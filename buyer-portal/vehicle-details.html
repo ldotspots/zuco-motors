@@ -18,15 +18,147 @@
     }
 
     .vehicle-gallery {
+      margin-bottom: 2rem;
+    }
+    .gallery-main {
+      position: relative;
       background: var(--gray-200);
       height: 400px;
       border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-main .placeholder {
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 2rem;
-      color: var(--gray-600);
+      height: 100%;
+      color: var(--gray-500);
       font-size: var(--text-xl);
+    }
+    .gallery-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.9);
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+      transition: all 0.2s;
+    }
+    .gallery-nav:hover { background: white; transform: translateY(-50%) scale(1.1); }
+    .gallery-nav.prev { left: 1rem; }
+    .gallery-nav.next { right: 1rem; }
+    .gallery-counter {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+    }
+    .gallery-thumbnails {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+    .gallery-thumb {
+      flex-shrink: 0;
+      width: 80px;
+      height: 60px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .gallery-thumb.active { border-color: var(--primary-600); }
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* Lightbox Modal */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+    .lightbox-content img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.3); }
+    .lightbox-nav.prev { left: 1rem; }
+    .lightbox-nav.next { right: 1rem; }
+    .lightbox-counter {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: var(--text-lg);
     }
 
     .specs-table {
@@ -110,7 +242,18 @@
         <div>
           <!-- Gallery -->
           <div class="vehicle-gallery" id="vehicleGallery">
-            Vehicle Image Placeholder
+            <div class="gallery-main" onclick="openLightbox()">
+              <div class="placeholder" id="galleryPlaceholder">No images available</div>
+              <img id="galleryMainImage" src="" alt="" style="display:none;">
+              <button class="gallery-nav prev" onclick="event.stopPropagation(); prevImage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="gallery-nav next" onclick="event.stopPropagation(); nextImage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <div class="gallery-counter" id="galleryCounter" style="display:none;">1 / 1</div>
+            </div>
+            <div class="gallery-thumbnails" id="galleryThumbnails"></div>
           </div>
 
           <!-- Description -->
@@ -255,6 +398,21 @@
     </div>
   </footer>
 
+  <!-- Lightbox Modal -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <button class="lightbox-nav prev" onclick="prevImage()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="">
+    </div>
+    <button class="lightbox-nav next" onclick="nextImage()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+  </div>
+
   <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
@@ -267,6 +425,8 @@
     }
 
     let currentVehicle = null;
+    let vehicleImages = [];
+    let currentImageIndex = 0;
 
     // Get vehicle ID from URL
     const params = Utils.getQueryParams();
@@ -298,9 +458,8 @@
       document.getElementById('vehicleBadge').textContent = currentVehicle.status;
       document.getElementById('vehicleBadge').className = `badge badge-${currentVehicle.status === 'Available' ? 'success' : 'warning'}`;
 
-      // Gallery placeholder
-      document.getElementById('vehicleGallery').textContent =
-        `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`;
+      // Setup image gallery
+      setupGallery();
 
       // Specs
       const specsTable = document.getElementById('specsTable').querySelector('tbody');
@@ -351,6 +510,103 @@
       loadSimilarVehicles();
     }
 
+    // Setup image gallery
+    function setupGallery() {
+      vehicleImages = currentVehicle.images || [];
+      currentImageIndex = 0;
+
+      const mainImg = document.getElementById('galleryMainImage');
+      const placeholder = document.getElementById('galleryPlaceholder');
+      const counter = document.getElementById('galleryCounter');
+      const thumbnails = document.getElementById('galleryThumbnails');
+      const navButtons = document.querySelectorAll('.gallery-nav');
+
+      if (vehicleImages.length > 0) {
+        placeholder.style.display = 'none';
+        mainImg.style.display = 'block';
+        mainImg.src = vehicleImages[0];
+        mainImg.alt = `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`;
+        counter.style.display = 'block';
+        counter.textContent = `1 / ${vehicleImages.length}`;
+
+        // Show nav buttons only if more than one image
+        navButtons.forEach(btn => btn.style.display = vehicleImages.length > 1 ? 'flex' : 'none');
+
+        // Build thumbnails
+        thumbnails.innerHTML = vehicleImages.map((img, i) => `
+          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="goToImage(${i})">
+            <img src="${img}" alt="Thumbnail ${i + 1}">
+          </div>
+        `).join('');
+      } else {
+        placeholder.style.display = 'flex';
+        placeholder.textContent = `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`;
+        mainImg.style.display = 'none';
+        counter.style.display = 'none';
+        navButtons.forEach(btn => btn.style.display = 'none');
+        thumbnails.innerHTML = '';
+      }
+    }
+
+    function goToImage(index) {
+      if (vehicleImages.length === 0) return;
+      currentImageIndex = index;
+      if (currentImageIndex < 0) currentImageIndex = vehicleImages.length - 1;
+      if (currentImageIndex >= vehicleImages.length) currentImageIndex = 0;
+
+      const mainImg = document.getElementById('galleryMainImage');
+      mainImg.src = vehicleImages[currentImageIndex];
+
+      document.getElementById('galleryCounter').textContent = `${currentImageIndex + 1} / ${vehicleImages.length}`;
+      document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${vehicleImages.length}`;
+
+      // Update lightbox if open
+      document.getElementById('lightboxImage').src = vehicleImages[currentImageIndex];
+
+      // Update active thumbnail
+      document.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === currentImageIndex);
+      });
+    }
+
+    function prevImage() {
+      goToImage(currentImageIndex - 1);
+    }
+
+    function nextImage() {
+      goToImage(currentImageIndex + 1);
+    }
+
+    function openLightbox() {
+      if (vehicleImages.length === 0) return;
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImage');
+      lightboxImg.src = vehicleImages[currentImageIndex];
+      document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${vehicleImages.length}`;
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      const lightbox = document.getElementById('lightbox');
+      if (lightbox.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+      }
+    });
+
+    // Close lightbox on background click
+    document.getElementById('lightbox').addEventListener('click', (e) => {
+      if (e.target.id === 'lightbox') closeLightbox();
+    });
+
     // Load similar vehicles
     async function loadSimilarVehicles() {
       const allVehicles = await DB.getVehicles();
@@ -361,9 +617,10 @@
       const container = document.getElementById('similarVehicles');
       container.innerHTML = vehicles.map(v => `
         <div class="vehicle-card">
-          <div style="background: var(--gray-200); height: 150px; display: flex; align-items: center; justify-content: center; color: var(--gray-500);">
-            ${v.year} ${v.make} ${v.model}
-          </div>
+          ${v.images && v.images.length > 0 && v.images[0].startsWith('data:')
+            ? `<img src="${v.images[0]}" alt="${v.year} ${v.make} ${v.model}" style="width:100%;height:150px;object-fit:cover;border-radius:var(--radius-lg) var(--radius-lg) 0 0;">`
+            : `<div style="background:var(--gray-200);height:150px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);border-radius:var(--radius-lg) var(--radius-lg) 0 0;">${v.year} ${v.make} ${v.model}</div>`
+          }
           <div class="vehicle-card-body">
             <h4 style="margin-bottom: 0.5rem;">${v.year} ${v.make} ${v.model}</h4>
             <div style="font-size: var(--text-xl); font-weight: 700; color: var(--primary-600); margin-bottom: 0.5rem;">
