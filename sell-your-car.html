@@ -261,7 +261,6 @@
               <div class="form-group">
                 <label for="qQuoteType">Quote Type *</label>
                 <select id="qQuoteType" class="form-control" required>
-                  <option value="instant">Instant Offer — Automated valuation</option>
                   <option value="agent">Agent Appraisal — Personalised review within 24h</option>
                   <option value="inspection">In-Person Inspection — Book a dealership visit</option>
                 </select>
@@ -285,17 +284,6 @@
               <div class="form-group">
                 <label for="qEmail">Email *</label>
                 <input type="email" id="qEmail" class="form-control" required placeholder="you@email.com">
-              </div>
-
-              <!-- Instant estimate preview -->
-              <div id="estimatePreview" style="display:none;" class="mb-4">
-                <div class="card" style="background:var(--gray-50);border:1px solid var(--gray-200);">
-                  <div class="card-body" style="text-align:center;">
-                    <div style="color:var(--gray-500);font-size:var(--text-sm);margin-bottom:0.25rem;">Estimated Value Range (NZD)</div>
-                    <div id="estimateRange" style="font-size:var(--text-2xl);font-weight:700;color:var(--primary-600);"></div>
-                    <div style="color:var(--gray-500);font-size:var(--text-xs);margin-top:0.25rem;">Based on current market data. Final offer may vary.</div>
-                  </div>
-                </div>
               </div>
 
               <button type="submit" class="btn btn-primary btn-lg w-full">Submit Quote Request</button>
@@ -504,8 +492,6 @@
 
       // Store plate on form for submission
       form._plateData = { plate, vin: vehicleData.vin || '' };
-
-      tryShowEstimate();
     }
 
     // Allow Enter key in plate field to trigger lookup
@@ -513,123 +499,8 @@
       if (e.key === 'Enter') { e.preventDefault(); lookupPlate(); }
     });
 
-    // ── Valuation Model ──────────────────────────────────────────
-    // NZD base prices (new) by make — used when specific model not found
-    const BASE_PRICES_NZD = {
-      // Japanese
-      'Toyota':    { _default: 38000, 'Corolla': 35000, 'Camry': 42000, 'RAV4': 48000, 'Hilux': 55000, 'Yaris': 28000, 'Land Cruiser': 95000, 'Highlander': 62000, 'C-HR': 36000 },
-      'Honda':     { _default: 34000, 'Jazz': 26000, 'Civic': 36000, 'CR-V': 44000, 'HR-V': 38000, 'Accord': 46000 },
-      'Mazda':     { _default: 38000, 'Mazda2': 28000, 'Mazda3': 36000, 'Mazda6': 48000, 'CX-3': 34000, 'CX-5': 46000, 'CX-9': 58000, 'BT-50': 52000 },
-      'Nissan':    { _default: 34000, 'Leaf': 52000, 'Qashqai': 40000, 'X-Trail': 45000, 'Navara': 52000, 'Note': 26000, 'Juke': 34000 },
-      'Suzuki':    { _default: 26000, 'Swift': 24000, 'Vitara': 32000, 'Jimny': 30000, 'Ignis': 22000, 'S-Cross': 34000, 'Baleno': 22000 },
-      'Subaru':    { _default: 42000, 'Impreza': 34000, 'Outback': 50000, 'Forester': 46000, 'XV': 40000, 'WRX': 48000, 'BRZ': 45000 },
-      'Mitsubishi':{ _default: 36000, 'Outlander': 44000, 'ASX': 34000, 'Triton': 48000, 'Eclipse Cross': 38000, 'Pajero Sport': 52000 },
-      // Korean
-      'Hyundai':   { _default: 36000, 'i30': 32000, 'Tucson': 44000, 'Santa Fe': 56000, 'Kona': 38000, 'Ioniq 5': 72000, 'Venue': 28000 },
-      'Kia':       { _default: 36000, 'Sportage': 42000, 'Seltos': 36000, 'Cerato': 32000, 'Sorento': 56000, 'Stonic': 30000, 'EV6': 78000, 'Niro': 48000 },
-      // Utes
-      'Ford':      { _default: 42000, 'Ranger': 56000, 'Everest': 62000, 'Focus': 34000, 'Escape': 42000, 'Mustang': 72000 },
-      'Isuzu':     { _default: 48000, 'D-Max': 52000, 'MU-X': 56000 },
-      // European
-      'Volkswagen':{ _default: 44000, 'Golf': 42000, 'Tiguan': 52000, 'Polo': 32000, 'T-Cross': 36000, 'Amarok': 62000, 'T-Roc': 44000 },
-      'BMW':       { _default: 65000, '320i': 68000, 'X1': 62000, 'X3': 82000, 'X5': 120000, '118i': 52000 },
-      'Mercedes-Benz': { _default: 70000, 'A-Class': 55000, 'C200': 72000, 'C300': 82000, 'GLA': 64000, 'GLC': 88000 },
-      'Audi':      { _default: 62000, 'A3': 52000, 'A4': 68000, 'Q3': 58000, 'Q5': 82000, 'Q7': 110000 },
-      // EV / Other
-      'Tesla':     { _default: 72000, 'Model 3': 68000, 'Model Y': 78000, 'Model S': 140000, 'Model X': 160000 },
-      'MG':        { _default: 32000, 'ZS': 28000, 'ZS EV': 48000, 'HS': 36000, 'MG3': 22000 },
-      'Holden':    { _default: 32000, 'Commodore': 38000, 'Colorado': 48000, 'Trax': 28000, 'Captiva': 34000 },
-      'BYD':       { _default: 55000, 'Atto 3': 52000, 'Dolphin': 44000 },
-    };
-
-    // Depreciation: steeper in first 3 years, then flattens
-    function getAgeFactor(age) {
-      if (age <= 0) return 1.0;
-      if (age === 1) return 0.85;
-      if (age === 2) return 0.76;
-      if (age === 3) return 0.68;
-      if (age <= 5) return 0.68 - ((age - 3) * 0.05); // 0.63, 0.58
-      if (age <= 10) return 0.58 - ((age - 5) * 0.04); // 0.54 ... 0.38
-      return Math.max(0.15, 0.38 - ((age - 10) * 0.03));
-    }
-
-    // Mileage penalty (km-based for NZ)
-    function getMileageFactor(km) {
-      const avgAnnualKm = 14000;
-      if (km <= 30000) return 1.0;
-      if (km <= 80000) return 1.0 - ((km - 30000) / 250000);
-      if (km <= 150000) return 0.8 - ((km - 80000) / 350000);
-      return Math.max(0.35, 0.6 - ((km - 150000) / 400000));
-    }
-
-    const CONDITION_FACTOR = { excellent: 1.05, good: 0.92, fair: 0.72, poor: 0.48 };
-
-    // EV/hybrid bonus
-    function getFuelAdjustment(fuel) {
-      if (fuel === 'electric') return 1.08;
-      if (fuel === 'hybrid') return 1.04;
-      return 1.0;
-    }
-
-    function getBasePrice(make, model) {
-      // Normalise model — take first word to match lookup keys
-      const makeData = BASE_PRICES_NZD[make];
-      if (!makeData) return 30000; // unknown make fallback
-      // Try exact model match first, then first-word match
-      const modelClean = (model || '').trim();
-      if (makeData[modelClean]) return makeData[modelClean];
-      const firstWord = modelClean.split(/\s+/)[0];
-      if (makeData[firstWord]) return makeData[firstWord];
-      return makeData._default;
-    }
-
     const form = document.getElementById('quoteForm');
     const quoteTypeEl = document.getElementById('qQuoteType');
-    const estimatePreview = document.getElementById('estimatePreview');
-
-    function tryShowEstimate() {
-      const make = document.getElementById('qMake').value.trim();
-      const model = document.getElementById('qModel').value.trim();
-      const year = parseInt(document.getElementById('qYear').value);
-      const km = parseInt(document.getElementById('qMileage').value);
-      const condition = document.getElementById('qCondition').value;
-      const fuel = document.getElementById('qFuel').value;
-      const qType = quoteTypeEl.value;
-
-      if (qType !== 'instant' || !make || !model || !year || !km || !condition) {
-        estimatePreview.style.display = 'none';
-        return;
-      }
-
-      const currentYear = new Date().getFullYear();
-      const age = currentYear - year;
-      const base = getBasePrice(make, model);
-      const ageFactor = getAgeFactor(age);
-      const kmFactor = getMileageFactor(km);
-      const condFactor = CONDITION_FACTOR[condition] || 0.75;
-      const fuelAdj = getFuelAdjustment(fuel);
-
-      const estimate = Math.round(base * ageFactor * kmFactor * condFactor * fuelAdj);
-      // Offer range: dealer buys below market, so apply a buy margin
-      const buyMargin = 0.88; // dealer pays ~88% of estimated market value
-      const offerBase = Math.round(estimate * buyMargin);
-      const low = Math.round(offerBase * 0.92);
-      const high = Math.round(offerBase * 1.08);
-
-      // Round to nearest $100
-      const lowR = Math.round(low / 100) * 100;
-      const highR = Math.round(high / 100) * 100;
-
-      document.getElementById('estimateRange').textContent =
-        `NZ$${Utils.formatNumber(lowR)} — NZ$${Utils.formatNumber(highR)}`;
-      estimatePreview.style.display = 'block';
-    }
-
-    // Attach listeners to vehicle fields
-    ['qMake', 'qModel', 'qYear', 'qMileage', 'qCondition', 'qQuoteType', 'qFuel'].forEach(id => {
-      document.getElementById(id).addEventListener('change', tryShowEstimate);
-      document.getElementById(id).addEventListener('input', tryShowEstimate);
-    });
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -658,7 +529,6 @@
       Utils.showToast(`${typeLabels[qType]} request submitted! We'll be in touch soon.`, 'success');
       form.reset();
       form._plateData = null;
-      estimatePreview.style.display = 'none';
       document.getElementById('lookupResult').style.display = 'none';
       document.getElementById('lookupStatus').innerHTML = '';
     });
