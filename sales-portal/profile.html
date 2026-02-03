@@ -119,7 +119,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    const agent = Auth.getCurrentUser();
+    const agent = Auth.getCurrentUserSync();
 
     if (agent) {
       document.getElementById('agentName').textContent = `${agent.firstName} ${agent.lastName}`;

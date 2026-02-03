@@ -104,7 +104,7 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    const user = Auth.getCurrentUser();
+    const user = Auth.getCurrentUserSync();
     const statusEl = document.getElementById('appStatus');
     const formCard = document.getElementById('appFormCard');
 

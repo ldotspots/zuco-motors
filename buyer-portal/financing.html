@@ -145,7 +145,7 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    const user = Auth.getCurrentUser();
+    const user = Auth.getCurrentUserSync();
 
     // Auto-fill from logged-in user
     if (user) {

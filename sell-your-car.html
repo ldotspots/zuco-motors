@@ -524,7 +524,7 @@
 
     // Auto-fill contact fields if logged in
     if (Auth.isAuthenticated()) {
-      const user = Auth.getCurrentUser();
+      const user = Auth.getCurrentUserSync();
       if (user) {
         document.getElementById('qName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
         document.getElementById('qEmail').value = user.email || '';

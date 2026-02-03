@@ -166,7 +166,7 @@
       const limit = prompt('Approved financing limit ($):');
       if (limit === null) return;
       const notes = prompt('Notes for the customer (optional):') || '';
-      const dealer = Auth.getCurrentUser();
+      const dealer = Auth.getCurrentUserSync();
 
       await DB.updateFinancingApplication(appId, {
         status: 'approved',
@@ -182,7 +182,7 @@
 
     async function rejectApp(appId) {
       const notes = prompt('Reason / notes for the customer (optional):') || '';
-      const dealer = Auth.getCurrentUser();
+      const dealer = Auth.getCurrentUserSync();
 
       await DB.updateFinancingApplication(appId, {
         status: 'rejected',

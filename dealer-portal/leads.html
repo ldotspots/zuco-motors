@@ -178,7 +178,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    const dealer = Auth.getCurrentUser();
+    const dealer = Auth.getCurrentUserSync();
     let currentLeadId = null;
 
     async function renderLeads() {

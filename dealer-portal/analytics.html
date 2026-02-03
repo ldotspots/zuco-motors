@@ -161,7 +161,7 @@
   <script src="../js/utils.js"></script>
   <script>
     async function initAnalytics() {
-      const dealer = Auth.getCurrentUser();
+      const dealer = Auth.getCurrentUserSync();
       const transactions = await DB.getTransactionsByAgent(dealer?.id) || [];
       const leads = await DB.getInquiries() || [];
       const vehicles = await DB.getVehicles();

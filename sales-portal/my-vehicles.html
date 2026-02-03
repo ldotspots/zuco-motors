@@ -52,7 +52,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    const agent = Auth.getCurrentUser();
+    const agent = Auth.getCurrentUserSync();
 
     async function render() {
       const allocations = (await DB.getAllocationsByAgent(agent?.id)).filter(a => a.status === 'active' || a.status === 'reserved');

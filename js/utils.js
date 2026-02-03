@@ -420,18 +420,17 @@ const Utils = {
   },
 
   // ====================
-  // FAVORITES
+  // FAVORITES (stored in localStorage for fast access)
   // ====================
+
+  // Get favorites from localStorage
+  getFavorites() {
+    return this.getFromStorage('zuco_favorites', []);
+  },
 
   // Toggle favorite
   toggleFavorite(vehicleId) {
-    const user = Auth.getCurrentUser();
-    if (!user) {
-      this.showToast('Please log in to save favorites', 'warning');
-      return false;
-    }
-
-    const favorites = user.profile.favorites || [];
+    const favorites = this.getFavorites();
     const index = favorites.indexOf(vehicleId);
 
     if (index > -1) {
@@ -442,19 +441,13 @@ const Utils = {
       this.showToast('Added to favorites', 'success');
     }
 
-    DB.updateUser(user.id, {
-      profile: { ...user.profile, favorites }
-    });
-
+    this.saveToStorage('zuco_favorites', favorites);
     return index === -1; // Return true if added, false if removed
   },
 
   // Check if favorite
   isFavorite(vehicleId) {
-    const user = Auth.getCurrentUser();
-    if (!user) return false;
-
-    const favorites = user.profile.favorites || [];
+    const favorites = this.getFavorites();
     return favorites.includes(vehicleId);
   },
 

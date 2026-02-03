@@ -138,7 +138,7 @@
       });
 
       // Update application
-      const dealer = Auth.getCurrentUser();
+      const dealer = Auth.getCurrentUserSync();
       await DB.updateAgentApplication(appId, {
         status: 'approved',
         reviewedAt: new Date().toISOString(),
@@ -151,7 +151,7 @@
 
     async function rejectApp(appId) {
       const feedback = prompt('Optional feedback for the applicant:') || '';
-      const dealer = Auth.getCurrentUser();
+      const dealer = Auth.getCurrentUserSync();
       await DB.updateAgentApplication(appId, {
         status: 'rejected',
         reviewedAt: new Date().toISOString(),

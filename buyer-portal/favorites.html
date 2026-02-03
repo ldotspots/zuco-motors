@@ -74,7 +74,7 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    const user = Auth.getCurrentUser();
+    const user = Auth.getCurrentUserSync();
 
     async function loadFavorites() {
       const favorites = user?.profile?.favorites || [];

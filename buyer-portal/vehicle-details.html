@@ -340,7 +340,7 @@
       updateFavoriteButton();
 
       // Pre-fill inquiry form with logged-in user info
-      const buyer = Auth.getCurrentUser();
+      const buyer = Auth.getCurrentUserSync();
       if (buyer) {
         document.getElementById('inqName').value = `${buyer.firstName} ${buyer.lastName}`;
         document.getElementById('inqEmail').value = buyer.email;
@@ -401,7 +401,7 @@
     // Inquiry form submission
     document.getElementById('inquiryForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const buyer = Auth.getCurrentUser();
+      const buyer = Auth.getCurrentUserSync();
 
       // Find agents allocated to this vehicle to assign the lead
       const allocations = await DB.getAllocationsByVehicle(vehicleId);
@@ -431,7 +431,7 @@
 
     // Auto-fill contact fields if logged in
     if (Auth.isAuthenticated()) {
-      const user = Auth.getCurrentUser();
+      const user = Auth.getCurrentUserSync();
       if (user) {
         document.getElementById('inqName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
         document.getElementById('inqEmail').value = user.email || '';

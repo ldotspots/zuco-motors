@@ -197,7 +197,7 @@
   <script src="../js/utils.js"></script>
   <script>
     // Get current dealer
-    const dealer = Auth.getCurrentUser();
+    const dealer = Auth.getCurrentUserSync();
     if (dealer) {
       document.getElementById('welcomeMessage').textContent = `Welcome back, ${dealer.firstName}!`;
     }

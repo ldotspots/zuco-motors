@@ -126,7 +126,7 @@
     }
 
     // Get current user
-    const user = Auth.getCurrentUser();
+    const user = Auth.getCurrentUserSync();
     if (user) {
       document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.firstName}!`;
     }

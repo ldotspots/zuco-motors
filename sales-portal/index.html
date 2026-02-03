@@ -101,7 +101,7 @@
     const TYPE_LABELS = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
 
     async function render() {
-      const agent = Auth.getCurrentUser();
+      const agent = Auth.getCurrentUserSync();
       if (agent) {
         document.getElementById('greeting').textContent = `Welcome back, ${agent.firstName}!`;
       }
