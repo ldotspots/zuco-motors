@@ -368,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Buyer portal pages that are publicly accessible (no login required)
   const buyerPublicFiles = ['inventory.html', 'vehicle-details.html', 'financing.html', 'compare.html'];
-  const filename = path.split('/').pop();
-  const isBuyerPublic = path.includes('/buyer-portal/') && buyerPublicFiles.includes(filename);
+  const isBuyerPublic = buyerPublicFiles.some(f => path.includes('/buyer-portal/' + f));
 
   if (isProtected && !isLoginPage && !isBuyerPublic) {
     // Determine required role
