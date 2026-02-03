@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Financing Calculator - Zuco Motors</title>
+  <title>Financing - Zuco Motors</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+  </style>
 </head>
 <body>
   <header>
@@ -32,83 +38,89 @@
   </header>
 
   <main class="section">
-    <div class="container">
-      <h1 class="mb-4">Financing Calculator</h1>
-      <p style="color: var(--gray-600);" class="mb-8">Estimate your monthly payments and explore financing options</p>
+    <div class="container" style="max-width: 700px;">
+      <h1 class="mb-4">Financing Inquiry</h1>
+      <p style="color: var(--gray-600);" class="mb-8">Submit your details and our team will review your application and get back to you with financing options.</p>
 
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
-        <!-- Calculator Form -->
-        <div class="card">
-          <div class="card-header"><h3>Loan Details</h3></div>
+      <!-- Existing Applications -->
+      <div id="existingApps" style="display:none;" class="mb-8"></div>
+
+      <!-- Financing Form -->
+      <div id="formSection">
+        <form id="financingForm" class="card">
           <div class="card-body">
-            <div class="form-group">
-              <label for="vehiclePrice">Vehicle Price ($)</label>
-              <input type="number" id="vehiclePrice" class="form-control" value="35000" min="0" step="500">
+            <h3 class="mb-4">Your Details</h3>
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" class="form-control" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="downPayment">Down Payment ($)</label>
-              <input type="number" id="downPayment" class="form-control" value="5000" min="0" step="500">
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" class="form-control" required>
+              </div>
             </div>
+
+            <h3 class="mb-4" style="margin-top: 1.5rem;">Vehicle & Financing</h3>
+
             <div class="form-group">
-              <label for="tradeInValue">Trade-In Value ($)</label>
-              <input type="number" id="tradeInValue" class="form-control" value="0" min="0" step="500">
+              <label for="vehicleInterest">Vehicle of Interest</label>
+              <input type="text" id="vehicleInterest" class="form-control" placeholder="e.g. 2022 Toyota Corolla or any SUV under $30k">
             </div>
-            <div class="form-group">
-              <label for="interestRate">Interest Rate (%)</label>
-              <input type="number" id="interestRate" class="form-control" value="5.9" min="0" max="30" step="0.1">
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="estimatedBudget">Estimated Budget ($)</label>
+                <input type="number" id="estimatedBudget" class="form-control" placeholder="e.g. 25000" min="0" step="500">
+              </div>
+              <div class="form-group">
+                <label for="depositAmount">Deposit Available ($)</label>
+                <input type="number" id="depositAmount" class="form-control" placeholder="e.g. 5000" min="0" step="500">
+              </div>
             </div>
+
             <div class="form-group">
-              <label for="loanTerm">Loan Term</label>
-              <select id="loanTerm" class="form-control">
-                <option value="24">24 months (2 years)</option>
-                <option value="36">36 months (3 years)</option>
-                <option value="48">48 months (4 years)</option>
-                <option value="60" selected>60 months (5 years)</option>
-                <option value="72">72 months (6 years)</option>
-                <option value="84">84 months (7 years)</option>
+              <label for="employmentStatus">Employment Status</label>
+              <select id="employmentStatus" class="form-control" required>
+                <option value="">Select...</option>
+                <option value="full-time">Full-Time Employed</option>
+                <option value="part-time">Part-Time Employed</option>
+                <option value="self-employed">Self-Employed</option>
+                <option value="student">Student</option>
+                <option value="other">Other</option>
               </select>
             </div>
+
             <div class="form-group">
-              <label for="taxRate">Sales Tax Rate (%)</label>
-              <input type="number" id="taxRate" class="form-control" value="8.25" min="0" max="15" step="0.25">
+              <label for="annualIncome">Approximate Annual Income ($)</label>
+              <input type="number" id="annualIncome" class="form-control" placeholder="e.g. 55000" min="0" step="1000">
             </div>
-            <button class="btn btn-primary w-full" onclick="calculate()">Calculate Payment</button>
-          </div>
-        </div>
 
-        <!-- Results -->
-        <div>
-          <div class="card mb-6">
-            <div class="card-header"><h3>Monthly Payment</h3></div>
-            <div class="card-body text-center">
-              <div id="monthlyPayment" style="font-size: var(--text-5xl); font-weight: 700; color: var(--primary-600);">$0</div>
-              <p style="color: var(--gray-600);">per month</p>
+            <div class="form-group">
+              <label for="notes">Additional Notes</label>
+              <textarea id="notes" class="form-control" rows="3" placeholder="Anything else you'd like us to know..."></textarea>
             </div>
-          </div>
 
-          <div class="card">
-            <div class="card-header"><h3>Loan Summary</h3></div>
-            <div class="card-body">
-              <table style="width: 100%;">
-                <tr><td style="padding: 0.75rem; font-weight: 600;">Vehicle Price</td><td id="summaryPrice" style="padding: 0.75rem; text-align: right;">$0</td></tr>
-                <tr><td style="padding: 0.75rem; font-weight: 600;">Down Payment</td><td id="summaryDown" style="padding: 0.75rem; text-align: right;">-$0</td></tr>
-                <tr><td style="padding: 0.75rem; font-weight: 600;">Trade-In Value</td><td id="summaryTrade" style="padding: 0.75rem; text-align: right;">-$0</td></tr>
-                <tr><td style="padding: 0.75rem; font-weight: 600;">Sales Tax</td><td id="summaryTax" style="padding: 0.75rem; text-align: right;">$0</td></tr>
-                <tr style="border-top: 2px solid var(--gray-300);"><td style="padding: 0.75rem; font-weight: 700;">Loan Amount</td><td id="summaryLoan" style="padding: 0.75rem; text-align: right; font-weight: 700;">$0</td></tr>
-                <tr><td style="padding: 0.75rem; font-weight: 600;">Total Interest</td><td id="summaryInterest" style="padding: 0.75rem; text-align: right; color: var(--error);">$0</td></tr>
-                <tr style="border-top: 2px solid var(--gray-300);"><td style="padding: 0.75rem; font-weight: 700;">Total Cost</td><td id="summaryTotal" style="padding: 0.75rem; text-align: right; font-weight: 700;">$0</td></tr>
-              </table>
+            <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
+              <input type="checkbox" id="consent" required style="width:auto;">
+              <label for="consent" style="margin-bottom:0;">I consent to Zuco Motors contacting me about financing options</label>
             </div>
-          </div>
 
-          <!-- Rate Comparison -->
-          <div class="card mt-6">
-            <div class="card-header"><h3>Term Comparison</h3></div>
-            <div class="card-body">
-              <div id="termComparison"></div>
-            </div>
+            <button type="submit" class="btn btn-primary w-full btn-lg">Submit Financing Inquiry</button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   </main>
@@ -131,55 +143,88 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    // Pre-fill from URL params
+    const user = Auth.getCurrentUser();
+
+    // Auto-fill from logged-in user
+    if (user) {
+      document.getElementById('firstName').value = user.firstName || '';
+      document.getElementById('lastName').value = user.lastName || '';
+      document.getElementById('email').value = user.email || '';
+      document.getElementById('phone').value = user.phone || '';
+    }
+
+    // Pre-fill vehicle from URL params
     const params = Utils.getQueryParams();
-    if (params.price) document.getElementById('vehiclePrice').value = params.price;
-    if (params.vehicleId) {
-      const vehicle = DB.getVehicle(params.vehicleId);
-      if (vehicle) document.getElementById('vehiclePrice').value = vehicle.pricing.salePrice;
+    if (params.vehicle) document.getElementById('vehicleInterest').value = params.vehicle;
+    if (params.price) document.getElementById('estimatedBudget').value = params.price;
+
+    // Show existing applications
+    function renderExistingApps() {
+      if (!user) return;
+      const apps = DB.getFinancingApplicationsByUser(user.id);
+      if (!apps.length) return;
+
+      const container = document.getElementById('existingApps');
+      container.style.display = '';
+      container.innerHTML = '<h3 class="mb-4">Your Financing Inquiries</h3>' +
+        apps.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)).map(app => `
+          <div class="card mb-4">
+            <div class="card-body">
+              <div class="flex justify-between items-center mb-2">
+                <strong>${app.vehicleInterest || 'General Inquiry'}</strong>
+                <span class="status-badge status-${app.status}">${app.status.charAt(0).toUpperCase() + app.status.slice(1)}</span>
+              </div>
+              <div style="font-size:var(--text-sm);color:var(--gray-500);">
+                Submitted ${Utils.formatRelativeTime(app.submittedAt)}
+                ${app.estimatedBudget ? ' &middot; Budget: ' + Utils.formatCurrency(app.estimatedBudget) : ''}
+              </div>
+              ${app.dealerNotes ? '<div style="margin-top:0.75rem;padding:0.75rem;background:var(--gray-50);border-radius:var(--radius-md);font-size:var(--text-sm);"><strong>Response:</strong> ' + app.dealerNotes + '</div>' : ''}
+              ${app.approvedLimit ? '<div style="margin-top:0.5rem;font-size:var(--text-sm);color:var(--success);font-weight:600;">Approved Limit: ' + Utils.formatCurrency(app.approvedLimit) + '</div>' : ''}
+            </div>
+          </div>
+        `).join('');
     }
 
-    function calculate() {
-      const price = parseFloat(document.getElementById('vehiclePrice').value) || 0;
-      const down = parseFloat(document.getElementById('downPayment').value) || 0;
-      const tradeIn = parseFloat(document.getElementById('tradeInValue').value) || 0;
-      const rate = parseFloat(document.getElementById('interestRate').value) || 0;
-      const months = parseInt(document.getElementById('loanTerm').value) || 60;
-      const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+    renderExistingApps();
 
-      const tax = price * (taxRate / 100);
-      const loanAmount = price + tax - down - tradeIn;
-      const monthly = Utils.calculateMonthlyPayment(Math.max(loanAmount, 0), rate, months);
-      const totalInterest = Utils.calculateTotalInterest(monthly, months, Math.max(loanAmount, 0));
-      const totalCost = down + tradeIn + (monthly * months);
+    // Submit form
+    document.getElementById('financingForm').addEventListener('submit', (e) => {
+      e.preventDefault();
 
-      document.getElementById('monthlyPayment').textContent = Utils.formatCurrency(monthly);
-      document.getElementById('summaryPrice').textContent = Utils.formatCurrency(price);
-      document.getElementById('summaryDown').textContent = '-' + Utils.formatCurrency(down);
-      document.getElementById('summaryTrade').textContent = '-' + Utils.formatCurrency(tradeIn);
-      document.getElementById('summaryTax').textContent = Utils.formatCurrency(tax);
-      document.getElementById('summaryLoan').textContent = Utils.formatCurrency(Math.max(loanAmount, 0));
-      document.getElementById('summaryInterest').textContent = Utils.formatCurrency(totalInterest);
-      document.getElementById('summaryTotal').textContent = Utils.formatCurrency(totalCost);
+      const app = {
+        id: 'FIN-' + Date.now(),
+        userId: user ? user.id : null,
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        vehicleInterest: document.getElementById('vehicleInterest').value.trim(),
+        estimatedBudget: parseFloat(document.getElementById('estimatedBudget').value) || null,
+        depositAmount: parseFloat(document.getElementById('depositAmount').value) || null,
+        employmentStatus: document.getElementById('employmentStatus').value,
+        annualIncome: parseFloat(document.getElementById('annualIncome').value) || null,
+        notes: document.getElementById('notes').value.trim(),
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+        reviewedAt: null,
+        reviewedBy: null,
+        dealerNotes: '',
+        approvedLimit: null
+      };
 
-      // Term comparison
-      const terms = [36, 48, 60, 72, 84];
-      const comparison = document.getElementById('termComparison');
-      comparison.innerHTML = `<table style="width: 100%;"><thead><tr><th>Term</th><th>Monthly</th><th>Total Interest</th><th>Total Cost</th></tr></thead><tbody>` +
-        terms.map(t => {
-          const m = Utils.calculateMonthlyPayment(Math.max(loanAmount, 0), rate, t);
-          const ti = Utils.calculateTotalInterest(m, t, Math.max(loanAmount, 0));
-          const isSelected = t === months;
-          return `<tr style="${isSelected ? 'background: var(--primary-50); font-weight: 600;' : ''}">
-            <td style="padding: 0.5rem;">${t} mo</td>
-            <td style="padding: 0.5rem;">${Utils.formatCurrency(m)}</td>
-            <td style="padding: 0.5rem;">${Utils.formatCurrency(ti)}</td>
-            <td style="padding: 0.5rem;">${Utils.formatCurrency(down + tradeIn + (m * t))}</td>
-          </tr>`;
-        }).join('') + `</tbody></table>`;
-    }
+      DB.addFinancingApplication(app);
+      Utils.showToast('Financing inquiry submitted! We\'ll be in touch soon.', 'success');
+      document.getElementById('financingForm').reset();
 
-    calculate();
+      if (user) {
+        document.getElementById('firstName').value = user.firstName || '';
+        document.getElementById('lastName').value = user.lastName || '';
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('phone').value = user.phone || '';
+      }
+
+      renderExistingApps();
+    });
   </script>
 </body>
 </html>

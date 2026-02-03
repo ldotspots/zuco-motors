@@ -904,6 +904,34 @@ const DB = {
     apps[idx] = { ...apps[idx], ...updates };
     localStorage.setItem('zuco_agent_applications', JSON.stringify(apps));
     return apps[idx];
+  },
+
+  // ====================
+  // FINANCING APPLICATIONS
+  // ====================
+
+  getFinancingApplications() {
+    return JSON.parse(localStorage.getItem('zuco_financing_applications') || '[]');
+  },
+
+  getFinancingApplicationsByUser(userId) {
+    return this.getFinancingApplications().filter(a => a.userId === userId);
+  },
+
+  addFinancingApplication(app) {
+    const apps = this.getFinancingApplications();
+    apps.push(app);
+    localStorage.setItem('zuco_financing_applications', JSON.stringify(apps));
+    return app;
+  },
+
+  updateFinancingApplication(id, updates) {
+    const apps = this.getFinancingApplications();
+    const idx = apps.findIndex(a => a.id === id);
+    if (idx === -1) return null;
+    apps[idx] = { ...apps[idx], ...updates };
+    localStorage.setItem('zuco_financing_applications', JSON.stringify(apps));
+    return apps[idx];
   }
 };
 

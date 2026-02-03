@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financing Applications - Dealer Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .status-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    .app-detail { display: none; padding: 1rem 1.25rem; background: var(--gray-50); border-top: 1px solid var(--gray-200); }
+    .detail-grid { display: grid; grid-template-columns: 160px 1fr; gap: 0.25rem 1rem; font-size: var(--text-sm); }
+    .detail-grid dt { color: var(--gray-500); font-weight: 500; }
+    .detail-grid dd { margin: 0; color: var(--gray-800); }
+    .action-btns { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="customers.html">Customers</a>
+          <a href="applications.html">Applications</a>
+          <a href="financing-applications.html" class="active">Financing</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-6">Financing Applications</h1>
+
+      <div class="flex gap-4 mb-6">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email, or vehicle..." style="max-width:400px;">
+        <select id="statusFilter" class="form-control" style="max-width:180px;">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div id="appTable"></div>
+    </div>
+  </main>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const EMPLOYMENT_LABELS = {
+      'full-time': 'Full-Time Employed',
+      'part-time': 'Part-Time Employed',
+      'self-employed': 'Self-Employed',
+      'student': 'Student',
+      'other': 'Other'
+    };
+
+    function statusBadge(status) {
+      return `<span class="status-badge status-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+    }
+
+    function renderApps() {
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const statusFilter = document.getElementById('statusFilter').value;
+      let apps = DB.getFinancingApplications().sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+      if (search) {
+        apps = apps.filter(a =>
+          (a.firstName + ' ' + a.lastName).toLowerCase().includes(search) ||
+          (a.email || '').toLowerCase().includes(search) ||
+          (a.vehicleInterest || '').toLowerCase().includes(search)
+        );
+      }
+      if (statusFilter) {
+        apps = apps.filter(a => a.status === statusFilter);
+      }
+
+      const container = document.getElementById('appTable');
+
+      if (!apps.length) {
+        container.innerHTML = '<p style="color:var(--gray-500);text-align:center;padding:2rem;">No financing applications found.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Vehicle</th>
+              <th>Budget</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${apps.map((a, i) => `
+              <tr>
+                <td style="white-space:nowrap;">${new Date(a.submittedAt).toLocaleDateString('en-NZ')}</td>
+                <td><strong>${a.firstName || ''} ${a.lastName || ''}</strong></td>
+                <td>${a.email || '—'}</td>
+                <td>${a.vehicleInterest || '—'}</td>
+                <td>${a.estimatedBudget ? Utils.formatCurrency(a.estimatedBudget) : '—'}</td>
+                <td>${statusBadge(a.status)}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="toggleDetail('fin${i}')">Details</button></td>
+              </tr>
+              <tr id="fin${i}" class="app-detail">
+                <td colspan="7" style="padding:1rem;">
+                  <dl class="detail-grid">
+                    <dt>Application ID</dt><dd>${a.id}</dd>
+                    <dt>Phone</dt><dd>${a.phone || '—'}</dd>
+                    <dt>Vehicle Interest</dt><dd>${a.vehicleInterest || '—'}</dd>
+                    <dt>Estimated Budget</dt><dd>${a.estimatedBudget ? Utils.formatCurrency(a.estimatedBudget) : '—'}</dd>
+                    <dt>Deposit Available</dt><dd>${a.depositAmount ? Utils.formatCurrency(a.depositAmount) : '—'}</dd>
+                    <dt>Employment</dt><dd>${EMPLOYMENT_LABELS[a.employmentStatus] || a.employmentStatus || '—'}</dd>
+                    <dt>Annual Income</dt><dd>${a.annualIncome ? Utils.formatCurrency(a.annualIncome) : '—'}</dd>
+                    <dt>Notes</dt><dd>${a.notes || '—'}</dd>
+                    <dt>Submitted</dt><dd>${new Date(a.submittedAt).toLocaleString('en-NZ')}</dd>
+                    ${a.reviewedAt ? `<dt>Reviewed</dt><dd>${new Date(a.reviewedAt).toLocaleString('en-NZ')}</dd>` : ''}
+                    ${a.dealerNotes ? `<dt>Dealer Notes</dt><dd>${a.dealerNotes}</dd>` : ''}
+                    ${a.approvedLimit ? `<dt>Approved Limit</dt><dd style="color:var(--success);font-weight:600;">${Utils.formatCurrency(a.approvedLimit)}</dd>` : ''}
+                  </dl>
+                  ${a.status === 'pending' ? `
+                    <div class="action-btns">
+                      <button class="btn btn-primary btn-sm" onclick="approveApp('${a.id}')">Approve</button>
+                      <button class="btn btn-secondary btn-sm" onclick="rejectApp('${a.id}')">Reject</button>
+                    </div>
+                  ` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function toggleDetail(id) {
+      const row = document.getElementById(id);
+      row.style.display = row.style.display === 'table-row' ? 'none' : 'table-row';
+    }
+
+    function approveApp(appId) {
+      const limit = prompt('Approved financing limit ($):');
+      if (limit === null) return;
+      const notes = prompt('Notes for the customer (optional):') || '';
+      const dealer = Auth.getCurrentUser();
+
+      DB.updateFinancingApplication(appId, {
+        status: 'approved',
+        approvedLimit: parseFloat(limit) || null,
+        dealerNotes: notes,
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: dealer ? dealer.id : null
+      });
+
+      Utils.showToast('Application approved!', 'success');
+      renderApps();
+    }
+
+    function rejectApp(appId) {
+      const notes = prompt('Reason / notes for the customer (optional):') || '';
+      const dealer = Auth.getCurrentUser();
+
+      DB.updateFinancingApplication(appId, {
+        status: 'rejected',
+        dealerNotes: notes,
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: dealer ? dealer.id : null
+      });
+
+      Utils.showToast('Application rejected.', 'success');
+      renderApps();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderApps);
+    document.getElementById('statusFilter').addEventListener('change', renderApps);
+    renderApps();
+  </script>
+</body>
+</html>
