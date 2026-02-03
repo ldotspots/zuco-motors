@@ -108,6 +108,11 @@ body {
   overflow-x: hidden;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
@@ -166,6 +171,10 @@ img {
 .grid {
   display: grid;
   gap: var(--space-6);
+}
+
+.grid > * {
+  min-width: 0;
 }
 
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
@@ -432,6 +441,14 @@ textarea {
   box-shadow: var(--shadow-md);
   overflow: hidden;
   transition: all var(--transition-normal);
+  min-width: 0;
+}
+
+.vehicle-card > img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
 }
 
 .vehicle-card:hover {
