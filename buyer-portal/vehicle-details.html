@@ -515,9 +515,23 @@
     }
 
     // Setup image gallery
+    let galleryInitialized = false;
     function setupGallery() {
-      vehicleImages = currentVehicle.images || [];
-      currentImageIndex = 0;
+      const newImages = currentVehicle.images || [];
+
+      // Only reset index if images changed or first load
+      const imagesChanged = JSON.stringify(newImages) !== JSON.stringify(vehicleImages);
+      vehicleImages = newImages;
+
+      if (!galleryInitialized || imagesChanged) {
+        currentImageIndex = 0;
+        galleryInitialized = true;
+      }
+
+      // Ensure index is valid
+      if (currentImageIndex >= vehicleImages.length) {
+        currentImageIndex = 0;
+      }
 
       const mainImg = document.getElementById('galleryMainImage');
       const placeholder = document.getElementById('galleryPlaceholder');
@@ -528,17 +542,17 @@
       if (vehicleImages.length > 0) {
         placeholder.style.display = 'none';
         mainImg.style.display = 'block';
-        mainImg.src = vehicleImages[0];
+        mainImg.src = vehicleImages[currentImageIndex];
         mainImg.alt = `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`;
         counter.style.display = 'block';
-        counter.textContent = `1 / ${vehicleImages.length}`;
+        counter.textContent = `${currentImageIndex + 1} / ${vehicleImages.length}`;
 
         // Show nav buttons only if more than one image
         navButtons.forEach(btn => btn.style.display = vehicleImages.length > 1 ? 'flex' : 'none');
 
         // Build thumbnails
         thumbnails.innerHTML = vehicleImages.map((img, i) => `
-          <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="goToImage(${i})">
+          <div class="gallery-thumb ${i === currentImageIndex ? 'active' : ''}" onclick="goToImage(${i})">
             <img src="${img}" alt="Thumbnail ${i + 1}">
           </div>
         `).join('');
