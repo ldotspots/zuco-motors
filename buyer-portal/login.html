@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       background: linear-gradient(135deg, var(--primary-50) 0%, var(--gray-100) 100%);
@@ -232,6 +233,7 @@
     </div>
   </div>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -252,14 +254,14 @@
     });
 
     // Login Form Submit
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
       const rememberMe = document.getElementById('rememberMe').checked;
 
-      const result = Auth.login(email, password, rememberMe);
+      const result = await Auth.login(email, password, rememberMe);
 
       if (result.success) {
         Utils.showToast('Login successful! Redirecting...', 'success');
@@ -272,7 +274,7 @@
     });
 
     // Register Form Submit
-    document.getElementById('registerForm').addEventListener('submit', (e) => {
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const firstName = document.getElementById('registerFirstName').value;
@@ -306,7 +308,7 @@
       }
 
       // Register
-      const result = Auth.register({
+      const result = await Auth.register({
         firstName,
         lastName,
         email,
@@ -317,7 +319,7 @@
 
       if (result.success) {
         // Auto-login after registration
-        const loginResult = Auth.login(email, password, false);
+        const loginResult = await Auth.login(email, password, false);
         if (loginResult.success) {
           Utils.showToast('Account created! Redirecting...', 'success');
           setTimeout(() => { window.location.href = '/'; }, 1000);
@@ -330,12 +332,6 @@
         Utils.showToast(result.error, 'error');
       }
     });
-
-    // Demo accounts helper
-    console.log('Demo Buyer Accounts:');
-    console.log('Email: john.buyer@email.com | Password: Demo123!');
-    console.log('Email: sarah.buyer@email.com | Password: Demo123!');
-    console.log('Email: mike.customer@email.com | Password: Demo123!');
   </script>
 </body>
 </html>
