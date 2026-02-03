@@ -47,7 +47,7 @@ const DB = {
   // ====================
 
   async getUsers() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
@@ -56,7 +56,7 @@ const DB = {
   },
 
   async getUser(id) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('users')
       .select('*')
       .eq('id', id)
@@ -66,7 +66,7 @@ const DB = {
   },
 
   async getUserByEmail(email) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('users')
       .select('*')
       .ilike('email', email)
@@ -76,7 +76,7 @@ const DB = {
   },
 
   async addUser(user) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('users')
       .insert([this.toSnakeCase(user)])
       .select()
@@ -86,7 +86,7 @@ const DB = {
   },
 
   async updateUser(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('users')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -101,7 +101,7 @@ const DB = {
   // ====================
 
   async getVehicles() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('vehicles')
       .select('*')
       .order('added_date', { ascending: false });
@@ -110,7 +110,7 @@ const DB = {
   },
 
   async getVehicle(id) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('vehicles')
       .select('*')
       .eq('id', id)
@@ -120,7 +120,7 @@ const DB = {
   },
 
   async addVehicle(vehicle) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('vehicles')
       .insert([this.toSnakeCase(vehicle)])
       .select()
@@ -130,7 +130,7 @@ const DB = {
   },
 
   async updateVehicle(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('vehicles')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -141,7 +141,7 @@ const DB = {
   },
 
   async deleteVehicle(id) {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('vehicles')
       .delete()
       .eq('id', id);
@@ -153,7 +153,7 @@ const DB = {
   // ====================
 
   async getInquiries() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('inquiries')
       .select('*')
       .order('created_at', { ascending: false });
@@ -162,7 +162,7 @@ const DB = {
   },
 
   async getInquiry(id) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('inquiries')
       .select('*')
       .eq('id', id)
@@ -172,7 +172,7 @@ const DB = {
   },
 
   async getInquiriesByBuyer(buyerId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('inquiries')
       .select('*')
       .eq('buyer_id', buyerId)
@@ -182,7 +182,7 @@ const DB = {
   },
 
   async getInquiriesByAgent(agentId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('inquiries')
       .select('*')
       .eq('agent_id', agentId)
@@ -192,7 +192,7 @@ const DB = {
   },
 
   async addInquiry(inquiry) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('inquiries')
       .insert([this.toSnakeCase(inquiry)])
       .select()
@@ -202,7 +202,7 @@ const DB = {
   },
 
   async updateInquiry(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('inquiries')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -217,7 +217,7 @@ const DB = {
   // ====================
 
   async getTransactions() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('transactions')
       .select('*')
       .order('created_at', { ascending: false });
@@ -226,7 +226,7 @@ const DB = {
   },
 
   async getTransaction(id) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('transactions')
       .select('*')
       .eq('id', id)
@@ -236,7 +236,7 @@ const DB = {
   },
 
   async getTransactionsByAgent(agentId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('transactions')
       .select('*')
       .eq('agent_id', agentId)
@@ -246,7 +246,7 @@ const DB = {
   },
 
   async addTransaction(transaction) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('transactions')
       .insert([this.toSnakeCase(transaction)])
       .select()
@@ -260,7 +260,7 @@ const DB = {
   // ====================
 
   async getAgentAllocations() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_allocations')
       .select('*')
       .order('allocated_at', { ascending: false });
@@ -269,7 +269,7 @@ const DB = {
   },
 
   async getAllocationsByVehicle(vehicleId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_allocations')
       .select('*')
       .eq('vehicle_id', vehicleId)
@@ -279,7 +279,7 @@ const DB = {
   },
 
   async getAllocationsByAgent(agentId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_allocations')
       .select('*')
       .eq('agent_id', agentId)
@@ -289,7 +289,7 @@ const DB = {
   },
 
   async addAllocation(allocation) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_allocations')
       .insert([this.toSnakeCase(allocation)])
       .select()
@@ -299,7 +299,7 @@ const DB = {
   },
 
   async updateAllocation(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_allocations')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -314,7 +314,7 @@ const DB = {
   // ====================
 
   async getTestDrives() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('test_drives')
       .select('*')
       .order('created_at', { ascending: false });
@@ -323,7 +323,7 @@ const DB = {
   },
 
   async getTestDrivesByAgent(agentId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('test_drives')
       .select('*')
       .eq('agent_id', agentId)
@@ -333,7 +333,7 @@ const DB = {
   },
 
   async getTestDrivesByVehicle(vehicleId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('test_drives')
       .select('*')
       .eq('vehicle_id', vehicleId)
@@ -343,7 +343,7 @@ const DB = {
   },
 
   async addTestDrive(testDrive) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('test_drives')
       .insert([this.toSnakeCase(testDrive)])
       .select()
@@ -353,7 +353,7 @@ const DB = {
   },
 
   async updateTestDrive(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('test_drives')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -368,7 +368,7 @@ const DB = {
   // ====================
 
   async getAgentSales() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_sales')
       .select('*')
       .order('created_at', { ascending: false });
@@ -377,7 +377,7 @@ const DB = {
   },
 
   async getAgentSale(saleId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_sales')
       .select('*')
       .eq('id', saleId)
@@ -387,7 +387,7 @@ const DB = {
   },
 
   async getAgentSalesByAgent(agentId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_sales')
       .select('*')
       .eq('agent_id', agentId)
@@ -397,7 +397,7 @@ const DB = {
   },
 
   async getAgentSalesByStatus(status) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_sales')
       .select('*')
       .eq('status', status)
@@ -407,7 +407,7 @@ const DB = {
   },
 
   async addAgentSale(sale) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_sales')
       .insert([this.toSnakeCase(sale)])
       .select()
@@ -417,7 +417,7 @@ const DB = {
   },
 
   async updateAgentSale(saleId, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_sales')
       .update(this.toSnakeCase(updates))
       .eq('id', saleId)
@@ -432,7 +432,7 @@ const DB = {
   // ====================
 
   async getViewingBookings() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('viewing_bookings')
       .select('*')
       .order('created_at', { ascending: false });
@@ -441,7 +441,7 @@ const DB = {
   },
 
   async getViewingBooking(id) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('viewing_bookings')
       .select('*')
       .eq('id', id)
@@ -451,7 +451,7 @@ const DB = {
   },
 
   async getViewingBookingsByVehicle(vehicleId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('viewing_bookings')
       .select('*')
       .eq('vehicle_id', vehicleId)
@@ -461,7 +461,7 @@ const DB = {
   },
 
   async getViewingBookingsByAgent(agentId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('viewing_bookings')
       .select('*')
       .eq('agent_id', agentId)
@@ -471,7 +471,7 @@ const DB = {
   },
 
   async addViewingBooking(booking) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('viewing_bookings')
       .insert([this.toSnakeCase(booking)])
       .select()
@@ -481,7 +481,7 @@ const DB = {
   },
 
   async updateViewingBooking(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('viewing_bookings')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -496,7 +496,7 @@ const DB = {
   // ====================
 
   async getQuoteRequests() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('quote_requests')
       .select('*')
       .order('created_at', { ascending: false });
@@ -505,7 +505,7 @@ const DB = {
   },
 
   async getQuoteRequest(id) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('quote_requests')
       .select('*')
       .eq('id', id)
@@ -515,7 +515,7 @@ const DB = {
   },
 
   async addQuoteRequest(quote) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('quote_requests')
       .insert([this.toSnakeCase(quote)])
       .select()
@@ -525,7 +525,7 @@ const DB = {
   },
 
   async updateQuoteRequest(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('quote_requests')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -540,7 +540,7 @@ const DB = {
   // ====================
 
   async getAgentApplications() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_applications')
       .select('*')
       .order('created_at', { ascending: false });
@@ -549,7 +549,7 @@ const DB = {
   },
 
   async getAgentApplicationByUserId(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_applications')
       .select('*')
       .eq('user_id', userId)
@@ -559,7 +559,7 @@ const DB = {
   },
 
   async addAgentApplication(app) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_applications')
       .insert([this.toSnakeCase(app)])
       .select()
@@ -569,7 +569,7 @@ const DB = {
   },
 
   async updateAgentApplication(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('agent_applications')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -584,7 +584,7 @@ const DB = {
   // ====================
 
   async getFinancingApplications() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('financing_applications')
       .select('*')
       .order('created_at', { ascending: false });
@@ -593,7 +593,7 @@ const DB = {
   },
 
   async getFinancingApplicationsByUser(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('financing_applications')
       .select('*')
       .eq('user_id', userId)
@@ -603,7 +603,7 @@ const DB = {
   },
 
   async addFinancingApplication(app) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('financing_applications')
       .insert([this.toSnakeCase(app)])
       .select()
@@ -613,7 +613,7 @@ const DB = {
   },
 
   async updateFinancingApplication(id, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('financing_applications')
       .update(this.toSnakeCase(updates))
       .eq('id', id)
@@ -644,49 +644,49 @@ const DB = {
   // ====================
 
   subscribeToVehicles(callback) {
-    return supabase
+    return supabaseClient
       .channel('vehicles-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, callback)
       .subscribe();
   },
 
   subscribeToInquiries(callback) {
-    return supabase
+    return supabaseClient
       .channel('inquiries-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inquiries' }, callback)
       .subscribe();
   },
 
   subscribeToQuoteRequests(callback) {
-    return supabase
+    return supabaseClient
       .channel('quote-requests-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'quote_requests' }, callback)
       .subscribe();
   },
 
   subscribeToAllocations(callback) {
-    return supabase
+    return supabaseClient
       .channel('allocations-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_allocations' }, callback)
       .subscribe();
   },
 
   subscribeToAgentSales(callback) {
-    return supabase
+    return supabaseClient
       .channel('agent-sales-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_sales' }, callback)
       .subscribe();
   },
 
   subscribeToTestDrives(callback) {
-    return supabase
+    return supabaseClient
       .channel('test-drives-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'test_drives' }, callback)
       .subscribe();
   },
 
   subscribeToViewingBookings(callback) {
-    return supabase
+    return supabaseClient
       .channel('viewing-bookings-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'viewing_bookings' }, callback)
       .subscribe();
