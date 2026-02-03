@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -71,22 +72,23 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
     const agent = Auth.getCurrentUser();
 
-    function render() {
+    async function render() {
       const status = document.getElementById('filterStatus').value;
-      let drives = DB.getTestDrivesByAgent(agent?.id);
+      let drives = await DB.getTestDrivesByAgent(agent?.id);
       if (status !== 'all') drives = drives.filter(td => td.status === status);
       drives.sort((a, b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time));
 
       const statusColors = { scheduled: 'badge-primary', completed: 'badge-gray', cancelled: 'badge-gray', 'no-show': 'badge-gray' };
 
-      document.getElementById('driveTable').innerHTML = drives.map(td => {
-        const v = DB.getVehicle(td.vehicleId);
+      const driveRows = await Promise.all(drives.map(async td => {
+        const v = await DB.getVehicle(td.vehicleId);
         const isScheduled = td.status === 'scheduled';
         return `<tr>
           <td>${Utils.formatDate(td.date)}</td>
@@ -103,17 +105,23 @@
             ` : '-'}
           </td>
         </tr>`;
-      }).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-500);">No test drives found</td></tr>';
+      }));
+      document.getElementById('driveTable').innerHTML = driveRows.join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-500);">No test drives found</td></tr>';
     }
 
-    function updateStatus(id, status) {
-      DB.updateTestDrive(id, { status });
+    async function updateStatus(id, status) {
+      await DB.updateTestDrive(id, { status });
       Utils.showToast(`Test drive marked as ${status}`, 'success');
-      render();
+      await render();
+    }
+
+    async function init() {
+      await render();
+      DB.subscribeToTestDrives(() => render());
     }
 
     document.getElementById('filterStatus').addEventListener('change', render);
-    render();
+    init();
   </script>
 </body>
 </html>

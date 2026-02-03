@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -46,14 +47,15 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
     const agent = Auth.getCurrentUser();
 
-    function render() {
-      const allocations = DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active' || a.status === 'reserved');
+    async function render() {
+      const allocations = (await DB.getAllocationsByAgent(agent?.id)).filter(a => a.status === 'active' || a.status === 'reserved');
 
       if (!allocations.length) {
         document.getElementById('vehicleList').innerHTML = `
@@ -64,10 +66,10 @@
         return;
       }
 
-      document.getElementById('vehicleList').innerHTML = allocations.map(alloc => {
-        const v = DB.getVehicle(alloc.vehicleId);
+      const vehicleItems = await Promise.all(allocations.map(async alloc => {
+        const v = await DB.getVehicle(alloc.vehicleId);
         if (!v) return '';
-        const pricing = DB.getAgentVehiclePricing(v.id);
+        const pricing = await DB.getAgentVehiclePricing(v.id);
         return `<div class="card mb-4">
           <div class="card-body">
             <div class="flex justify-between items-center">
@@ -95,21 +97,28 @@
             </div>
           </div>
         </div>`;
-      }).join('');
+      }));
+      document.getElementById('vehicleList').innerHTML = vehicleItems.join('');
     }
 
-    function release(allocId) {
+    async function release(allocId) {
       if (!confirm('Release this vehicle allocation?')) return;
-      DB.updateAllocation(allocId, { status: 'released' });
+      await DB.updateAllocation(allocId, { status: 'released' });
       Utils.showToast('Vehicle released', 'success');
-      render();
+      await render();
     }
 
     function bookAppointment(vehicleId) {
       window.location.href = `vehicle-detail.html?id=${vehicleId}#booking`;
     }
 
-    render();
+    async function init() {
+      await render();
+      DB.subscribeToAllocations(() => render());
+      DB.subscribeToVehicles(() => render());
+    }
+
+    init();
   </script>
 </body>
 </html>

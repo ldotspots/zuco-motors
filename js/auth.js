@@ -17,9 +17,9 @@ const Auth = {
     return this.SESSION_KEYS.buyer;
   },
 
-  // Login function
-  login(email, password, rememberMe = false) {
-    const user = DB.getUserByEmail(email);
+  // Login function (async for Supabase)
+  async login(email, password, rememberMe = false) {
+    const user = await DB.getUserByEmail(email);
 
     if (!user) {
       return { success: false, error: 'User not found' };
@@ -31,7 +31,7 @@ const Auth = {
     }
 
     // Update last login
-    DB.updateUser(user.id, { lastLogin: new Date().toISOString() });
+    await DB.updateUser(user.id, { lastLogin: new Date().toISOString() });
 
     // Create session
     const session = {
@@ -65,22 +65,22 @@ const Auth = {
     };
   },
 
-  // Register new user
-  register(userData) {
+  // Register new user (async for Supabase)
+  async register(userData) {
     // Check if email already exists
-    const existing = DB.getUserByEmail(userData.email);
+    const existing = await DB.getUserByEmail(userData.email);
     if (existing) {
       return { success: false, error: 'Email already registered' };
     }
 
     // Create new user
     const newUser = {
-      id: this.generateUserId(userData.role),
       email: userData.email,
       password: userData.password, // In production, would be hashed
       role: userData.role || 'buyer',
       firstName: userData.firstName,
       lastName: userData.lastName,
+      name: `${userData.firstName} ${userData.lastName}`,
       phone: userData.phone || '',
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString(),
@@ -105,9 +105,9 @@ const Auth = {
       };
     }
 
-    DB.addUser(newUser);
+    const createdUser = await DB.addUser(newUser);
 
-    return { success: true, user: newUser };
+    return { success: true, user: createdUser };
   },
 
   // Logout function
@@ -166,15 +166,30 @@ const Auth = {
     }
   },
 
-  // Get current user details
-  getCurrentUser() {
+  // Get current user details (async for Supabase)
+  async getCurrentUser() {
     const session = this.getSession();
     if (!session) {
       return null;
     }
 
-    const user = DB.getUser(session.userId);
+    const user = await DB.getUser(session.userId);
     return user;
+  },
+
+  // Synchronous version for compatibility (uses session data only)
+  getCurrentUserSync() {
+    const session = this.getSession();
+    if (!session) {
+      return null;
+    }
+    return {
+      id: session.userId,
+      email: session.email,
+      role: session.role,
+      firstName: session.firstName,
+      lastName: session.lastName
+    };
   },
 
   // Check if user has specific role
@@ -251,12 +266,12 @@ const Auth = {
     }
   },
 
-  // Generate user ID
-  generateUserId(role) {
+  // Generate user ID (async for Supabase)
+  async generateUserId(role) {
     const prefix = role === 'dealer' ? 'DLR' : role === 'sales_agent' ? 'AGT' : 'USR';
-    const users = DB.getUsers();
+    const users = await DB.getUsers();
     const existingIds = users
-      .filter(u => u.id.startsWith(prefix))
+      .filter(u => u.id && u.id.startsWith(prefix))
       .map(u => parseInt(u.id.substring(3)))
       .filter(n => !isNaN(n));
 
@@ -277,9 +292,9 @@ const Auth = {
     return now.toISOString();
   },
 
-  // Update password
-  updatePassword(currentPassword, newPassword) {
-    const user = this.getCurrentUser();
+  // Update password (async for Supabase)
+  async updatePassword(currentPassword, newPassword) {
+    const user = await this.getCurrentUser();
     if (!user) {
       return { success: false, error: 'Not authenticated' };
     }
@@ -288,18 +303,18 @@ const Auth = {
       return { success: false, error: 'Current password is incorrect' };
     }
 
-    DB.updateUser(user.id, { password: newPassword });
+    await DB.updateUser(user.id, { password: newPassword });
     return { success: true };
   },
 
-  // Update profile
-  updateProfile(updates) {
-    const user = this.getCurrentUser();
+  // Update profile (async for Supabase)
+  async updateProfile(updates) {
+    const user = await this.getCurrentUser();
     if (!user) {
       return { success: false, error: 'Not authenticated' };
     }
 
-    const updatedUser = DB.updateUser(user.id, updates);
+    const updatedUser = await DB.updateUser(user.id, updates);
 
     // Update session if name changed
     if (updates.firstName || updates.lastName) {
@@ -351,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only dealer and sales portals require authentication (buyer portal is fully public)
   const isDealer = path.includes('/dealer-portal/') && !path.includes('/dealer-portal/login.html');
   const isSales = path.includes('/sales-portal/') && !path.includes('/sales-portal/login.html');
+  const isLoginPage = path.includes('/login.html');
 
   if (isDealer) {
     Auth.requireAuth('dealer');

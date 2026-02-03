@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -42,6 +43,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -49,15 +51,19 @@
     const agent = Auth.getCurrentUser();
     const params = Utils.getQueryParams();
     const vehicleId = params.id;
-    const vehicle = DB.getVehicle(vehicleId);
 
-    if (!vehicle) {
-      document.getElementById('content').innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:3rem;">Vehicle not found.</div></div>';
-    } else {
-      const pricing = DB.getAgentVehiclePricing(vehicleId);
+    async function render() {
+      const vehicle = await DB.getVehicle(vehicleId);
+
+      if (!vehicle) {
+        document.getElementById('content').innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:3rem;">Vehicle not found.</div></div>';
+        return;
+      }
+
+      const pricing = await DB.getAgentVehiclePricing(vehicleId);
       const isReserved = vehicle.status === 'Reserved';
       const isSold = vehicle.status === 'Sold';
-      const allocations = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+      const allocations = (await DB.getAllocationsByVehicle(vehicleId)).filter(a => a.status === 'active');
       const myAlloc = allocations.find(a => a.agentId === agent?.id);
       const isMine = !!myAlloc;
       const full = allocations.length >= 10;
@@ -204,8 +210,8 @@
         });
 
         // Date -> time slots
-        bookDateEl.addEventListener('change', () => {
-          const slots = Utils.findAvailableViewingSlots(vehicleId, bookDateEl.value);
+        bookDateEl.addEventListener('change', async () => {
+          const slots = await Utils.findAvailableViewingSlots(vehicleId, bookDateEl.value);
           const sel = document.getElementById('bookTime');
           sel.innerHTML = slots.length
             ? slots.map(s => `<option value="${s}">${s}</option>`).join('')
@@ -224,7 +230,7 @@
           reader.readAsDataURL(file);
         });
 
-        bookingForm.addEventListener('submit', (e) => {
+        bookingForm.addEventListener('submit', async (e) => {
           e.preventDefault();
           const bType = bookTypeEl.value;
           if (bType === 'viewing' && !proofDataUrl) {
@@ -238,7 +244,7 @@
           const typeLabels = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
           if (!confirm(`Submit this ${typeLabels[bType]} booking? The dealership will review and approve it.`)) return;
 
-          DB.addViewingBooking({
+          await DB.addViewingBooking({
             id: Utils.generateId('VWG'),
             vehicleId,
             agentId: agent.id,
@@ -263,11 +269,11 @@
       }
     }
 
-    function claim() {
-      const existing = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+    async function claim() {
+      const existing = (await DB.getAllocationsByVehicle(vehicleId)).filter(a => a.status === 'active');
       if (existing.length >= 10) { Utils.showToast('Fully allocated', 'error'); return; }
       if (existing.find(a => a.agentId === agent.id)) { Utils.showToast('Already claimed', 'warning'); return; }
-      DB.addAllocation({
+      await DB.addAllocation({
         id: Utils.generateId('ALC'),
         vehicleId,
         agentId: agent.id,
@@ -279,13 +285,21 @@
       setTimeout(() => location.reload(), 500);
     }
 
-    function release() {
+    async function release() {
       if (!confirm('Release this vehicle allocation?')) return;
-      const alloc = DB.getAllocationsByVehicle(vehicleId).find(a => a.agentId === agent.id && a.status === 'active');
-      if (alloc) DB.updateAllocation(alloc.id, { status: 'released' });
+      const alloc = (await DB.getAllocationsByVehicle(vehicleId)).find(a => a.agentId === agent.id && a.status === 'active');
+      if (alloc) await DB.updateAllocation(alloc.id, { status: 'released' });
       Utils.showToast('Released', 'success');
       setTimeout(() => location.reload(), 500);
     }
+
+    async function init() {
+      await render();
+      DB.subscribeToVehicles(() => render());
+      DB.subscribeToAllocations(() => render());
+    }
+
+    init();
   </script>
 </body>
 </html>

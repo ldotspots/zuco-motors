@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -154,6 +155,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -196,12 +198,12 @@
       Utils.showToast(result.success ? 'Profile updated!' : result.error, result.success ? 'success' : 'error');
     });
 
-    function saveNotifications() {
+    async function saveNotifications() {
       const prefs = {
         email: document.getElementById('emailNotifs').checked,
         sms: document.getElementById('smsNotifs').checked
       };
-      DB.updateUser(user.id, { profile: { ...user.profile, notificationPrefs: prefs } });
+      await DB.updateUser(user.id, { profile: { ...user.profile, notificationPrefs: prefs } });
       Utils.showToast('Notification preferences saved!', 'success');
     }
 
@@ -228,10 +230,10 @@
     });
 
     // Agent application section
-    function loadAgentApp() {
+    async function loadAgentApp() {
       const el = document.getElementById('agentAppContent');
       if (!user) { el.innerHTML = '<p style="color:var(--gray-500);">Sign in to apply.</p>'; return; }
-      const app = DB.getAgentApplicationByUserId(user.id);
+      const app = await DB.getAgentApplicationByUserId(user.id);
       if (!app) {
         el.innerHTML = `
           <p style="margin-bottom:1rem;">Interested in joining our sales team? Apply to become a Zuco Motors sales agent.</p>
@@ -254,9 +256,13 @@
         `;
       }
     }
-    loadAgentApp();
 
-    loadProfile();
+    async function init() {
+      loadProfile();
+      await loadAgentApp();
+      DB.subscribeToVehicles(() => loadAgentApp());
+    }
+    init();
   </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <!-- Header -->
@@ -113,6 +114,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -130,9 +132,9 @@
     }
 
     // Update stats
-    function updateStats() {
+    async function updateStats() {
       const favorites = user?.profile?.favorites || [];
-      const inquiries = DB.getInquiriesByBuyer(user?.id) || [];
+      const inquiries = await DB.getInquiriesByBuyer(user?.id) || [];
 
       document.getElementById('favoritesCount').textContent = favorites.length;
       document.getElementById('inquiriesCount').textContent = inquiries.filter(i => i.status !== 'closed-won' && i.status !== 'closed-lost').length;
@@ -163,8 +165,8 @@
     }
 
     // Load featured vehicles
-    function loadFeaturedVehicles() {
-      const vehicles = DB.getVehicles();
+    async function loadFeaturedVehicles() {
+      const vehicles = await DB.getVehicles();
       const featured = vehicles
         .filter(v => v.status === 'Available')
         .sort((a, b) => b.views - a.views)
@@ -179,12 +181,12 @@
     }
 
     // Load saved vehicles
-    function loadSavedVehicles() {
+    async function loadSavedVehicles() {
       if (!user || !user.profile.favorites || user.profile.favorites.length === 0) {
         return;
       }
 
-      const vehicles = DB.getVehicles();
+      const vehicles = await DB.getVehicles();
       const saved = vehicles.filter(v => user.profile.favorites.includes(v.id)).slice(0, 3);
 
       if (saved.length > 0) {
@@ -194,12 +196,13 @@
     }
 
     // Load recent activity
-    function loadRecentActivity() {
+    async function loadRecentActivity() {
       if (!user) return;
 
-      const inquiries = DB.getInquiriesByBuyer(user.id).slice(0, 5);
-      const activityHTML = inquiries.map(inq => {
-        const vehicle = DB.getVehicle(inq.vehicleId);
+      const allInquiries = await DB.getInquiriesByBuyer(user.id);
+      const inquiries = allInquiries.slice(0, 5);
+      const activityHTML = await Promise.all(inquiries.map(async inq => {
+        const vehicle = await DB.getVehicle(inq.vehicleId);
         return `
           <div style="padding: 1rem; border-bottom: 1px solid var(--gray-200);">
             <div class="flex justify-between items-center">
@@ -216,10 +219,10 @@
             </div>
           </div>
         `;
-      }).join('');
+      }));
 
       if (inquiries.length > 0) {
-        document.getElementById('recentActivity').innerHTML = activityHTML;
+        document.getElementById('recentActivity').innerHTML = activityHTML.join('');
       }
     }
 
@@ -230,11 +233,20 @@
       window.location.href = `inventory.html?query=${encodeURIComponent(query)}`;
     });
 
+    // Render all data
+    async function render() {
+      await updateStats();
+      await loadFeaturedVehicles();
+      await loadSavedVehicles();
+      await loadRecentActivity();
+    }
+
     // Initialize
-    updateStats();
-    loadFeaturedVehicles();
-    loadSavedVehicles();
-    loadRecentActivity();
+    async function init() {
+      await render();
+      DB.subscribeToVehicles(() => render());
+    }
+    init();
   </script>
 </body>
 </html>

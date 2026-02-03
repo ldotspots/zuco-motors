@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -92,6 +93,7 @@
     </div>
   </main>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -106,17 +108,20 @@
     const statusEl = document.getElementById('appStatus');
     const formCard = document.getElementById('appFormCard');
 
-    if (!user || user.role !== 'buyer') {
-      formCard.style.display = 'none';
-      statusEl.innerHTML = '<div class="card"><div class="card-body"><p style="text-align:center;color:var(--gray-500);">You need to be signed in as a buyer to apply. <a href="login.html">Sign in</a></p></div></div>';
-    } else {
+    async function checkApplication() {
+      if (!user || user.role !== 'buyer') {
+        formCard.style.display = 'none';
+        statusEl.innerHTML = '<div class="card"><div class="card-body"><p style="text-align:center;color:var(--gray-500);">You need to be signed in as a buyer to apply. <a href="login.html">Sign in</a></p></div></div>';
+        return;
+      }
+
       // Pre-fill user details
       document.getElementById('appName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
       document.getElementById('appEmail').value = user.email || '';
       document.getElementById('appPhone').value = user.phone || '';
 
       // Check existing application
-      const existing = DB.getAgentApplicationByUserId(user.id);
+      const existing = await DB.getAgentApplicationByUserId(user.id);
       if (existing) {
         formCard.style.display = 'none';
         if (existing.status === 'pending') {
@@ -144,9 +149,9 @@
       }
     }
 
-    document.getElementById('applyForm').addEventListener('submit', (e) => {
+    document.getElementById('applyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      DB.addAgentApplication({
+      await DB.addAgentApplication({
         id: Utils.generateId('APP'),
         userId: user.id,
         firstName: user.firstName,
@@ -165,6 +170,12 @@
       Utils.showToast('Application submitted! We\'ll review it shortly.', 'success');
       setTimeout(() => window.location.reload(), 1000);
     });
+
+    async function init() {
+      await checkApplication();
+      DB.subscribeToVehicles(() => checkApplication());
+    }
+    init();
   </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -273,6 +274,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -514,7 +516,7 @@
       document.getElementById('agentProfit').textContent = Utils.formatCurrency(agentProfit);
     }
 
-    document.getElementById('addVehicleForm').addEventListener('submit', (e) => {
+    document.getElementById('addVehicleForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
@@ -522,8 +524,7 @@
       const markup = listingPrice > 0 && costPrice > 0 ? (listingPrice - costPrice) / costPrice : 0.10;
 
       const vehicle = {
-        id: Utils.generateId('VEH'),
-        vin: document.getElementById('vin').value || DB.generateVIN(),
+        vin: document.getElementById('vin').value || DB.generateId('VIN'),
         year: parseInt(document.getElementById('year').value),
         make: document.getElementById('make').value,
         model: document.getElementById('model').value,
@@ -568,7 +569,7 @@
         owners: document.getElementById('condition').value === 'New' ? 0 : 1
       };
 
-      DB.addVehicle(vehicle);
+      await DB.addVehicle(vehicle);
       Utils.showToast('Vehicle added successfully!', 'success');
       setTimeout(() => window.location.href = 'inventory.html', 1500);
     });

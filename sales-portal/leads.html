@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -114,18 +115,21 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
     const agent = Auth.getCurrentUser();
 
-    function getMyLeads() {
+    async function getMyLeads() {
       // Get vehicles this agent has allocated
+      const allocations = await DB.getAllocationsByAgent(agent?.id);
       const myAllocVehicleIds = new Set(
-        DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active').map(a => a.vehicleId)
+        allocations.filter(a => a.status === 'active').map(a => a.vehicleId)
       );
-      return DB.getInquiries().filter(inq => {
+      const inquiries = await DB.getInquiries();
+      return inquiries.filter(inq => {
         // Already claimed by this agent
         if (inq.claimedByAgentId === agent?.id) return true;
         // Claimed by another agent — hide it
@@ -135,17 +139,17 @@
       });
     }
 
-    function render() {
+    async function render() {
       const statusFilter = document.getElementById('filterStatus').value;
       const typeFilter = document.getElementById('filterType').value;
 
-      let leads = getMyLeads();
+      let leads = await getMyLeads();
       if (statusFilter !== 'all') leads = leads.filter(l => l.status === statusFilter);
       if (typeFilter !== 'all') leads = leads.filter(l => l.type === typeFilter);
       leads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       // KPIs (use all my leads, unfiltered)
-      const all = getMyLeads();
+      const all = await getMyLeads();
       document.getElementById('totalLeads').textContent = all.length;
       document.getElementById('openLeads').textContent = all.filter(l => l.status === 'open').length;
       document.getElementById('contactedLeads').textContent = all.filter(l => l.status === 'contacted' || l.status === 'negotiating').length;
@@ -159,8 +163,8 @@
         'closed-lost': 'badge-gray'
       };
 
-      document.getElementById('leadsTable').innerHTML = leads.map(l => {
-        const v = DB.getVehicle(l.vehicleId);
+      const leadRows = await Promise.all(leads.map(async l => {
+        const v = await DB.getVehicle(l.vehicleId);
         const isMine = l.claimedByAgentId === agent?.id;
         const unclaimed = !l.claimedByAgentId;
         return `<tr>
@@ -178,19 +182,20 @@
             }
           </td>
         </tr>`;
-      }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No leads found</td></tr>';
+      }));
+      document.getElementById('leadsTable').innerHTML = leadRows.join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No leads found</td></tr>';
     }
 
-    function claimLead(id) {
+    async function claimLead(id) {
       // Re-read to check if another agent claimed it in the meantime
-      const lead = DB.getInquiry(id);
+      const lead = await DB.getInquiry(id);
       if (!lead) return;
       if (lead.claimedByAgentId) {
         Utils.showToast('This lead has already been claimed by another agent', 'error');
-        render();
+        await render();
         return;
       }
-      DB.updateInquiry(id, {
+      await DB.updateInquiry(id, {
         claimedByAgentId: agent.id,
         claimedByAgentName: `${agent.firstName} ${agent.lastName}`,
         claimedAt: new Date().toISOString(),
@@ -198,13 +203,13 @@
         updatedAt: new Date().toISOString()
       });
       Utils.showToast('Lead claimed! Contact details revealed.', 'success');
-      render();
+      await render();
     }
 
-    function viewLead(id) {
-      const lead = DB.getInquiry(id);
+    async function viewLead(id) {
+      const lead = await DB.getInquiry(id);
       if (!lead) return;
-      const v = DB.getVehicle(lead.vehicleId);
+      const v = await DB.getVehicle(lead.vehicleId);
 
       document.getElementById('leadModalContent').innerHTML = `
         <div class="mb-4">
@@ -232,21 +237,27 @@
       document.getElementById('leadModal').style.display = 'block';
     }
 
-    function updateLeadStatus(id) {
+    async function updateLeadStatus(id) {
       const status = document.getElementById('leadStatusSelect').value;
-      DB.updateInquiry(id, { status, updatedAt: new Date().toISOString() });
+      await DB.updateInquiry(id, { status, updatedAt: new Date().toISOString() });
       Utils.showToast('Lead status updated', 'success');
       closeModal();
-      render();
+      await render();
     }
 
     function closeModal() {
       document.getElementById('leadModal').style.display = 'none';
     }
 
+    async function init() {
+      await render();
+      DB.subscribeToInquiries(() => render());
+      DB.subscribeToAllocations(() => render());
+    }
+
     document.getElementById('filterStatus').addEventListener('change', render);
     document.getElementById('filterType').addEventListener('change', render);
-    render();
+    init();
   </script>
 </body>
 </html>

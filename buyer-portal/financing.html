@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; }
     .status-pending { background: #fef3c7; color: #92400e; }
@@ -133,6 +134,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -159,9 +161,9 @@
     if (params.price) document.getElementById('estimatedBudget').value = params.price;
 
     // Show existing applications
-    function renderExistingApps() {
+    async function renderExistingApps() {
       if (!user) return;
-      const apps = DB.getFinancingApplicationsByUser(user.id);
+      const apps = await DB.getFinancingApplicationsByUser(user.id);
       if (!apps.length) return;
 
       const container = document.getElementById('existingApps');
@@ -185,10 +187,8 @@
         `).join('');
     }
 
-    renderExistingApps();
-
     // Submit form
-    document.getElementById('financingForm').addEventListener('submit', (e) => {
+    document.getElementById('financingForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const app = {
@@ -212,7 +212,7 @@
         approvedLimit: null
       };
 
-      DB.addFinancingApplication(app);
+      await DB.addFinancingApplication(app);
       Utils.showToast('Financing inquiry submitted! We\'ll be in touch soon.', 'success');
       document.getElementById('financingForm').reset();
 
@@ -223,8 +223,14 @@
         document.getElementById('phone').value = user.phone || '';
       }
 
-      renderExistingApps();
+      await renderExistingApps();
     });
+
+    async function init() {
+      await renderExistingApps();
+      DB.subscribeToVehicles(() => renderExistingApps());
+    }
+    init();
   </script>
 </body>
 </html>

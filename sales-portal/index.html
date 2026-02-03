@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -92,66 +93,80 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    const agent = Auth.getCurrentUser();
-    if (agent) {
-      document.getElementById('greeting').textContent = `Welcome back, ${agent.firstName}!`;
-    }
-
-    const allocations = DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active');
-    const appointments = DB.getViewingBookingsByAgent(agent?.id).filter(b => b.status === 'pending' || b.status === 'approved');
-    const sales = DB.getAgentSalesByAgent(agent?.id).filter(s => s.status === 'completed');
-    const totalProfit = sales.reduce((s, sale) => s + sale.agentProfit, 0);
-
     const TYPE_LABELS = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
 
-    document.getElementById('allocatedCount').textContent = allocations.length;
-    document.getElementById('upcomingAppts').textContent = appointments.length;
-    document.getElementById('totalSales').textContent = sales.length;
-    document.getElementById('totalProfit').textContent = Utils.formatCurrency(totalProfit);
+    async function render() {
+      const agent = Auth.getCurrentUser();
+      if (agent) {
+        document.getElementById('greeting').textContent = `Welcome back, ${agent.firstName}!`;
+      }
 
-    // Upcoming appointments
-    if (appointments.length) {
-      const sorted = [...appointments].sort((a, b) => new Date(a.date + 'T' + a.timeSlot) - new Date(b.date + 'T' + b.timeSlot));
-      document.getElementById('appointmentsList').innerHTML = sorted.slice(0, 5).map(appt => {
-        const vehicle = DB.getVehicle(appt.vehicleId);
-        const typeLabel = TYPE_LABELS[appt.bookingType] || 'Viewing';
-        const statusBadge = appt.status === 'approved'
-          ? '<span class="badge badge-primary" style="font-size:10px;">Approved</span>'
-          : '<span class="badge badge-warning" style="font-size:10px;">Pending</span>';
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
-          <div>
-            <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
-            <div style="font-size:var(--text-sm);color:var(--gray-500);">${appt.customerName} — ${typeLabel}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:var(--text-sm);font-weight:600;">${Utils.formatDate(appt.date)}</div>
-            <div style="font-size:var(--text-sm);color:var(--gray-500);">${appt.timeSlot} ${statusBadge}</div>
-          </div>
-        </div>`;
-      }).join('');
+      const allocations = (await DB.getAllocationsByAgent(agent?.id)).filter(a => a.status === 'active');
+      const appointments = (await DB.getViewingBookingsByAgent(agent?.id)).filter(b => b.status === 'pending' || b.status === 'approved');
+      const sales = (await DB.getAgentSalesByAgent(agent?.id)).filter(s => s.status === 'completed');
+      const totalProfit = sales.reduce((s, sale) => s + sale.agentProfit, 0);
+
+      document.getElementById('allocatedCount').textContent = allocations.length;
+      document.getElementById('upcomingAppts').textContent = appointments.length;
+      document.getElementById('totalSales').textContent = sales.length;
+      document.getElementById('totalProfit').textContent = Utils.formatCurrency(totalProfit);
+
+      // Upcoming appointments
+      if (appointments.length) {
+        const sorted = [...appointments].sort((a, b) => new Date(a.date + 'T' + a.timeSlot) - new Date(b.date + 'T' + b.timeSlot));
+        const appointmentItems = await Promise.all(sorted.slice(0, 5).map(async appt => {
+          const vehicle = await DB.getVehicle(appt.vehicleId);
+          const typeLabel = TYPE_LABELS[appt.bookingType] || 'Viewing';
+          const statusBadge = appt.status === 'approved'
+            ? '<span class="badge badge-primary" style="font-size:10px;">Approved</span>'
+            : '<span class="badge badge-warning" style="font-size:10px;">Pending</span>';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
+            <div>
+              <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
+              <div style="font-size:var(--text-sm);color:var(--gray-500);">${appt.customerName} — ${typeLabel}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:var(--text-sm);font-weight:600;">${Utils.formatDate(appt.date)}</div>
+              <div style="font-size:var(--text-sm);color:var(--gray-500);">${appt.timeSlot} ${statusBadge}</div>
+            </div>
+          </div>`;
+        }));
+        document.getElementById('appointmentsList').innerHTML = appointmentItems.join('');
+      }
+
+      // Recent sales
+      if (sales.length) {
+        const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+        const salesItems = await Promise.all(sorted.slice(0, 5).map(async sale => {
+          const vehicle = await DB.getVehicle(sale.vehicleId);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
+            <div>
+              <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
+              <div style="font-size:var(--text-sm);color:var(--gray-500);">Buyer: ${sale.buyerName}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:600;color:var(--success);">+${Utils.formatCurrency(sale.agentProfit)}</div>
+              <div style="font-size:var(--text-sm);color:var(--gray-500);">${Utils.formatDate(sale.saleDate)}</div>
+            </div>
+          </div>`;
+        }));
+        document.getElementById('recentSales').innerHTML = salesItems.join('');
+      }
     }
 
-    // Recent sales
-    if (sales.length) {
-      const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
-      document.getElementById('recentSales').innerHTML = sorted.slice(0, 5).map(sale => {
-        const vehicle = DB.getVehicle(sale.vehicleId);
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
-          <div>
-            <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
-            <div style="font-size:var(--text-sm);color:var(--gray-500);">Buyer: ${sale.buyerName}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-weight:600;color:var(--success);">+${Utils.formatCurrency(sale.agentProfit)}</div>
-            <div style="font-size:var(--text-sm);color:var(--gray-500);">${Utils.formatDate(sale.saleDate)}</div>
-          </div>
-        </div>`;
-      }).join('');
+    async function init() {
+      await render();
+      DB.subscribeToAllocations(() => render());
+      DB.subscribeToViewingBookings(() => render());
+      DB.subscribeToAgentSales(() => render());
     }
+
+    init();
   </script>
 </body>
 </html>

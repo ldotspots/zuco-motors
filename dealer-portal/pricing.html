@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -121,6 +122,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -128,31 +130,14 @@
     const dealer = Auth.getCurrentUser();
     let currentVehicle = null;
 
-    // Populate vehicle selector
-    const vehicles = DB.getVehicles().filter(v => v.status === 'Available');
-    const select = document.getElementById('vehicleSelect');
-    vehicles.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v.id;
-      opt.textContent = `${v.year} ${v.make} ${v.model} ${v.trim} - ${Utils.formatCurrency(v.pricing.salePrice)}`;
-      select.appendChild(opt);
-    });
-
-    // Check URL params
-    const params = Utils.getQueryParams();
-    if (params.id) {
-      select.value = params.id;
-      loadVehiclePricing();
-    }
-
-    function loadVehiclePricing() {
+    async function loadVehiclePricing() {
       const id = document.getElementById('vehicleSelect').value;
       if (!id) {
         document.getElementById('pricingDetails').style.display = 'none';
         return;
       }
 
-      currentVehicle = DB.getVehicle(id);
+      currentVehicle = await DB.getVehicle(id);
       if (!currentVehicle) return;
 
       document.getElementById('pricingDetails').style.display = 'block';
@@ -193,19 +178,39 @@
       document.getElementById('companyMargin').textContent = Utils.formatCurrency(companyMarginAmt);
     }
 
-    function savePricing() {
+    async function savePricing() {
       if (!currentVehicle) return;
       const markup = parseFloat(document.getElementById('markupSlider').value) / 100;
       const salePrice = Math.round(currentVehicle.pricing.invoiceCost * (1 + markup));
 
-      DB.updateVehicle(currentVehicle.id, {
+      await DB.updateVehicle(currentVehicle.id, {
         pricing: { ...currentVehicle.pricing, currentMarkup: markup, salePrice },
         lastUpdated: new Date().toISOString().split('T')[0]
       });
 
-      currentVehicle = DB.getVehicle(currentVehicle.id);
+      currentVehicle = await DB.getVehicle(currentVehicle.id);
       Utils.showToast('Pricing updated!', 'success');
     }
+
+    async function init() {
+      // Populate vehicle selector
+      const vehicles = (await DB.getVehicles()).filter(v => v.status === 'Available');
+      const select = document.getElementById('vehicleSelect');
+      vehicles.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = `${v.year} ${v.make} ${v.model} ${v.trim} - ${Utils.formatCurrency(v.pricing.salePrice)}`;
+        select.appendChild(opt);
+      });
+
+      // Check URL params
+      const params = Utils.getQueryParams();
+      if (params.id) {
+        select.value = params.id;
+        await loadVehiclePricing();
+      }
+    }
+    init();
   </script>
 </body>
 </html>

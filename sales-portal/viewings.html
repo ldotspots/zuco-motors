@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .calendar-grid { display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 1px; background: var(--gray-200); border-radius: var(--radius-md); overflow: hidden; }
     .cal-header { background: var(--gray-100); padding: 0.75rem 0.5rem; text-align: center; font-weight: 600; font-size: var(--text-sm); }
@@ -102,6 +103,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -130,11 +132,13 @@
     function changeWeek(dir) { weekOffset += dir; render(); }
     function goToday() { weekOffset = 0; render(); }
 
-    function render() {
-      const myViewings = DB.getViewingBookingsByAgent(agent?.id);
-      const myTestDrives = DB.getTestDrivesByAgent(agent?.id);
-      const allViewings = DB.getViewingBookings().filter(b => b.status === 'pending' || b.status === 'approved');
-      const allTestDrives = DB.getTestDrives().filter(td => td.status === 'scheduled');
+    async function render() {
+      const myViewings = await DB.getViewingBookingsByAgent(agent?.id);
+      const myTestDrives = await DB.getTestDrivesByAgent(agent?.id);
+      const allViewingsRaw = await DB.getViewingBookings();
+      const allViewings = allViewingsRaw.filter(b => b.status === 'pending' || b.status === 'approved');
+      const allTestDrivesRaw = await DB.getTestDrives();
+      const allTestDrives = allTestDrivesRaw.filter(td => td.status === 'scheduled');
 
       const weekStart = getWeekStart(weekOffset);
       const days = [];
@@ -159,9 +163,9 @@
         html += `<div class="cal-header${key === todayKey ? ' today' : ''}">${DAY_NAMES[d.getDay()]}<br>${d.getDate()}</div>`;
       });
 
-      SLOTS.forEach(slot => {
+      for (const slot of SLOTS) {
         html += `<div class="cal-time">${slot}</div>`;
-        days.forEach(d => {
+        for (const d of days) {
           const key = formatDateKey(d);
           const slotDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(slot));
           const isPast = slotDate < now;
@@ -170,7 +174,7 @@
           // My booking in this slot
           const myViewing = myViewings.find(b => b.date === key && b.timeSlot === slot);
           if (myViewing) {
-            const v = DB.getVehicle(myViewing.vehicleId);
+            const v = await DB.getVehicle(myViewing.vehicleId);
             const bTypeClass = myViewing.bookingType || 'viewing';
             const bTypeLabel = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
             cells.push(`<div class="cal-slot ${bTypeClass} ${myViewing.status}">
@@ -182,14 +186,14 @@
 
           // My test drives in this hourly slot (could be :00 or :30)
           const myTDs = myTestDrives.filter(td => td.date === key && slotKey(td.time) === slot);
-          myTDs.forEach(td => {
-            const v = DB.getVehicle(td.vehicleId);
+          for (const td of myTDs) {
+            const v = await DB.getVehicle(td.vehicleId);
             cells.push(`<div class="cal-slot testdrive ${td.status}">
               <span class="slot-label">${td.clientName} (${td.time})</span>
               <span class="slot-sub">${v ? `${v.year} ${v.make} ${v.model}` : ''}</span>
               <span class="slot-sub">Test Drive</span>
             </div>`);
-          });
+          }
 
           // Other agents' viewings (only if I don't have one here)
           if (!myViewing) {
@@ -214,13 +218,19 @@
           }
 
           html += `<div class="cal-cell${isPast ? ' past' : ''}">${cells.join('')}</div>`;
-        });
-      });
+        }
+      }
 
       document.getElementById('calendar').innerHTML = html;
     }
 
-    render();
+    async function init() {
+      await render();
+      DB.subscribeToViewingBookings(() => render());
+      DB.subscribeToTestDrives(() => render());
+    }
+
+    init();
   </script>
 </body>
 </html>

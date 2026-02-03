@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .hero {
       background: linear-gradient(135deg, var(--gray-900) 0%, var(--primary-800) 100%);
@@ -297,13 +298,14 @@
     </div>
   </footer>
 
+  <script src="js/supabase-config.js"></script>
   <script src="js/db.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/utils.js"></script>
   <script>
     // If dealer or sales agent, redirect to their portal
     // Buyers stay on the home page with updated nav
-    document.addEventListener('DOMContentLoaded', () => {
+    async function init() {
       if (Auth.isAuthenticated()) {
         const session = Auth.getSession();
         if (session.role === 'dealer') {
@@ -315,11 +317,17 @@
           document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
         }
       }
+      await loadFeatured();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
     });
 
     // Load featured vehicles (no auth required)
-    function loadFeatured() {
-      const vehicles = DB.getVehicles()
+    async function loadFeatured() {
+      const allVehicles = await DB.getVehicles();
+      const vehicles = allVehicles
         .filter(v => v.status === 'Available')
         .sort((a, b) => b.views - a.views)
         .slice(0, 6);
@@ -360,8 +368,6 @@
       Utils.toggleFavorite(vehicleId);
       loadFeatured();
     }
-
-    loadFeatured();
   </script>
 </body>
 </html>

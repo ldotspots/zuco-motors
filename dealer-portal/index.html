@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <!-- Header -->
@@ -190,6 +191,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -201,11 +203,11 @@
     }
 
     // Calculate KPIs
-    function calculateKPIs() {
-      const vehicles = DB.getVehicles();
+    async function calculateKPIs() {
+      const vehicles = await DB.getVehicles();
       const myVehicles = vehicles.filter(v => v.assignedAgent === dealer.id);
-      const leads = DB.getInquiriesByAgent(dealer.id);
-      const transactions = DB.getTransactionsByAgent(dealer.id);
+      const leads = await DB.getInquiriesByAgent(dealer.id);
+      const transactions = await DB.getTransactionsByAgent(dealer.id);
 
       // Total Inventory Value
       const totalValue = myVehicles
@@ -262,8 +264,9 @@
     }
 
     // Load recent leads
-    function loadRecentLeads() {
-      const leads = DB.getInquiriesByAgent(dealer.id)
+    async function loadRecentLeads() {
+      const allLeads = await DB.getInquiriesByAgent(dealer.id);
+      const leads = allLeads
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 5);
 
@@ -274,9 +277,9 @@
         return;
       }
 
-      tableBody.innerHTML = leads.map(lead => {
-        const vehicle = DB.getVehicle(lead.vehicleId);
-        const buyer = DB.getUser(lead.buyerId);
+      const rows = await Promise.all(leads.map(async lead => {
+        const vehicle = await DB.getVehicle(lead.vehicleId);
+        const buyer = await DB.getUser(lead.buyerId);
 
         return `
           <tr>
@@ -294,12 +297,14 @@
             </td>
           </tr>
         `;
-      }).join('');
+      }));
+      tableBody.innerHTML = rows.join('');
     }
 
     // Load inventory alerts
-    function loadInventoryAlerts() {
-      const vehicles = DB.getVehicles().filter(v => v.assignedAgent === dealer.id && v.status === 'Available');
+    async function loadInventoryAlerts() {
+      const allVehicles = await DB.getVehicles();
+      const vehicles = allVehicles.filter(v => v.assignedAgent === dealer.id && v.status === 'Available');
 
       // Stale inventory (on lot for >60 days)
       const today = new Date();
@@ -342,8 +347,9 @@
     }
 
     // Sales Performance Chart (last 6 months)
-    function renderSalesChart() {
-      const agentSales = DB.getAgentSales().filter(s => s.status === 'completed');
+    async function renderSalesChart() {
+      const allSales = await DB.getAgentSales();
+      const agentSales = allSales.filter(s => s.status === 'completed');
       const now = new Date();
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const months = [];
@@ -353,23 +359,23 @@
       }
 
       let totalUnits = 0, totalRev = 0, totalProfit = 0;
-      const monthlyData = months.map(m => {
+      const monthlyData = await Promise.all(months.map(async m => {
         const sales = agentSales.filter(s => {
           const d = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
           return d.getMonth() === m.month && d.getFullYear() === m.year;
         });
         let rev = 0, profit = 0;
-        sales.forEach(s => {
-          const v = DB.getVehicle(s.vehicleId);
+        for (const s of sales) {
+          const v = await DB.getVehicle(s.vehicleId);
           const invoiceCost = v ? v.pricing.invoiceCost : 0;
           rev += s.salePrice;
           profit += (s.salePrice - invoiceCost) - (s.agentProfit || 0);
-        });
+        }
         totalUnits += sales.length;
         totalRev += rev;
         totalProfit += profit;
         return { label: m.label, count: sales.length, revenue: rev };
-      });
+      }));
 
       document.getElementById('chart6mUnits').textContent = totalUnits;
       document.getElementById('chart6mRevenue').textContent = Utils.formatCurrency(totalRev);
@@ -388,10 +394,17 @@
     }
 
     // Initialize
-    calculateKPIs();
-    loadRecentLeads();
-    loadInventoryAlerts();
-    renderSalesChart();
+    async function init() {
+      await calculateKPIs();
+      await loadRecentLeads();
+      await loadInventoryAlerts();
+      await renderSalesChart();
+      // Subscribe to real-time updates
+      DB.subscribeToVehicles(() => { calculateKPIs(); loadInventoryAlerts(); });
+      DB.subscribeToInquiries(() => { calculateKPIs(); loadRecentLeads(); });
+      DB.subscribeToAgentSales(() => { calculateKPIs(); renderSalesChart(); });
+    }
+    init();
   </script>
 </body>
 </html>

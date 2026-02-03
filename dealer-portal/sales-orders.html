@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .proof-overlay { position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s; }
     .proof-overlay.active { opacity:1;pointer-events:auto; }
@@ -215,6 +216,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -229,8 +231,8 @@
       return null;
     }
 
-    function render() {
-      const allSalesRaw = DB.getAgentSales();
+    async function render() {
+      const allSalesRaw = await DB.getAgentSales();
       const timeframe = document.getElementById('filterTimeframe').value;
       const tfStart = getTimeframeStart(timeframe);
 
@@ -252,12 +254,13 @@
       document.getElementById('completedCount').textContent = completed.length;
 
       // Company revenue = company's share of gross spread for completed sales
-      const companyRevenue = completed.reduce((sum, s) => {
-        const v = DB.getVehicle(s.vehicleId);
-        if (!v) return sum;
+      let companyRevenue = 0;
+      for (const s of completed) {
+        const v = await DB.getVehicle(s.vehicleId);
+        if (!v) continue;
         const grossSpread = s.salePrice - v.pricing.invoiceCost;
-        return sum + Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
-      }, 0);
+        companyRevenue += Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
+      }
       document.getElementById('totalRevenue').textContent = Utils.formatCurrency(companyRevenue);
 
       // Net sales = total sale prices for all non-cancelled sales in timeframe
@@ -280,10 +283,11 @@
         cancelled: 'Cancelled'
       };
 
-      const allLeads = DB.getInquiries() || [];
+      const allLeads = await DB.getInquiries() || [];
       const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
-      document.getElementById('ordersTable').innerHTML = sorted.map(s => {
-        const v = DB.getVehicle(s.vehicleId);
+
+      const tableRows = await Promise.all(sorted.map(async (s) => {
+        const v = await DB.getVehicle(s.vehicleId);
         const compRev = v ? Math.round((s.salePrice - v.pricing.invoiceCost) * DB.COMPANY_MARGIN_RATE) : 0;
         const badge = statusBadge[s.status] || 'badge-gray';
         const label = statusLabel[s.status] || s.status;
@@ -329,75 +333,78 @@
           <td><span class="badge ${badge}">${label}</span></td>
           <td>${actions}</td>
         </tr>`;
-      }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--gray-500);">No orders found</td></tr>';
+      }));
+      document.getElementById('ordersTable').innerHTML = tableRows.join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--gray-500);">No orders found</td></tr>';
     }
 
-    function approve(saleId) {
-      DB.updateAgentSale(saleId, {
+    async function approve(saleId) {
+      await DB.updateAgentSale(saleId, {
         status: 'ready_for_collection',
         approvedAt: new Date().toISOString()
       });
       Utils.showToast('Order approved — ready for agent collection', 'success');
-      render();
+      await render();
     }
 
-    function reject(saleId) {
+    async function reject(saleId) {
       if (!confirm('Reject this sale order? The vehicle will be unlocked and made available again.')) return;
-      const sale = DB.getAgentSale(saleId);
-      DB.updateAgentSale(saleId, {
+      const sale = await DB.getAgentSale(saleId);
+      await DB.updateAgentSale(saleId, {
         status: 'cancelled',
         cancelledAt: new Date().toISOString()
       });
       // Unlock vehicle
       if (sale) {
-        DB.updateVehicle(sale.vehicleId, { status: 'Available' });
-        DB.getAllocationsByVehicle(sale.vehicleId).filter(a => a.status === 'reserved').forEach(a => {
-          DB.updateAllocation(a.id, { status: 'active' });
-        });
+        await DB.updateVehicle(sale.vehicleId, { status: 'Available' });
+        const allocations = await DB.getAllocationsByVehicle(sale.vehicleId);
+        for (const a of allocations.filter(a => a.status === 'reserved')) {
+          await DB.updateAllocation(a.id, { status: 'active' });
+        }
         // Revert related lead back to negotiating
-        const allLeads = DB.getInquiries() || [];
+        const allLeads = await DB.getInquiries() || [];
         const relatedLead = (sale.leadId && allLeads.find(l => l.id === sale.leadId))
           || allLeads.find(l => l.vehicleId === sale.vehicleId);
         if (relatedLead) {
-          DB.updateInquiry(relatedLead.id, { status: 'negotiating', archivedAt: null });
+          await DB.updateInquiry(relatedLead.id, { status: 'negotiating', archivedAt: null });
         }
       }
       Utils.showToast('Order rejected — vehicle unlocked', 'success');
-      render();
+      await render();
     }
 
-    function markCollected(saleId) {
+    async function markCollected(saleId) {
       if (!confirm('Confirm the agent has collected the vehicle and paid?')) return;
-      const sale = DB.getAgentSale(saleId);
-      DB.updateAgentSale(saleId, {
+      const sale = await DB.getAgentSale(saleId);
+      await DB.updateAgentSale(saleId, {
         status: 'completed',
         completedAt: new Date().toISOString()
       });
       // Finalize: mark vehicle as Sold
       if (sale) {
-        DB.updateVehicle(sale.vehicleId, { status: 'Sold' });
-        DB.getAllocationsByVehicle(sale.vehicleId).filter(a => a.status === 'reserved').forEach(a => {
-          DB.updateAllocation(a.id, { status: 'sold' });
-        });
+        await DB.updateVehicle(sale.vehicleId, { status: 'Sold' });
+        const allocations = await DB.getAllocationsByVehicle(sale.vehicleId);
+        for (const a of allocations.filter(a => a.status === 'reserved')) {
+          await DB.updateAllocation(a.id, { status: 'sold' });
+        }
         // Archive related lead
-        const allLeads = DB.getInquiries() || [];
+        const allLeads = await DB.getInquiries() || [];
         const relatedLead = (sale.leadId && allLeads.find(l => l.id === sale.leadId))
           || allLeads.find(l => l.vehicleId === sale.vehicleId && l.claimedByAgentId === sale.agentId)
           || allLeads.find(l => l.vehicleId === sale.vehicleId);
         if (relatedLead) {
-          DB.updateInquiry(relatedLead.id, { status: 'closed-won', archivedAt: new Date().toISOString() });
+          await DB.updateInquiry(relatedLead.id, { status: 'closed-won', archivedAt: new Date().toISOString() });
         }
       }
       Utils.showToast('Sale completed!', 'success');
-      render();
+      await render();
     }
 
     // === Bookings / Viewings ===
     const TYPE_LABELS = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
     const TYPE_BADGE = { viewing: 'badge-info', test_drive: 'badge-primary', consultation: 'badge-warning' };
 
-    function renderViewings() {
-      const bookings = DB.getViewingBookings();
+    async function renderViewings() {
+      const bookings = await DB.getViewingBookings();
       const pending = bookings.filter(b => b.status === 'pending');
       const approved = bookings.filter(b => b.status === 'approved');
       const completed = bookings.filter(b => b.status === 'completed');
@@ -413,8 +420,8 @@
       const statusLabel = { pending: 'Pending', approved: 'Approved', rejected: 'Rejected', completed: 'Sold', no_sale: 'No Sale', no_show: 'No-Show' };
 
       const sorted = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      document.getElementById('viewingsTable').innerHTML = sorted.map(b => {
-        const v = DB.getVehicle(b.vehicleId);
+      const tableRows = await Promise.all(sorted.map(async (b) => {
+        const v = await DB.getVehicle(b.vehicleId);
         const badge = statusBadge[b.status] || 'badge-gray';
         const label = statusLabel[b.status] || b.status;
         const bType = b.bookingType || 'viewing';
@@ -451,29 +458,30 @@
           <td><span class="badge ${badge}">${label}</span>${b.dealerNotes ? `<br><small style="color:var(--gray-500);">${b.dealerNotes}</small>` : ''}</td>
           <td>${actions}</td>
         </tr>`;
-      }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No bookings yet</td></tr>';
+      }));
+      document.getElementById('viewingsTable').innerHTML = tableRows.join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No bookings yet</td></tr>';
     }
 
-    function approveViewing(id) {
-      DB.updateViewingBooking(id, { status: 'approved', approvedAt: new Date().toISOString() });
+    async function approveViewing(id) {
+      await DB.updateViewingBooking(id, { status: 'approved', approvedAt: new Date().toISOString() });
       Utils.showToast('Booking approved', 'success');
-      renderViewings(); renderCalendar();
+      await renderViewings(); await renderCalendar();
     }
 
-    function rejectViewing(id) {
+    async function rejectViewing(id) {
       const reason = prompt('Reason for rejection (optional):') || '';
-      DB.updateViewingBooking(id, { status: 'rejected', rejectedAt: new Date().toISOString(), dealerNotes: reason });
+      await DB.updateViewingBooking(id, { status: 'rejected', rejectedAt: new Date().toISOString(), dealerNotes: reason });
       Utils.showToast('Booking rejected', 'success');
-      renderViewings(); renderCalendar();
+      await renderViewings(); await renderCalendar();
     }
 
-    function saleCompleted(id) {
-      const b = DB.getViewingBooking(id);
+    async function saleCompleted(id) {
+      const b = await DB.getViewingBooking(id);
       if (!b) return;
-      const v = DB.getVehicle(b.vehicleId);
+      const v = await DB.getVehicle(b.vehicleId);
       if (!v) { Utils.showToast('Vehicle not found', 'error'); return; }
 
-      const pricing = DB.getAgentVehiclePricing(b.vehicleId);
+      const pricing = await DB.getAgentVehiclePricing(b.vehicleId);
       const defaultPrice = v.pricing.salePrice;
       const input = prompt(`Enter final sale price for ${v.year} ${v.make} ${v.model}:`, defaultPrice);
       if (input === null) return;
@@ -486,7 +494,7 @@
       const companyMargin = grossSpread - agentProfit;
 
       // Create agent sale record
-      DB.addAgentSale({
+      await DB.addAgentSale({
         id: Utils.generateId('SALE'),
         vehicleId: b.vehicleId,
         agentId: b.agentId,
@@ -505,34 +513,35 @@
       });
 
       // Mark vehicle as Sold
-      DB.updateVehicle(b.vehicleId, { status: 'Sold' });
-      DB.getAllocationsByVehicle(b.vehicleId).filter(a => a.status === 'active' || a.status === 'reserved').forEach(a => {
-        DB.updateAllocation(a.id, { status: 'sold' });
-      });
+      await DB.updateVehicle(b.vehicleId, { status: 'Sold' });
+      const allocations = await DB.getAllocationsByVehicle(b.vehicleId);
+      for (const a of allocations.filter(a => a.status === 'active' || a.status === 'reserved')) {
+        await DB.updateAllocation(a.id, { status: 'sold' });
+      }
 
       // Mark booking as completed
-      DB.updateViewingBooking(id, { status: 'completed', completedAt: new Date().toISOString() });
+      await DB.updateViewingBooking(id, { status: 'completed', completedAt: new Date().toISOString() });
 
       Utils.showToast(`Sale completed! ${Utils.formatCurrency(salePrice)} — Agent profit: ${Utils.formatCurrency(agentProfit)}`, 'success');
-      render(); renderViewings(); renderCalendar();
+      await render(); await renderViewings(); await renderCalendar();
     }
 
-    function noSaleViewing(id) {
-      DB.updateViewingBooking(id, { status: 'no_sale', dealerNotes: 'Customer visited — no sale' });
+    async function noSaleViewing(id) {
+      await DB.updateViewingBooking(id, { status: 'no_sale', dealerNotes: 'Customer visited — no sale' });
       Utils.showToast('Marked as no sale — vehicle remains available', 'success');
-      renderViewings(); renderCalendar();
+      await renderViewings(); await renderCalendar();
     }
 
-    function noShowViewing(id) {
-      DB.updateViewingBooking(id, { status: 'no_show', dealerNotes: 'Customer did not show up' });
+    async function noShowViewing(id) {
+      await DB.updateViewingBooking(id, { status: 'no_show', dealerNotes: 'Customer did not show up' });
       Utils.showToast('Marked as no-show', 'success');
-      renderViewings(); renderCalendar();
+      await renderViewings(); await renderCalendar();
     }
 
-    function viewProof(bookingId) {
-      const b = DB.getViewingBooking(bookingId);
+    async function viewProof(bookingId) {
+      const b = await DB.getViewingBooking(bookingId);
       if (!b || !b.confirmationProof) return;
-      const v = DB.getVehicle(b.vehicleId);
+      const v = await DB.getVehicle(b.vehicleId);
       const overlay = document.getElementById('proofOverlay');
       document.getElementById('proofImage').src = b.confirmationProof;
       document.getElementById('proofMeta').textContent =
@@ -561,8 +570,9 @@
     function changeWeek(dir) { weekOffset += dir; renderCalendar(); }
     function goToday() { weekOffset = 0; renderCalendar(); }
 
-    function renderCalendar() {
-      const bookings = DB.getViewingBookings().filter(b => b.status !== 'rejected');
+    async function renderCalendar() {
+      const allBookings = await DB.getViewingBookings();
+      const bookings = allBookings.filter(b => b.status !== 'rejected');
       const weekStart = getWeekStart(weekOffset);
       const days = [];
       for (let i = 0; i < 7; i++) {
@@ -585,35 +595,38 @@
         html += `<div class="cal-header${key === todayKey ? ' today' : ''}">${DAY_NAMES[d.getDay()]}<br>${d.getDate()}</div>`;
       });
 
-      SLOTS.forEach(slot => {
+      for (const slot of SLOTS) {
         html += `<div class="cal-time">${slot}</div>`;
-        days.forEach(d => {
+        for (const d of days) {
           const key = formatDateKey(d);
           const slotDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(slot));
           const isPast = slotDate < now;
           let cells = [];
 
           const slotBookings = bookings.filter(b => b.date === key && b.timeSlot === slot);
-          slotBookings.forEach(b => {
-            const v = DB.getVehicle(b.vehicleId);
+          for (const b of slotBookings) {
+            const v = await DB.getVehicle(b.vehicleId);
             const bType = b.bookingType || 'viewing';
             cells.push(`<div class="cal-slot ${bType}">
               <span class="slot-label">${b.customerName}</span>
               <span class="slot-sub">${v ? `${v.year} ${v.make} ${v.model}` : ''}</span>
               <span class="slot-sub">${b.agentName} — ${statusLabel[b.status] || b.status}</span>
             </div>`);
-          });
+          }
 
           html += `<div class="cal-cell${isPast ? ' past' : ''}">${cells.join('')}</div>`;
-        });
-      });
+        }
+      }
 
       document.getElementById('calendar').innerHTML = html;
     }
 
-    render();
-    renderViewings();
-    renderCalendar();
+    async function init() {
+      await render();
+      await renderViewings();
+      await renderCalendar();
+    }
+    init();
   </script>
 
   <!-- Proof Viewer Modal -->

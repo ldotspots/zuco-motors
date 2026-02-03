@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -130,14 +131,15 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
     const dealer = Auth.getCurrentUser();
 
-    function renderInventory() {
-      let vehicles = DB.getVehicles();
+    async function renderInventory() {
+      let vehicles = await DB.getVehicles();
 
       // Stats (before filtering)
       const available = vehicles.filter(v => v.status === 'Available');
@@ -189,20 +191,25 @@
       }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;">No vehicles found</td></tr>';
     }
 
-    function updateStatus(vehicleId, newStatus) {
-      DB.updateVehicle(vehicleId, { status: newStatus });
+    async function updateStatus(vehicleId, newStatus) {
+      await DB.updateVehicle(vehicleId, { status: newStatus });
       Utils.showToast(`Vehicle marked as ${newStatus}`, 'success');
       renderInventory();
     }
 
-    function deleteVehicle(vehicleId) {
+    async function deleteVehicle(vehicleId) {
       if (!confirm('Are you sure you want to permanently delete this vehicle? This cannot be undone.')) return;
-      DB.deleteVehicle(vehicleId);
+      await DB.deleteVehicle(vehicleId);
       Utils.showToast('Vehicle deleted', 'success');
       renderInventory();
     }
 
-    renderInventory();
+    // Initialize and subscribe to real-time updates
+    async function init() {
+      await renderInventory();
+      DB.subscribeToVehicles(() => renderInventory());
+    }
+    init();
   </script>
 </body>
 </html>

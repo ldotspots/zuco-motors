@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -105,22 +106,29 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    // Populate agent filter
-    const allCompleted = DB.getAgentSales().filter(s => s.status === 'completed');
-    const agentNames = [...new Set(allCompleted.map(s => s.agentName))].sort();
-    const agentSelect = document.getElementById('agentFilter');
-    agentNames.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      agentSelect.appendChild(opt);
-    });
+    let allCompleted = [];
 
-    function render() {
+    async function initPastSales() {
+      // Populate agent filter
+      const allSales = await DB.getAgentSales();
+      allCompleted = allSales.filter(s => s.status === 'completed');
+      const agentNames = [...new Set(allCompleted.map(s => s.agentName))].sort();
+      const agentSelect = document.getElementById('agentFilter');
+      agentNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        agentSelect.appendChild(opt);
+      });
+      await render();
+    }
+
+    async function render() {
       let sales = [...allCompleted];
 
       // Filters
@@ -133,24 +141,28 @@
       if (dateFrom) sales = sales.filter(s => s.saleDate >= dateFrom);
       if (dateTo) sales = sales.filter(s => s.saleDate <= dateTo);
       if (search) {
-        sales = sales.filter(s => {
-          const v = DB.getVehicle(s.vehicleId);
+        const filteredSales = [];
+        for (const s of sales) {
+          const v = await DB.getVehicle(s.vehicleId);
           const vStr = v ? `${v.year} ${v.make} ${v.model} ${v.trim}`.toLowerCase() : '';
-          return (s.buyerName || '').toLowerCase().includes(search) || vStr.includes(search);
-        });
+          if ((s.buyerName || '').toLowerCase().includes(search) || vStr.includes(search)) {
+            filteredSales.push(s);
+          }
+        }
+        sales = filteredSales;
       }
 
       // KPIs (from filtered results)
       let totalRev = 0, totalComp = 0, totalAgent = 0;
-      sales.forEach(s => {
-        const v = DB.getVehicle(s.vehicleId);
+      for (const s of sales) {
+        const v = await DB.getVehicle(s.vehicleId);
         const invoiceCost = v ? v.pricing.invoiceCost : 0;
         const grossSpread = s.salePrice - invoiceCost;
         const companyMargin = grossSpread - (s.agentProfit || 0);
         totalRev += s.salePrice;
         totalComp += companyMargin;
         totalAgent += s.agentProfit || 0;
-      });
+      }
 
       document.getElementById('totalCount').textContent = sales.length;
       document.getElementById('totalRevenue').textContent = Utils.formatCurrency(totalRev);
@@ -161,8 +173,8 @@
       // Sort newest first
       sales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
 
-      document.getElementById('salesTable').innerHTML = sales.map(s => {
-        const v = DB.getVehicle(s.vehicleId);
+      const tableRows = await Promise.all(sales.map(async (s) => {
+        const v = await DB.getVehicle(s.vehicleId);
         const invoiceCost = v ? v.pricing.invoiceCost : 0;
         const grossSpread = s.salePrice - invoiceCost;
         const companyMargin = grossSpread - (s.agentProfit || 0);
@@ -191,10 +203,11 @@
           <td style="color:var(--success);font-weight:600;">${Utils.formatCurrency(companyMargin)}</td>
           <td>${Utils.formatCurrency(s.agentProfit)}</td>
         </tr>`;
-      }).join('') || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed sales found</td></tr>';
+      }));
+      document.getElementById('salesTable').innerHTML = tableRows.join('') || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed sales found</td></tr>';
     }
 
-    render();
+    initPastSales();
   </script>
 </body>
 </html>

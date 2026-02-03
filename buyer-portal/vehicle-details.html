@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .vehicle-header {
       background: var(--white);
@@ -254,6 +255,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -275,8 +277,8 @@
     }
 
     // Load vehicle details
-    function loadVehicle() {
-      currentVehicle = DB.getVehicle(vehicleId);
+    async function loadVehicle() {
+      currentVehicle = await DB.getVehicle(vehicleId);
 
       if (!currentVehicle) {
         Utils.showToast('Vehicle not found', 'error');
@@ -350,8 +352,9 @@
     }
 
     // Load similar vehicles
-    function loadSimilarVehicles() {
-      const vehicles = DB.getVehicles()
+    async function loadSimilarVehicles() {
+      const allVehicles = await DB.getVehicles();
+      const vehicles = allVehicles
         .filter(v => v.id !== vehicleId && v.status === 'Available' && v.make === currentVehicle.make)
         .slice(0, 3);
 
@@ -396,14 +399,15 @@
     }
 
     // Inquiry form submission
-    document.getElementById('inquiryForm').addEventListener('submit', (e) => {
+    document.getElementById('inquiryForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const buyer = Auth.getCurrentUser();
 
       // Find agents allocated to this vehicle to assign the lead
-      const allocations = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+      const allocations = await DB.getAllocationsByVehicle(vehicleId);
+      const activeAllocations = allocations.filter(a => a.status === 'active');
       // Assign to the first allocated agent, or leave unassigned
-      const assignedAgentId = allocations.length ? allocations[0].agentId : null;
+      const assignedAgentId = activeAllocations.length ? activeAllocations[0].agentId : null;
 
       const inquiry = {
         id: Utils.generateId('INQ'),
@@ -420,7 +424,7 @@
         updatedAt: new Date().toISOString()
       };
 
-      DB.addInquiry(inquiry);
+      await DB.addInquiry(inquiry);
       Utils.showToast('Inquiry submitted! A sales agent will be in touch soon.', 'success');
       document.getElementById('inquiryForm').reset();
     });
@@ -436,7 +440,11 @@
     }
 
     // Initialize
-    loadVehicle();
+    async function init() {
+      await loadVehicle();
+      DB.subscribeToVehicles(() => loadVehicle());
+    }
+    init();
   </script>
 </body>
 </html>

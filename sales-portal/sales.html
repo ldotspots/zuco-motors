@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -97,14 +98,15 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
     const agent = Auth.getCurrentUser();
 
-    function render() {
-      const allSales = DB.getAgentSalesByAgent(agent?.id);
+    async function render() {
+      const allSales = await DB.getAgentSalesByAgent(agent?.id);
       const filter = document.getElementById('filterStatus').value;
       let sales = filter === 'all' ? allSales : allSales.filter(s => s.status === filter);
 
@@ -131,8 +133,8 @@
       };
 
       const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
-      document.getElementById('salesTable').innerHTML = sorted.map(s => {
-        const v = DB.getVehicle(s.vehicleId);
+      const salesRows = await Promise.all(sorted.map(async s => {
+        const v = await DB.getVehicle(s.vehicleId);
         const badge = statusBadge[s.status] || 'badge-gray';
         const label = statusLabel[s.status] || s.status;
         return `<tr>
@@ -143,10 +145,17 @@
           <td style="font-weight:600;color:var(--success);">${Utils.formatCurrency(s.agentProfit)}</td>
           <td><span class="badge ${badge}">${label}</span></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-500);">No sales recorded yet</td></tr>';
+      }));
+      document.getElementById('salesTable').innerHTML = salesRows.join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-500);">No sales recorded yet</td></tr>';
     }
 
-    render();
+    async function init() {
+      await render();
+      DB.subscribeToAgentSales(() => render());
+    }
+
+    document.getElementById('filterStatus').addEventListener('change', render);
+    init();
   </script>
 </body>
 </html>

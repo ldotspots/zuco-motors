@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -172,6 +173,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -179,9 +181,9 @@
     const dealer = Auth.getCurrentUser();
     let currentLeadId = null;
 
-    function renderLeads() {
+    async function renderLeads() {
       // Show ALL inquiries (from all sources)
-      let leads = DB.getInquiries() || [];
+      let leads = await DB.getInquiries() || [];
 
       // Stats
       document.getElementById('totalLeads').textContent = leads.length;
@@ -203,9 +205,9 @@
 
       leads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      document.getElementById('leadsTable').innerHTML = leads.map(lead => {
-        const vehicle = DB.getVehicle(lead.vehicleId);
-        const buyer = lead.buyerId ? DB.getUser(lead.buyerId) : null;
+      const leadsHtml = await Promise.all(leads.map(async (lead) => {
+        const vehicle = await DB.getVehicle(lead.vehicleId);
+        const buyer = lead.buyerId ? await DB.getUser(lead.buyerId) : null;
         // Use contactName/contactEmail/contactPhone from inquiry form, fall back to buyer record
         const name = lead.contactName || (buyer ? `${buyer.firstName} ${buyer.lastName}` : 'Unknown');
         const email = lead.contactEmail || buyer?.email || '';
@@ -233,14 +235,16 @@
             </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;">No leads found</td></tr>';
+      }));
+      document.getElementById('leadsTable').innerHTML = leadsHtml.join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;">No leads found</td></tr>';
     }
 
-    function viewLead(id) {
-      const lead = DB.getInquiry ? DB.getInquiry(id) : (DB.getInquiries() || []).find(l => l.id === id);
+    async function viewLead(id) {
+      const allLeads = await DB.getInquiries() || [];
+      const lead = DB.getInquiry ? await DB.getInquiry(id) : allLeads.find(l => l.id === id);
       if (!lead) return;
-      const vehicle = DB.getVehicle(lead.vehicleId);
-      const buyer = lead.buyerId ? DB.getUser(lead.buyerId) : null;
+      const vehicle = await DB.getVehicle(lead.vehicleId);
+      const buyer = lead.buyerId ? await DB.getUser(lead.buyerId) : null;
       const name = lead.contactName || (buyer ? `${buyer.firstName} ${buyer.lastName}` : 'Unknown');
       const email = lead.contactEmail || buyer?.email || '';
       const phone = lead.contactPhone || buyer?.phone || '';
@@ -277,12 +281,13 @@
       currentLeadId = null;
     }
 
-    function saveStatus() {
+    async function saveStatus() {
       if (!currentLeadId) return;
       const newStatus = document.getElementById('newStatus').value;
-      const lead = DB.getInquiry ? DB.getInquiry(currentLeadId) : (DB.getInquiries() || []).find(l => l.id === currentLeadId);
+      const allLeads = await DB.getInquiries() || [];
+      const lead = DB.getInquiry ? await DB.getInquiry(currentLeadId) : allLeads.find(l => l.id === currentLeadId);
 
-      DB.updateInquiry(currentLeadId, {
+      await DB.updateInquiry(currentLeadId, {
         status: newStatus,
         priority: document.getElementById('newPriority').value,
         updatedAt: new Date().toISOString()
@@ -290,9 +295,9 @@
 
       // When a lead is marked closed-won, auto-create a sale order
       if (newStatus === 'closed-won' && lead) {
-        const vehicle = DB.getVehicle(lead.vehicleId);
+        const vehicle = await DB.getVehicle(lead.vehicleId);
         if (vehicle && vehicle.status === 'Available') {
-          const buyer = lead.buyerId ? DB.getUser(lead.buyerId) : null;
+          const buyer = lead.buyerId ? await DB.getUser(lead.buyerId) : null;
           const agentName = lead.claimedByAgentName || 'Developer Sale';
           const agentId = lead.claimedByAgentId || dealer?.id;
           const salePrice = vehicle.pricing.salePrice;
@@ -301,7 +306,7 @@
           const companyMargin = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
           const agentProfit = lead.claimedByAgentId ? (grossSpread - companyMargin) : 0;
 
-          DB.addAgentSale({
+          await DB.addAgentSale({
             id: Utils.generateId('SALE'),
             vehicleId: lead.vehicleId,
             agentId: agentId,
@@ -319,10 +324,11 @@
           });
 
           // Reserve vehicle
-          DB.updateVehicle(lead.vehicleId, { status: 'Reserved' });
-          DB.getAllocationsByVehicle(lead.vehicleId).filter(a => a.status === 'active').forEach(a => {
-            DB.updateAllocation(a.id, { status: 'reserved' });
-          });
+          await DB.updateVehicle(lead.vehicleId, { status: 'Reserved' });
+          const allocations = await DB.getAllocationsByVehicle(lead.vehicleId);
+          for (const a of allocations.filter(a => a.status === 'active')) {
+            await DB.updateAllocation(a.id, { status: 'reserved' });
+          }
 
           Utils.showToast('Lead won! Sale order created — check Sales Orders page', 'success');
         } else {
@@ -333,10 +339,13 @@
       }
 
       closeModal();
-      renderLeads();
+      await renderLeads();
     }
 
-    renderLeads();
+    async function init() {
+      await renderLeads();
+    }
+    init();
   </script>
 </body>
 </html>

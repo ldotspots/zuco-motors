@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -85,32 +86,38 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
     const agent = Auth.getCurrentUser();
-    const myAllocations = DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active');
-    const myVehicleIds = new Set(myAllocations.map(a => a.vehicleId));
+    let myVehicleIds = new Set();
 
-    function render() {
+    async function loadMyAllocations() {
+      const myAllocations = (await DB.getAllocationsByAgent(agent?.id)).filter(a => a.status === 'active');
+      myVehicleIds = new Set(myAllocations.map(a => a.vehicleId));
+    }
+
+    async function render() {
       const query = document.getElementById('searchQuery').value.toLowerCase();
       const body = document.getElementById('filterBody').value;
       const condition = document.getElementById('filterCondition').value;
       const sort = document.getElementById('sortBy').value;
 
-      let vehicles = DB.getVehicles().filter(v => v.status === 'Available');
+      let vehicles = (await DB.getVehicles()).filter(v => v.status === 'Available');
 
       if (query) vehicles = vehicles.filter(v => `${v.year} ${v.make} ${v.model} ${v.trim}`.toLowerCase().includes(query));
       if (body !== 'all') vehicles = vehicles.filter(v => v.bodyStyle === body);
       if (condition !== 'all') vehicles = vehicles.filter(v => v.condition === condition);
 
       // Attach agent pricing
-      vehicles = vehicles.map(v => {
-        const pricing = DB.getAgentVehiclePricing(v.id);
-        const allocCount = DB.getAllocationsByVehicle(v.id).filter(a => a.status === 'active').length;
+      vehicles = await Promise.all(vehicles.map(async v => {
+        const pricing = await DB.getAgentVehiclePricing(v.id);
+        const allocs = await DB.getAllocationsByVehicle(v.id);
+        const allocCount = allocs.filter(a => a.status === 'active').length;
         return { ...v, agentPricing: pricing, allocCount };
-      });
+      }));
 
       // Sort
       const [field, order] = sort.split('-');
@@ -155,11 +162,11 @@
       }).join('') || '<p style="grid-column:1/-1;text-align:center;color:var(--gray-500);">No vehicles found</p>';
     }
 
-    function claim(vehicleId) {
-      const existing = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+    async function claim(vehicleId) {
+      const existing = (await DB.getAllocationsByVehicle(vehicleId)).filter(a => a.status === 'active');
       if (existing.length >= 10) { Utils.showToast('This vehicle is fully allocated', 'error'); return; }
       if (existing.find(a => a.agentId === agent.id)) { Utils.showToast('Already claimed', 'warning'); return; }
-      DB.addAllocation({
+      await DB.addAllocation({
         id: Utils.generateId('ALC'),
         vehicleId,
         agentId: agent.id,
@@ -169,14 +176,24 @@
       });
       myVehicleIds.add(vehicleId);
       Utils.showToast('Vehicle claimed!', 'success');
-      render();
+      await render();
+    }
+
+    async function init() {
+      await loadMyAllocations();
+      await render();
+      DB.subscribeToVehicles(() => render());
+      DB.subscribeToAllocations(async () => {
+        await loadMyAllocations();
+        render();
+      });
     }
 
     document.getElementById('searchQuery').addEventListener('input', Utils.debounce(render, 300));
     document.getElementById('filterBody').addEventListener('change', render);
     document.getElementById('filterCondition').addEventListener('change', render);
     document.getElementById('sortBy').addEventListener('change', render);
-    render();
+    init();
   </script>
 </body>
 </html>

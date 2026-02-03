@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .compare-grid {
       display: grid;
@@ -89,6 +90,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -99,7 +101,7 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    function loadComparison() {
+    async function loadComparison() {
       const ids = Utils.getComparisonList();
       const content = document.getElementById('compareContent');
       const emptyState = document.getElementById('emptyState');
@@ -113,7 +115,9 @@
       content.style.display = 'block';
       emptyState.style.display = 'none';
 
-      const vehicles = ids.map(id => DB.getVehicle(id)).filter(Boolean);
+      const vehiclePromises = ids.map(id => DB.getVehicle(id));
+      const vehicleResults = await Promise.all(vehiclePromises);
+      const vehicles = vehicleResults.filter(Boolean);
       const cols = vehicles.length + 1;
 
       const specs = [
@@ -172,7 +176,11 @@
       loadComparison();
     }
 
-    loadComparison();
+    async function init() {
+      await loadComparison();
+      DB.subscribeToVehicles(() => loadComparison());
+    }
+    init();
   </script>
 </body>
 </html>

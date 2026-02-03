@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .photo-preview { display: flex; align-items: center; gap: 0.5rem; }
     .photo-thumb { width: 50px; height: 38px; object-fit: cover; border-radius: 4px; cursor: pointer; }
@@ -114,6 +115,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -124,8 +126,8 @@
     const STATUS_LABEL = { pending: 'Pending', contacted: 'Contacted', accepted: 'Accepted', declined: 'Declined' };
     const COND_LABEL = { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor' };
 
-    function render() {
-      const quotes = DB.getQuoteRequests();
+    async function render() {
+      const quotes = await DB.getQuoteRequests();
       const pending = quotes.filter(q => q.status === 'pending');
       const contacted = quotes.filter(q => q.status === 'contacted');
       const accepted = quotes.filter(q => q.status === 'accepted');
@@ -180,14 +182,14 @@
       }).join('') || '<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--gray-500);">No quote requests yet</td></tr>';
     }
 
-    function updateStatus(id, status) {
-      DB.updateQuoteRequest(id, { status, updatedAt: new Date().toISOString() });
+    async function updateStatus(id, status) {
+      await DB.updateQuoteRequest(id, { status, updatedAt: new Date().toISOString() });
       Utils.showToast(`Quote marked as ${STATUS_LABEL[status]}`, 'success');
       render();
     }
 
-    function openPhotoModal(quoteId) {
-      const quotes = DB.getQuoteRequests();
+    async function openPhotoModal(quoteId) {
+      const quotes = await DB.getQuoteRequests();
       const quote = quotes.find(q => q.id === quoteId);
       if (!quote || !quote.images || quote.images.length === 0) return;
 
@@ -208,7 +210,12 @@
       if (e.key === 'Escape') closePhotoModal();
     });
 
-    render();
+    // Initialize and subscribe to real-time updates
+    async function init() {
+      await render();
+      DB.subscribeToQuoteRequests(() => render());
+    }
+    init();
   </script>
 </body>
 </html>

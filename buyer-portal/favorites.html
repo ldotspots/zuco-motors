@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header>
@@ -62,6 +63,7 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
@@ -74,7 +76,7 @@
 
     const user = Auth.getCurrentUser();
 
-    function loadFavorites() {
+    async function loadFavorites() {
       const favorites = user?.profile?.favorites || [];
       const container = document.getElementById('favoritesGrid');
       const emptyState = document.getElementById('emptyState');
@@ -87,7 +89,8 @@
         return;
       }
 
-      const vehicles = DB.getVehicles().filter(v => favorites.includes(v.id));
+      const allVehicles = await DB.getVehicles();
+      const vehicles = allVehicles.filter(v => favorites.includes(v.id));
       container.innerHTML = vehicles.map(v => `
         <div class="vehicle-card">
           <div style="background: var(--gray-200); height: 200px; display: flex; align-items: center; justify-content: center; color: var(--gray-500);">
@@ -119,7 +122,11 @@
       loadFavorites();
     }
 
-    loadFavorites();
+    async function init() {
+      await loadFavorites();
+      DB.subscribeToVehicles(() => loadFavorites());
+    }
+    init();
   </script>
 </body>
 </html>

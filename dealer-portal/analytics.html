@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .bar-chart { display: flex; align-items: flex-end; gap: 0.5rem; height: 200px; padding: 1rem 0; }
     .bar { flex: 1; background: var(--primary-600); border-radius: var(--radius-sm) var(--radius-sm) 0 0; position: relative; min-height: 4px; transition: all 0.3s; }
@@ -154,151 +155,158 @@
     </div>
   </footer>
 
+  <script src="../js/supabase-config.js"></script>
   <script src="../js/db.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    const dealer = Auth.getCurrentUser();
-    const transactions = DB.getTransactionsByAgent(dealer?.id) || [];
-    const leads = DB.getInquiries() || [];
-    const vehicles = DB.getVehicles();
-    const agentSales = DB.getAgentSales().filter(s => s.status === 'completed');
+    async function initAnalytics() {
+      const dealer = Auth.getCurrentUser();
+      const transactions = await DB.getTransactionsByAgent(dealer?.id) || [];
+      const leads = await DB.getInquiries() || [];
+      const vehicles = await DB.getVehicles();
+      const allAgentSales = await DB.getAgentSales();
+      const agentSales = allAgentSales.filter(s => s.status === 'completed');
 
-    // Compute totals from agent sales
-    let totalSaleRevenue = 0;
-    let totalGrossSpread = 0;
-    let totalCompanyMargin = 0;
-    let totalAgentProfit = 0;
-    let totalInvoiceCost = 0;
+      // Compute totals from agent sales
+      let totalSaleRevenue = 0;
+      let totalGrossSpread = 0;
+      let totalCompanyMargin = 0;
+      let totalAgentProfit = 0;
+      let totalInvoiceCost = 0;
 
-    agentSales.forEach(s => {
-      const v = DB.getVehicle(s.vehicleId);
-      const invoiceCost = v ? v.pricing.invoiceCost : 0;
-      const grossSpread = s.salePrice - invoiceCost;
-      const companyMargin = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
-      totalSaleRevenue += s.salePrice;
-      totalInvoiceCost += invoiceCost;
-      totalGrossSpread += grossSpread;
-      totalCompanyMargin += companyMargin;
-      totalAgentProfit += s.agentProfit;
-    });
+      for (const s of agentSales) {
+        const v = await DB.getVehicle(s.vehicleId);
+        const invoiceCost = v ? v.pricing.invoiceCost : 0;
+        const grossSpread = s.salePrice - invoiceCost;
+        const companyMargin = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
+        totalSaleRevenue += s.salePrice;
+        totalInvoiceCost += invoiceCost;
+        totalGrossSpread += grossSpread;
+        totalCompanyMargin += companyMargin;
+        totalAgentProfit += s.agentProfit;
+      }
 
-    const totalUnits = agentSales.length;
+      const totalUnits = agentSales.length;
 
-    // KPIs
-    document.getElementById('totalUnits').textContent = totalUnits;
-    document.getElementById('totalRevenue').textContent = Utils.formatCurrency(totalSaleRevenue);
-    document.getElementById('companyProfit').textContent = Utils.formatCurrency(totalCompanyMargin);
-    document.getElementById('agentPayouts').textContent = Utils.formatCurrency(totalAgentProfit);
+      // KPIs
+      document.getElementById('totalUnits').textContent = totalUnits;
+      document.getElementById('totalRevenue').textContent = Utils.formatCurrency(totalSaleRevenue);
+      document.getElementById('companyProfit').textContent = Utils.formatCurrency(totalCompanyMargin);
+      document.getElementById('agentPayouts').textContent = Utils.formatCurrency(totalAgentProfit);
 
-    // Sales Breakdown Table — individual vehicle rows
-    document.getElementById('companyColHeader').textContent = `Company (${(DB.COMPANY_MARGIN_RATE * 100).toFixed(0)}%)`;
-    document.getElementById('agentColHeader').textContent = `Agent (${(100 - DB.COMPANY_MARGIN_RATE * 100).toFixed(0)}%)`;
-    // Agent sale rows
-    let breakdownRows = agentSales.map(s => {
-      const v = DB.getVehicle(s.vehicleId);
-      const invoiceCost = v ? v.pricing.invoiceCost : 0;
-      const grossSpread = s.salePrice - invoiceCost;
-      const companyMargin = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
-      return `<tr>
-        <td style="padding:0.75rem;">${Utils.formatDate(s.completedAt || s.saleDate)}</td>
-        <td style="padding:0.75rem;">${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'}</td>
-        <td style="padding:0.75rem;">${s.agentName || 'N/A'}</td>
-        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(s.salePrice)}</td>
-        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(invoiceCost)}</td>
-        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(grossSpread)}</td>
-        <td style="padding:0.75rem;text-align:right;color:var(--success);font-weight:600;">${Utils.formatCurrency(companyMargin)}</td>
-        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(s.agentProfit)}</td>
+      // Sales Breakdown Table — individual vehicle rows
+      document.getElementById('companyColHeader').textContent = `Company (${(DB.COMPANY_MARGIN_RATE * 100).toFixed(0)}%)`;
+      document.getElementById('agentColHeader').textContent = `Agent (${(100 - DB.COMPANY_MARGIN_RATE * 100).toFixed(0)}%)`;
+      // Agent sale rows
+      let breakdownRows = '';
+      for (const s of agentSales) {
+        const v = await DB.getVehicle(s.vehicleId);
+        const invoiceCost = v ? v.pricing.invoiceCost : 0;
+        const grossSpread = s.salePrice - invoiceCost;
+        const companyMargin = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
+        breakdownRows += `<tr>
+          <td style="padding:0.75rem;">${Utils.formatDate(s.completedAt || s.saleDate)}</td>
+          <td style="padding:0.75rem;">${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'}</td>
+          <td style="padding:0.75rem;">${s.agentName || 'N/A'}</td>
+          <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(s.salePrice)}</td>
+          <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(invoiceCost)}</td>
+          <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(grossSpread)}</td>
+          <td style="padding:0.75rem;text-align:right;color:var(--success);font-weight:600;">${Utils.formatCurrency(companyMargin)}</td>
+          <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(s.agentProfit)}</td>
+        </tr>`;
+      }
+
+      // Add totals row
+      breakdownRows += `<tr style="border-top:2px solid var(--gray-400);font-weight:700;">
+        <td style="padding:0.75rem;"></td>
+        <td style="padding:0.75rem;">Totals (${totalUnits} sales)</td>
+        <td style="padding:0.75rem;"></td>
+        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalSaleRevenue)}</td>
+        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalInvoiceCost)}</td>
+        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalGrossSpread)}</td>
+        <td style="padding:0.75rem;text-align:right;color:var(--success);">${Utils.formatCurrency(totalCompanyMargin)}</td>
+        <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalAgentProfit)}</td>
       </tr>`;
-    }).join('');
 
-    // Add totals row
-    breakdownRows += `<tr style="border-top:2px solid var(--gray-400);font-weight:700;">
-      <td style="padding:0.75rem;"></td>
-      <td style="padding:0.75rem;">Totals (${totalUnits} sales)</td>
-      <td style="padding:0.75rem;"></td>
-      <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalSaleRevenue)}</td>
-      <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalInvoiceCost)}</td>
-      <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalGrossSpread)}</td>
-      <td style="padding:0.75rem;text-align:right;color:var(--success);">${Utils.formatCurrency(totalCompanyMargin)}</td>
-      <td style="padding:0.75rem;text-align:right;">${Utils.formatCurrency(totalAgentProfit)}</td>
-    </tr>`;
+      document.getElementById('salesBreakdown').innerHTML = breakdownRows || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed sales yet</td></tr>';
 
-    document.getElementById('salesBreakdown').innerHTML = breakdownRows || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed sales yet</td></tr>';
+      // Monthly Sales Chart — all 12 months
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthlySales = months.map((_, i) => {
+        return agentSales.filter(s => {
+          const d = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
+          return d.getMonth() === i;
+        }).length;
+      });
+      const maxSales = Math.max(...monthlySales, 1);
+      document.getElementById('monthlySalesChart').innerHTML = months.map((m, i) => {
+        const height = (monthlySales[i] / maxSales * 100);
+        return `<div class="bar" style="height: ${Math.max(height, 2)}%;">
+          <span class="bar-value">${monthlySales[i]}</span>
+          <span class="bar-label">${m}</span>
+        </div>`;
+      }).join('');
 
-    // Monthly Sales Chart — all 12 months
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlySales = months.map((_, i) => {
-      return agentSales.filter(s => {
-        const d = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
-        return d.getMonth() === i;
-      }).length;
-    });
-    const maxSales = Math.max(...monthlySales, 1);
-    document.getElementById('monthlySalesChart').innerHTML = months.map((m, i) => {
-      const height = (monthlySales[i] / maxSales * 100);
-      return `<div class="bar" style="height: ${Math.max(height, 2)}%;">
-        <span class="bar-value">${monthlySales[i]}</span>
-        <span class="bar-label">${m}</span>
-      </div>`;
-    }).join('');
-
-    // Top Vehicles
-    const topVehicles = vehicles.filter(v => v.status === 'Available').sort((a, b) => b.views - a.views).slice(0, 5);
-    document.getElementById('topVehicles').innerHTML = topVehicles.map((v, i) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;${i < topVehicles.length - 1 ? 'border-bottom:1px solid var(--gray-200);' : ''}">
-        <div>
-          <strong>${v.year} ${v.make} ${v.model}</strong>
-          <span style="font-size:var(--text-sm);color:var(--gray-600);margin-left:0.5rem;">${Utils.formatCurrency(v.pricing.salePrice)}</span>
+      // Top Vehicles
+      const topVehicles = vehicles.filter(v => v.status === 'Available').sort((a, b) => b.views - a.views).slice(0, 5);
+      document.getElementById('topVehicles').innerHTML = topVehicles.map((v, i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;${i < topVehicles.length - 1 ? 'border-bottom:1px solid var(--gray-200);' : ''}">
+          <div>
+            <strong>${v.year} ${v.make} ${v.model}</strong>
+            <span style="font-size:var(--text-sm);color:var(--gray-600);margin-left:0.5rem;">${Utils.formatCurrency(v.pricing.salePrice)}</span>
+          </div>
+          <span class="badge badge-primary">${v.views} views</span>
         </div>
-        <span class="badge badge-primary">${v.views} views</span>
-      </div>
-    `).join('') || '<p style="color:var(--gray-600);">No data</p>';
+      `).join('') || '<p style="color:var(--gray-600);">No data</p>';
 
-    // Inquiry Types
-    const types = ['purchase', 'trade-in', 'financing', 'test-drive'];
-    document.getElementById('inquiryTypes').innerHTML = types.map(t => {
-      const count = leads.filter(l => l.type === t).length;
-      const pct = leads.length ? (count / leads.length * 100).toFixed(0) : 0;
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
-        <span style="text-transform:capitalize;">${t}</span>
-        <div><strong>${count}</strong> <span style="color:var(--gray-500);">(${pct}%)</span></div>
-      </div>`;
-    }).join('');
+      // Inquiry Types
+      const types = ['purchase', 'trade-in', 'financing', 'test-drive'];
+      document.getElementById('inquiryTypes').innerHTML = types.map(t => {
+        const count = leads.filter(l => l.type === t).length;
+        const pct = leads.length ? (count / leads.length * 100).toFixed(0) : 0;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
+          <span style="text-transform:capitalize;">${t}</span>
+          <div><strong>${count}</strong> <span style="color:var(--gray-500);">(${pct}%)</span></div>
+        </div>`;
+      }).join('');
 
-    // Inventory Breakdown
-    const conditions = ['New', 'Certified Pre-Owned', 'Used'];
-    document.getElementById('inventoryBreakdown').innerHTML = conditions.map(c => {
-      const count = vehicles.filter(v => v.condition === c && v.status === 'Available').length;
-      const value = vehicles.filter(v => v.condition === c && v.status === 'Available').reduce((s, v) => s + v.pricing.salePrice, 0);
-      return `<div class="stat-card text-center">
-        <div class="stat-value">${count}</div>
-        <div class="stat-label">${c}</div>
-        <div style="color:var(--gray-600);font-size:var(--text-sm);margin-top:0.5rem;">${Utils.formatCurrency(value)} total value</div>
-      </div>`;
-    }).join('');
+      // Inventory Breakdown
+      const conditions = ['New', 'Certified Pre-Owned', 'Used'];
+      document.getElementById('inventoryBreakdown').innerHTML = conditions.map(c => {
+        const count = vehicles.filter(v => v.condition === c && v.status === 'Available').length;
+        const value = vehicles.filter(v => v.condition === c && v.status === 'Available').reduce((s, v) => s + v.pricing.salePrice, 0);
+        return `<div class="stat-card text-center">
+          <div class="stat-value">${count}</div>
+          <div class="stat-label">${c}</div>
+          <div style="color:var(--gray-600);font-size:var(--text-sm);margin-top:0.5rem;">${Utils.formatCurrency(value)} total value</div>
+        </div>`;
+      }).join('');
 
-    // Agent Performance Table
-    const agentMap = {};
-    agentSales.forEach(s => {
-      if (!agentMap[s.agentId]) agentMap[s.agentId] = { name: s.agentName, sales: 0, revenue: 0, companyRev: 0, agentProfit: 0 };
-      const entry = agentMap[s.agentId];
-      entry.sales++;
-      entry.revenue += s.salePrice;
-      entry.agentProfit += s.agentProfit;
-      const v = DB.getVehicle(s.vehicleId);
-      if (v) entry.companyRev += Math.round((s.salePrice - v.pricing.invoiceCost) * DB.COMPANY_MARGIN_RATE);
-    });
-    const agentRows = Object.values(agentMap).sort((a, b) => b.revenue - a.revenue);
-    document.getElementById('agentPerformance').innerHTML = agentRows.map(a => `
-      <tr>
-        <td><strong>${a.name}</strong></td>
-        <td>${a.sales}</td>
-        <td>${Utils.formatCurrency(a.revenue)}</td>
-        <td style="color:var(--success);font-weight:600;">${Utils.formatCurrency(a.companyRev)}</td>
-        <td>${Utils.formatCurrency(a.agentProfit)}</td>
-      </tr>
-    `).join('') || '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed agent sales yet</td></tr>';
+      // Agent Performance Table
+      const agentMap = {};
+      for (const s of agentSales) {
+        if (!agentMap[s.agentId]) agentMap[s.agentId] = { name: s.agentName, sales: 0, revenue: 0, companyRev: 0, agentProfit: 0 };
+        const entry = agentMap[s.agentId];
+        entry.sales++;
+        entry.revenue += s.salePrice;
+        entry.agentProfit += s.agentProfit;
+        const v = await DB.getVehicle(s.vehicleId);
+        if (v) entry.companyRev += Math.round((s.salePrice - v.pricing.invoiceCost) * DB.COMPANY_MARGIN_RATE);
+      }
+      const agentRows = Object.values(agentMap).sort((a, b) => b.revenue - a.revenue);
+      document.getElementById('agentPerformance').innerHTML = agentRows.map(a => `
+        <tr>
+          <td><strong>${a.name}</strong></td>
+          <td>${a.sales}</td>
+          <td>${Utils.formatCurrency(a.revenue)}</td>
+          <td style="color:var(--success);font-weight:600;">${Utils.formatCurrency(a.companyRev)}</td>
+          <td>${Utils.formatCurrency(a.agentProfit)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed agent sales yet</td></tr>';
+    }
+
+    initAnalytics();
   </script>
 </body>
 </html>
