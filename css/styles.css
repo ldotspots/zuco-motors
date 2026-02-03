@@ -230,6 +230,8 @@ header {
   gap: var(--space-6);
   align-items: center;
   flex-wrap: wrap;
+  justify-content: center;
+  flex: 1;
 }
 
 .nav a {
