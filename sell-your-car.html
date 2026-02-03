@@ -394,8 +394,8 @@
     // For direct use (test only — exposes key in browser):
     //   const CARJAM_PROXY = 'https://test.carjam.co.nz/api/car';
     //   const CARJAM_KEY = 'your-test-key';
-    const CARJAM_PROXY = '/.netlify/functions/carjam'; // Serverless proxy injects API key server-side
-    const CARJAM_KEY = null; // Key is in Netlify env vars, not exposed to browser
+    const CARJAM_PROXY = '/carjam'; // Cloudflare Pages function
+    const CARJAM_KEY = null; // Key is in Cloudflare env vars, not exposed to browser
 
     function parseCarJamResponse(data) {
       // CarJam returns hidh (human-readable) and idh at top level, vehicle data nested under .vehicle

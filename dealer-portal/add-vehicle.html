@@ -269,7 +269,7 @@
       'NOP012': { make: 'Toyota', model: 'RAV4', submodel: 'GXL Hybrid', year: 2022, cc: 2487, fuel: 'hybrid', colour: 'Silver', body: 'SUV', seats: 5, odometer: 19800, transmission: 'CVT', vin: 'JTMW1RFV2ND012345' }
     };
 
-    const CARJAM_PROXY = '/.netlify/functions/carjam';
+    const CARJAM_PROXY = '/carjam'; // Cloudflare Pages function
 
     function parseCarJamResponse(data) {
       const section = data?.hidh || data?.message?.hidh || data?.idh || data?.message?.idh || {};
