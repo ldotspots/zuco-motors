@@ -695,7 +695,7 @@ const DB = {
   // Unsubscribe from a channel
   unsubscribe(subscription) {
     if (subscription) {
-      supabase.removeChannel(subscription);
+      supabaseClient.removeChannel(subscription);
     }
   }
 };
