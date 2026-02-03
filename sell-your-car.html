@@ -291,7 +291,7 @@
               <div id="estimatePreview" style="display:none;" class="mb-4">
                 <div class="card" style="background:var(--gray-50);border:1px solid var(--gray-200);">
                   <div class="card-body" style="text-align:center;">
-                    <div style="color:var(--gray-500);font-size:var(--text-sm);margin-bottom:0.25rem;">Estimated Value Range</div>
+                    <div style="color:var(--gray-500);font-size:var(--text-sm);margin-bottom:0.25rem;">Estimated Value Range (NZD)</div>
                     <div id="estimateRange" style="font-size:var(--text-2xl);font-weight:700;color:var(--primary-600);"></div>
                     <div style="color:var(--gray-500);font-size:var(--text-xs);margin-top:0.25rem;">Based on current market data. Final offer may vary.</div>
                   </div>
@@ -621,7 +621,7 @@
       const highR = Math.round(high / 100) * 100;
 
       document.getElementById('estimateRange').textContent =
-        `$${Utils.formatNumber(lowR)} — $${Utils.formatNumber(highR)}`;
+        `NZ$${Utils.formatNumber(lowR)} — NZ$${Utils.formatNumber(highR)}`;
       estimatePreview.style.display = 'block';
     }
 
