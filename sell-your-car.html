@@ -402,24 +402,28 @@
     const CARJAM_KEY = null; // Key is in Netlify env vars, not exposed to browser
 
     function parseCarJamResponse(data) {
-      // CarJam returns data under message.idh (basic info) when using &basic=1&f=json&translate=1
-      // With translate=1, human-readable values are in message.hidh
-      const idh = data?.message?.hidh || data?.message?.idh || {};
-      if (!idh.make) return null;
+      // CarJam returns hidh (human-readable) and idh at top level, vehicle data nested under .vehicle
+      const section = data?.hidh || data?.message?.hidh || data?.idh || data?.message?.idh || {};
+      const v = section?.vehicle || section || {};
+      if (!v.make) return null;
       return {
-        make: idh.make || '',
-        model: idh.model || '',
-        submodel: idh.submodel || '',
-        year: parseInt(idh.year_of_manufacture) || 0,
-        cc: parseInt(idh.cc_rating) || 0,
-        fuel: (idh.fuel_type || '').toLowerCase(),
-        colour: idh.main_colour || '',
-        body: idh.body_style || '',
-        seats: parseInt(idh.number_of_seats) || 5,
-        odometer: parseInt(idh.latest_odometer_reading) || 0,
-        transmission: idh.transmission || '',
-        vin: idh.vin || ''
+        make: titleCase(v.make || ''),
+        model: titleCase(v.model || ''),
+        submodel: titleCase(v.submodel || ''),
+        year: parseInt(v.year_of_manufacture) || 0,
+        cc: parseInt(String(v.cc_rating).replace(/[^0-9]/g, '')) || 0,
+        fuel: (v.fuel_type || '').toLowerCase(),
+        colour: v.main_colour || '',
+        body: v.body_style || '',
+        seats: parseInt(v.no_of_seats) || 5,
+        odometer: parseInt(String(v.latest_odometer_reading).replace(/[^0-9]/g, '')) || 0,
+        transmission: v.transmission || '',
+        vin: v.vin || ''
       };
+    }
+
+    function titleCase(str) {
+      return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     }
 
     async function lookupPlate() {
