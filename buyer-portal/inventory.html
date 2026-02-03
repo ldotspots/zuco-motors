@@ -298,11 +298,10 @@
       container.innerHTML = pageVehicles.map(vehicle => `
         <div class="vehicle-card ${vehicle.status === 'Sold' ? 'sold' : ''}">
           ${vehicle.status === 'Sold' ? '<span class="sold-badge">Sold</span>' : ''}
-          <div class="card-img-placeholder" style="background: var(--gray-200); height: 200px; display: flex; align-items: center; justify-content: center; color: var(--gray-500); font-size: var(--text-sm); text-align: center; padding: 1rem;">
-            ${vehicle.images && vehicle.images.length > 0 && vehicle.images[0].startsWith('data:')
-              ? `<img src="${vehicle.images[0]}" alt="${vehicle.year} ${vehicle.make} ${vehicle.model}" style="width:100%;height:100%;object-fit:cover;">`
-              : `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-          </div>
+          ${vehicle.images && vehicle.images.length > 0 && vehicle.images[0].startsWith('data:')
+            ? `<img src="${vehicle.images[0]}" alt="${vehicle.year} ${vehicle.make} ${vehicle.model}" style="width:100%;height:200px;object-fit:cover;display:block;border-radius:var(--radius-lg) var(--radius-lg) 0 0;">`
+            : `<div style="background:var(--gray-200);height:200px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:var(--text-sm);text-align:center;padding:1rem;border-radius:var(--radius-lg) var(--radius-lg) 0 0;">${vehicle.year} ${vehicle.make} ${vehicle.model}</div>`
+          }
           <div class="vehicle-card-body">
             <div class="flex justify-between items-start mb-2">
               <h3 class="vehicle-card-title">${vehicle.year} ${vehicle.make} ${vehicle.model}</h3>
