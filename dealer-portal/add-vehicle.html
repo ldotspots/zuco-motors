@@ -233,6 +233,19 @@
           </div>
         </div>
 
+        <!-- Photos -->
+        <div class="card mb-6">
+          <div class="card-header"><h3>Photos</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="photos">Upload Vehicle Photos</label>
+              <input type="file" id="photos" class="form-control" multiple accept="image/jpeg,image/png,image/webp" onchange="handlePhotoUpload(event)" style="padding:0.5rem;">
+              <p style="font-size:var(--text-xs);color:var(--gray-500);margin-top:0.25rem;">Accepts JPG, PNG, WebP. Max 5 photos. First photo will be the main image.</p>
+            </div>
+            <div id="photoPreview" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:1rem;"></div>
+          </div>
+        </div>
+
         <!-- Features -->
         <div class="card mb-6">
           <div class="card-header"><h3>Features</h3></div>
@@ -403,6 +416,78 @@
       }
     });
 
+    // Photo upload handling
+    let uploadedPhotos = [];
+
+    function handlePhotoUpload(event) {
+      const files = Array.from(event.target.files);
+      const maxPhotos = 5;
+      const maxSize = 2 * 1024 * 1024; // 2MB per image
+
+      if (uploadedPhotos.length + files.length > maxPhotos) {
+        Utils.showToast(`Maximum ${maxPhotos} photos allowed`, 'error');
+        return;
+      }
+
+      files.forEach(file => {
+        if (file.size > maxSize) {
+          Utils.showToast(`${file.name} is too large. Max 2MB per image.`, 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          // Resize image to reduce storage size
+          resizeImage(e.target.result, 800, 600, (resizedDataUrl) => {
+            uploadedPhotos.push(resizedDataUrl);
+            renderPhotoPreview();
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function resizeImage(dataUrl, maxWidth, maxHeight, callback) {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = dataUrl;
+    }
+
+    function renderPhotoPreview() {
+      const container = document.getElementById('photoPreview');
+      container.innerHTML = uploadedPhotos.map((photo, idx) => `
+        <div style="position:relative;width:120px;height:90px;border-radius:var(--radius-md);overflow:hidden;border:2px solid ${idx === 0 ? 'var(--primary-500)' : 'var(--gray-200)'};">
+          <img src="${photo}" style="width:100%;height:100%;object-fit:cover;">
+          ${idx === 0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:var(--primary-500);color:white;font-size:10px;text-align:center;padding:2px;">Main Photo</span>' : ''}
+          <button type="button" onclick="removePhoto(${idx})" style="position:absolute;top:4px;right:4px;background:#dc2626;color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    function removePhoto(idx) {
+      uploadedPhotos.splice(idx, 1);
+      renderPhotoPreview();
+    }
+
     // Live pricing calculation
     function updateListingPrice() {
       const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
@@ -471,7 +556,7 @@
           netCost: costPrice
         },
         features: document.getElementById('features').value.split(',').map(f => f.trim()).filter(Boolean),
-        images: [],
+        images: uploadedPhotos,
         status: 'Available',
         location: 'Main Lot - New Arrivals',
         addedDate: new Date().toISOString().split('T')[0],

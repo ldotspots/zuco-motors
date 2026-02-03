@@ -8,6 +8,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .vehicle-card.sold { position: relative; pointer-events: auto; }
+    .vehicle-card.sold .sold-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #dc2626;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-weight: 700;
+      font-size: var(--text-sm);
+      border-radius: 4px;
+      z-index: 10;
+      text-transform: uppercase;
+    }
+    .vehicle-card.sold .card-img-placeholder { opacity: 0.6; }
+    .vehicle-card.sold .vehicle-card-actions .btn-primary {
+      background: var(--gray-400);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -165,7 +187,7 @@
 
     // Initialize
     function init() {
-      allVehicles = DB.getVehicles().filter(v => v.status === 'Available');
+      allVehicles = DB.getVehicles().filter(v => v.status === 'Available' || v.status === 'Sold');
       populateFilters();
       loadFiltersFromURL();
       applyFilters();
@@ -266,9 +288,12 @@
       }
 
       container.innerHTML = pageVehicles.map(vehicle => `
-        <div class="vehicle-card">
-          <div style="background: var(--gray-200); height: 200px; display: flex; align-items: center; justify-content: center; color: var(--gray-500); font-size: var(--text-sm); text-align: center; padding: 1rem;">
-            ${vehicle.year} ${vehicle.make} ${vehicle.model}
+        <div class="vehicle-card ${vehicle.status === 'Sold' ? 'sold' : ''}">
+          ${vehicle.status === 'Sold' ? '<span class="sold-badge">Sold</span>' : ''}
+          <div class="card-img-placeholder" style="background: var(--gray-200); height: 200px; display: flex; align-items: center; justify-content: center; color: var(--gray-500); font-size: var(--text-sm); text-align: center; padding: 1rem;">
+            ${vehicle.images && vehicle.images.length > 0 && vehicle.images[0].startsWith('data:')
+              ? `<img src="${vehicle.images[0]}" alt="${vehicle.year} ${vehicle.make} ${vehicle.model}" style="width:100%;height:100%;object-fit:cover;">`
+              : `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
           </div>
           <div class="vehicle-card-body">
             <div class="flex justify-between items-start mb-2">

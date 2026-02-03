@@ -175,11 +175,30 @@
             <td><span class="badge badge-${v.status === 'Available' ? 'success' : v.status === 'Sold' ? 'gray' : 'warning'}">${v.status}</span></td>
             <td>${daysOnLot}d</td>
             <td>
+              <select class="form-control" style="width:auto;display:inline-block;font-size:var(--text-sm);padding:0.25rem 0.5rem;margin-right:0.5rem;" onchange="updateStatus('${v.id}', this.value)">
+                <option value="Available" ${v.status === 'Available' ? 'selected' : ''}>Available</option>
+                <option value="Sold" ${v.status === 'Sold' ? 'selected' : ''}>Sold</option>
+                <option value="Pending" ${v.status === 'Pending' ? 'selected' : ''}>Pending</option>
+              </select>
               <a href="pricing.html?id=${v.id}" class="btn btn-outline btn-sm">Price</a>
+              <button class="btn btn-sm" style="background:#dc2626;color:white;margin-left:0.25rem;" onclick="deleteVehicle('${v.id}')">Delete</button>
             </td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;">No vehicles found</td></tr>';
+    }
+
+    function updateStatus(vehicleId, newStatus) {
+      DB.updateVehicle(vehicleId, { status: newStatus });
+      Utils.showToast(`Vehicle marked as ${newStatus}`, 'success');
+      renderInventory();
+    }
+
+    function deleteVehicle(vehicleId) {
+      if (!confirm('Are you sure you want to permanently delete this vehicle? This cannot be undone.')) return;
+      DB.deleteVehicle(vehicleId);
+      Utils.showToast('Vehicle deleted', 'success');
+      renderInventory();
     }
 
     renderInventory();
