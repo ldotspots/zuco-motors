@@ -286,6 +286,15 @@
                 <input type="email" id="qEmail" class="form-control" required placeholder="you@email.com">
               </div>
 
+              <div class="form-group" style="display:flex;align-items:flex-start;gap:0.5rem;">
+                <input type="checkbox" id="qConsent" required style="margin-top:0.25rem;">
+                <label for="qConsent" style="margin:0;font-size:var(--text-sm);color:var(--gray-600);">I consent to Zuco Motors storing my details for the purpose of this quote request *</label>
+              </div>
+              <div class="form-group" style="display:flex;align-items:flex-start;gap:0.5rem;">
+                <input type="checkbox" id="qMarketing" style="margin-top:0.25rem;">
+                <label for="qMarketing" style="margin:0;font-size:var(--text-sm);color:var(--gray-600);">Subscribe to marketing updates and promotions from Zuco Motors</label>
+              </div>
+
               <button type="submit" class="btn btn-primary btn-lg w-full">Submit Quote Request</button>
             </form>
           </div>
@@ -522,6 +531,8 @@
         contactName: document.getElementById('qName').value,
         contactPhone: document.getElementById('qPhone').value,
         contactEmail: document.getElementById('qEmail').value,
+        consentData: document.getElementById('qConsent').checked,
+        marketingOptIn: document.getElementById('qMarketing').checked,
         status: 'pending',
         createdAt: new Date().toISOString()
       });

@@ -70,7 +70,8 @@
           Auth.logout();
           return;
         }
-        Auth.redirectAfterLogin();
+        Utils.showToast('Login successful! Redirecting...', 'success');
+        setTimeout(() => { Auth.redirectAfterLogin(); }, 1000);
       } else {
         Utils.showToast(result.error, 'error');
       }

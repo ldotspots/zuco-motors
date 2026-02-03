@@ -246,8 +246,6 @@ const Auth = {
       window.location.href = '/dealer-portal/index.html';
     } else if (session.role === 'sales_agent') {
       window.location.href = '/sales-portal/index.html';
-    } else if (session.role === 'buyer') {
-      window.location.href = '/buyer-portal/index.html';
     } else {
       window.location.href = '/';
     }
@@ -369,13 +367,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const isLoginPage = loginPages.some(p => path.includes(p));
 
   // Buyer portal pages that are publicly accessible (no login required)
-  const buyerPublicPages = [
-    '/buyer-portal/inventory.html',
-    '/buyer-portal/vehicle-details.html',
-    '/buyer-portal/financing.html',
-    '/buyer-portal/compare.html'
-  ];
-  const isBuyerPublic = buyerPublicPages.some(p => path.includes(p));
+  const buyerPublicFiles = ['inventory.html', 'vehicle-details.html', 'financing.html', 'compare.html'];
+  const filename = path.split('/').pop();
+  const isBuyerPublic = path.includes('/buyer-portal/') && buyerPublicFiles.includes(filename);
 
   if (isProtected && !isLoginPage && !isBuyerPublic) {
     // Determine required role

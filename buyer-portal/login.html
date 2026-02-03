@@ -316,11 +316,16 @@
       });
 
       if (result.success) {
-        Utils.showToast('Account created successfully! Please sign in.', 'success');
-        // Switch to login tab
-        document.querySelector('[data-tab="login"]').click();
-        // Pre-fill email
-        document.getElementById('loginEmail').value = email;
+        // Auto-login after registration
+        const loginResult = Auth.login(email, password, false);
+        if (loginResult.success) {
+          Utils.showToast('Account created! Redirecting...', 'success');
+          setTimeout(() => { window.location.href = '/'; }, 1000);
+        } else {
+          Utils.showToast('Account created! Please sign in.', 'success');
+          document.querySelector('[data-tab="login"]').click();
+          document.getElementById('loginEmail').value = email;
+        }
       } else {
         Utils.showToast(result.error, 'error');
       }

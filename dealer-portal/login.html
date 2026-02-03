@@ -113,15 +113,9 @@
       </div>
     </form>
 
-    <!-- Demo Accounts Info -->
     <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
-      <p style="font-size: var(--text-sm); color: var(--gray-600); text-align: center; margin-bottom: 0.5rem;">
-        <strong>Demo Accounts:</strong>
-      </p>
       <p style="font-size: var(--text-xs); color: var(--gray-500); text-align: center;">
-        agent1@zucomotors.com / Dealer123!<br>
-        agent2@zucomotors.com / Dealer123!<br>
-        manager@zucomotors.com / Admin123!
+        Internal access only. Contact your administrator for credentials.
       </p>
     </div>
 
@@ -154,7 +148,7 @@
 
         Utils.showToast('Login successful! Redirecting...', 'success');
         setTimeout(() => {
-          window.location.href = 'index.html';
+          Auth.redirectAfterLogin();
         }, 1000);
       } else {
         Utils.showToast(result.error, 'error');

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers - Dealer Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); margin-bottom: 2rem; }
+    .tab-bar button { padding: 0.75rem 1.5rem; border: none; background: none; font-weight: 600; color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab-bar button.active { color: var(--primary-600); border-bottom-color: var(--primary-600); }
+    .search-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .search-bar input { flex: 1; }
+    .detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 0.25rem 1rem; font-size: var(--text-sm); }
+    .detail-row dt { color: var(--gray-500); font-weight: 500; }
+    .detail-row dd { margin: 0; color: var(--gray-800); }
+    .expand-btn { background: none; border: none; color: var(--primary-600); cursor: pointer; font-size: var(--text-sm); font-weight: 500; padding: 0; }
+    .expand-btn:hover { text-decoration: underline; }
+    .expanded-detail { display: none; padding: 1rem 1.25rem; background: var(--gray-50); border-top: 1px solid var(--gray-200); }
+    .consent-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; }
+    .consent-yes { background: #dcfce7; color: #166534; }
+    .consent-no { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="customers.html" class="active">Customers</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-6">Customer Data</h1>
+
+      <div class="tab-bar">
+        <button class="active" data-tab="quotes">Quote Requests</button>
+        <button data-tab="users">Registered Users</button>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email, plate, or vehicle...">
+      </div>
+
+      <!-- Quote Requests Tab -->
+      <div id="quotesTab">
+        <div id="quotesTable"></div>
+      </div>
+
+      <!-- Registered Users Tab -->
+      <div id="usersTab" style="display:none;">
+        <div id="usersTable"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-bar button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.getElementById('quotesTab').style.display = tab === 'quotes' ? '' : 'none';
+        document.getElementById('usersTab').style.display = tab === 'users' ? '' : 'none';
+      });
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', () => renderAll());
+
+    function getSearch() {
+      return document.getElementById('searchInput').value.toLowerCase().trim();
+    }
+
+    function consentBadge(val) {
+      return val ? '<span class="consent-badge consent-yes">Yes</span>' : '<span class="consent-badge consent-no">No</span>';
+    }
+
+    function renderQuotes() {
+      const search = getSearch();
+      let quotes = DB.getQuoteRequests().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      if (search) {
+        quotes = quotes.filter(q =>
+          (q.contactName || '').toLowerCase().includes(search) ||
+          (q.contactEmail || '').toLowerCase().includes(search) ||
+          (q.contactPhone || '').toLowerCase().includes(search) ||
+          (q.plate || '').toLowerCase().includes(search) ||
+          (q.make || '').toLowerCase().includes(search) ||
+          (q.model || '').toLowerCase().includes(search)
+        );
+      }
+
+      if (!quotes.length) {
+        document.getElementById('quotesTable').innerHTML = '<p style="color:var(--gray-500);text-align:center;padding:2rem;">No quote requests found.</p>';
+        return;
+      }
+
+      document.getElementById('quotesTable').innerHTML = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Vehicle</th>
+              <th>Plate</th>
+              <th>Type</th>
+              <th>Consent</th>
+              <th>Marketing</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${quotes.map((q, i) => `
+              <tr>
+                <td style="white-space:nowrap;">${q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-NZ') : '—'}</td>
+                <td><strong>${q.contactName || '—'}</strong></td>
+                <td>${q.contactEmail || '—'}</td>
+                <td>${q.contactPhone || '—'}</td>
+                <td>${q.year || ''} ${q.make || ''} ${q.model || ''}</td>
+                <td>${q.plate ? '<span class="badge badge-primary">' + q.plate + '</span>' : '—'}</td>
+                <td><span class="badge badge-gray">${q.quoteType || '—'}</span></td>
+                <td>${consentBadge(q.consentData)}</td>
+                <td>${consentBadge(q.marketingOptIn)}</td>
+                <td><button class="expand-btn" onclick="toggleDetail('q${i}')">Details</button></td>
+              </tr>
+              <tr id="q${i}" class="expanded-detail">
+                <td colspan="10" style="padding:1rem;">
+                  <dl class="detail-row">
+                    <dt>Quote ID</dt><dd>${q.id || '—'}</dd>
+                    <dt>VIN</dt><dd>${q.vin || '—'}</dd>
+                    <dt>Mileage</dt><dd>${q.mileage ? Utils.formatNumber(q.mileage) + ' km' : '—'}</dd>
+                    <dt>Fuel</dt><dd>${q.fuel || '—'}</dd>
+                    <dt>Condition</dt><dd>${q.condition || '—'}</dd>
+                    <dt>Status</dt><dd><span class="badge badge-warning">${q.status || 'pending'}</span></dd>
+                    <dt>Notes</dt><dd>${q.notes || '—'}</dd>
+                    <dt>Data Consent</dt><dd>${consentBadge(q.consentData)}</dd>
+                    <dt>Marketing</dt><dd>${consentBadge(q.marketingOptIn)}</dd>
+                  </dl>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderUsers() {
+      const search = getSearch();
+      let users = DB.getUsers().filter(u => u.role === 'buyer');
+
+      if (search) {
+        users = users.filter(u =>
+          (u.firstName || '').toLowerCase().includes(search) ||
+          (u.lastName || '').toLowerCase().includes(search) ||
+          (u.email || '').toLowerCase().includes(search) ||
+          (u.phone || '').toLowerCase().includes(search)
+        );
+      }
+
+      if (!users.length) {
+        document.getElementById('usersTable').innerHTML = '<p style="color:var(--gray-500);text-align:center;padding:2rem;">No registered users found.</p>';
+        return;
+      }
+
+      document.getElementById('usersTable').innerHTML = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td><strong>${u.firstName || ''} ${u.lastName || ''}</strong></td>
+                <td>${u.email || '—'}</td>
+                <td>${u.phone || '—'}</td>
+                <td><span class="badge badge-gray">${u.role || '—'}</span></td>
+                <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-NZ') : '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function toggleDetail(id) {
+      const row = document.getElementById(id);
+      row.style.display = row.style.display === 'table-row' ? 'none' : 'table-row';
+    }
+
+    function renderAll() {
+      renderQuotes();
+      renderUsers();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
