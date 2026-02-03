@@ -217,9 +217,17 @@
               </div>
             </div>
             <div id="profitSummary" style="background:var(--gray-50);padding:1rem;border-radius:var(--radius-md);margin-top:1rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="color:var(--gray-600);">Estimated Profit:</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                <span style="color:var(--gray-600);">Total Profit:</span>
                 <span id="profitAmount" style="font-size:var(--text-xl);font-weight:700;color:var(--success);">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding-top:0.75rem;border-top:1px solid var(--gray-200);">
+                <span style="color:var(--gray-500);font-size:var(--text-sm);">Company (89%):</span>
+                <span id="companyProfit" style="font-weight:600;color:var(--gray-700);">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.25rem;">
+                <span style="color:var(--gray-500);font-size:var(--text-sm);">Agent Commission (11%):</span>
+                <span id="agentProfit" style="font-weight:600;color:var(--primary-600);">$0</span>
               </div>
             </div>
           </div>
@@ -411,8 +419,14 @@
       const listingPrice = parseFloat(document.getElementById('listingPrice').value) || 0;
       const profit = listingPrice - costPrice;
 
+      // Company keeps 89%, agent gets 11% of profit
+      const companyProfit = Math.round(profit * 0.89);
+      const agentProfit = Math.round(profit * 0.11);
+
       document.getElementById('profitAmount').textContent = Utils.formatCurrency(profit);
       document.getElementById('profitAmount').style.color = profit >= 0 ? 'var(--success)' : 'var(--error)';
+      document.getElementById('companyProfit').textContent = Utils.formatCurrency(companyProfit);
+      document.getElementById('agentProfit').textContent = Utils.formatCurrency(agentProfit);
     }
 
     document.getElementById('addVehicleForm').addEventListener('submit', (e) => {
