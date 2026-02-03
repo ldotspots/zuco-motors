@@ -6,7 +6,7 @@ const DB = {
   COMPANY_MARGIN_RATE: 0.89,
 
   // Database schema version — bump to force re-seed
-  DB_VERSION: '8',
+  DB_VERSION: '9',
 
   // Initialize database
   init() {
@@ -157,84 +157,64 @@ const DB = {
         }
       })),
 
-      // Dealers/Agents
+      // Dealers (fixed accounts — no public registration)
       {
         id: "DLR001",
-        email: "agent1@zucomotors.com",
-        password: "Dealer123!",
+        email: "zucomotorsnz@gmail.com",
+        password: "ZucoPapichulo877!",
         role: "dealer",
-        firstName: "Alex",
-        lastName: "Thompson",
-        phone: "555-987-6543",
+        firstName: "Zuco",
+        lastName: "Motors",
+        phone: "",
         employeeId: "ZM-001",
-        commissionRate: 0.03,
-        createdAt: "2023-01-01T08:00:00Z",
-        lastLogin: "2024-02-01T09:15:00Z",
+        commissionRate: 0.05,
+        createdAt: "2024-01-01T08:00:00Z",
+        lastLogin: new Date().toISOString(),
         profile: {
-          department: "Sales",
-          supervisor: "Robert Chen",
-          salesTarget: 150000,
-          ytdSales: 87500
+          department: "Management",
+          supervisor: "",
+          salesTarget: 500000,
+          ytdSales: 0
         }
       },
       {
         id: "DLR002",
-        email: "agent2@zucomotors.com",
-        password: "Dealer123!",
+        email: "cjrutherford1407@gmail.com",
+        password: "Poppy2624",
         role: "dealer",
-        firstName: "Jessica",
-        lastName: "Martinez",
-        phone: "555-876-5432",
+        firstName: "CJ",
+        lastName: "Rutherford",
+        phone: "",
         employeeId: "ZM-002",
         commissionRate: 0.03,
-        createdAt: "2023-02-01T08:00:00Z",
-        lastLogin: "2024-02-01T08:45:00Z",
+        createdAt: "2024-01-01T08:00:00Z",
+        lastLogin: new Date().toISOString(),
         profile: {
           department: "Sales",
-          supervisor: "Robert Chen",
+          supervisor: "",
           salesTarget: 150000,
-          ytdSales: 92000
+          ytdSales: 0
         }
       },
       {
         id: "DLR003",
-        email: "manager@zucomotors.com",
-        password: "Admin123!",
+        email: "meleisealucaa@gmail.com",
+        password: "Third6300!!!",
         role: "dealer",
-        firstName: "Robert",
-        lastName: "Chen",
-        phone: "555-765-4321",
-        employeeId: "ZM-MGR-001",
-        commissionRate: 0.05,
-        createdAt: "2022-01-01T08:00:00Z",
-        lastLogin: "2024-02-01T07:30:00Z",
+        firstName: "Luca",
+        lastName: "Meleisea",
+        phone: "",
+        employeeId: "ZM-003",
+        commissionRate: 0.03,
+        createdAt: "2024-01-01T08:00:00Z",
+        lastLogin: new Date().toISOString(),
         profile: {
           department: "Sales",
-          supervisor: "CEO",
-          salesTarget: 500000,
-          ytdSales: 320000
+          supervisor: "",
+          salesTarget: 150000,
+          ytdSales: 0
         }
       },
-      // Additional dealers (7 more to reach 10 total)
-      ...Array.from({length: 7}, (_, i) => ({
-        id: `DLR${String(i + 4).padStart(3, '0')}`,
-        email: `agent${i + 4}@zucomotors.com`,
-        password: "Dealer123!",
-        role: "dealer",
-        firstName: ["Marcus", "Linda", "Kevin", "Patricia", "Daniel", "Rachel", "Steven"][i],
-        lastName: ["Williams", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson"][i],
-        phone: `555-${String(654 - i * 10).padStart(3, '0')}-4321`,
-        employeeId: `ZM-${String(i + 4).padStart(3, '0')}`,
-        commissionRate: 0.03,
-        createdAt: new Date(2023, i, 1, 8, 0, 0).toISOString(),
-        lastLogin: new Date(2024, 1, 1, 8 + i, 0, 0).toISOString(),
-        profile: {
-          department: "Sales",
-          supervisor: "Robert Chen",
-          salesTarget: 150000,
-          ytdSales: 50000 + i * 10000
-        }
-      })),
 
       // Sales Agents (independent salespeople)
       ...Array.from({length: 20}, (_, i) => ({
@@ -690,7 +670,8 @@ const DB = {
   },
 
   getUserByEmail(email) {
-    return this.getUsers().find(u => u.email === email);
+    const e = email.toLowerCase();
+    return this.getUsers().find(u => u.email.toLowerCase() === e);
   },
 
   addUser(user) {
