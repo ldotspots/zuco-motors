@@ -569,9 +569,18 @@
         owners: document.getElementById('condition').value === 'New' ? 0 : 1
       };
 
-      await DB.addVehicle(vehicle);
-      Utils.showToast('Vehicle added successfully!', 'success');
-      setTimeout(() => window.location.href = 'inventory.html', 1500);
+      try {
+        const result = await DB.addVehicle(vehicle);
+        if (result) {
+          Utils.showToast('Vehicle added successfully!', 'success');
+          setTimeout(() => window.location.href = 'inventory.html', 1500);
+        } else {
+          Utils.showToast('Failed to add vehicle. Check console for details.', 'error');
+        }
+      } catch (err) {
+        console.error('Add vehicle error:', err);
+        Utils.showToast('Error adding vehicle: ' + err.message, 'error');
+      }
     });
   </script>
 </body>

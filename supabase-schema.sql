@@ -244,3 +244,20 @@ INSERT INTO users (email, password, name, first_name, last_name, role, employee_
   ('cjrutherford1407@gmail.com', 'Poppy2624', 'CJ Rutherford', 'CJ', 'Rutherford', 'dealer', 'ZM-002', 0.03),
   ('meleisealucaa@gmail.com', 'Third6300!!!', 'Luca Meleisea', 'Luca', 'Meleisea', 'dealer', 'ZM-003', 0.03)
 ON CONFLICT (email) DO NOTHING;
+
+-- ============================================
+-- DISABLE ROW LEVEL SECURITY (for development)
+-- ============================================
+-- This allows all operations without authentication
+-- In production, you would enable RLS and add proper policies
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE vehicles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE inquiries DISABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_allocations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE test_drives DISABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_sales DISABLE ROW LEVEL SECURITY;
+ALTER TABLE viewing_bookings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE quote_requests DISABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_applications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE financing_applications DISABLE ROW LEVEL SECURITY;
