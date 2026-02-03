@@ -6,7 +6,7 @@ const DB = {
   COMPANY_MARGIN_RATE: 0.89,
 
   // Database schema version — bump to force re-seed
-  DB_VERSION: '10',
+  DB_VERSION: '11',
 
   // Initialize database
   init() {
@@ -25,10 +25,10 @@ const DB = {
   seedDatabase() {
     localStorage.setItem('zuco_users', JSON.stringify(this.getInitialUsers()));
     localStorage.setItem('zuco_vehicles', JSON.stringify(this.getInitialVehicles()));
-    localStorage.setItem('zuco_inquiries', JSON.stringify(this.getInitialInquiries()));
-    localStorage.setItem('zuco_transactions', JSON.stringify(this.getInitialTransactions()));
-    localStorage.setItem('zuco_agent_allocations', JSON.stringify(this.getInitialAllocations()));
-    localStorage.setItem('zuco_test_drives', JSON.stringify(this.getInitialTestDrives()));
+    localStorage.setItem('zuco_inquiries', JSON.stringify([]));
+    localStorage.setItem('zuco_transactions', JSON.stringify([]));
+    localStorage.setItem('zuco_agent_allocations', JSON.stringify([]));
+    localStorage.setItem('zuco_test_drives', JSON.stringify([]));
     localStorage.setItem('zuco_agent_sales', JSON.stringify([]));
     localStorage.setItem('zuco_viewing_bookings', JSON.stringify([]));
   },
@@ -46,117 +46,6 @@ const DB = {
 
   getInitialUsers() {
     return [
-      // Buyers
-      {
-        id: "USR001",
-        email: "john.buyer@email.com",
-        password: "Demo123!", // In production, this would be hashed
-        role: "buyer",
-        firstName: "John",
-        lastName: "Smith",
-        phone: "555-123-4567",
-        createdAt: "2024-01-15T10:30:00Z",
-        lastLogin: "2024-02-01T14:22:00Z",
-        profile: {
-          address: "123 Main St, Austin, TX 78701",
-          preferredContact: "email",
-          savedSearches: [],
-          favorites: [],
-          notificationPrefs: { email: true, sms: false }
-        }
-      },
-      {
-        id: "USR002",
-        email: "sarah.buyer@email.com",
-        password: "Demo123!",
-        role: "buyer",
-        firstName: "Sarah",
-        lastName: "Wilson",
-        phone: "555-234-5678",
-        createdAt: "2024-01-20T09:15:00Z",
-        lastLogin: "2024-02-01T16:30:00Z",
-        profile: {
-          address: "456 Oak Ave, Dallas, TX 75201",
-          preferredContact: "phone",
-          savedSearches: [],
-          favorites: ["VEH002", "VEH005"],
-          notificationPrefs: { email: true, sms: true }
-        }
-      },
-      {
-        id: "USR003",
-        email: "mike.customer@email.com",
-        password: "Demo123!",
-        role: "buyer",
-        firstName: "Mike",
-        lastName: "Johnson",
-        phone: "555-345-6789",
-        createdAt: "2024-01-25T14:45:00Z",
-        lastLogin: "2024-01-31T11:20:00Z",
-        profile: {
-          address: "789 Pine Dr, Houston, TX 77001",
-          preferredContact: "email",
-          savedSearches: [],
-          favorites: ["VEH001"],
-          notificationPrefs: { email: true, sms: false }
-        }
-      },
-      {
-        id: "USR004",
-        email: "emily.chen@email.com",
-        password: "Demo123!",
-        role: "buyer",
-        firstName: "Emily",
-        lastName: "Chen",
-        phone: "555-456-7890",
-        createdAt: "2023-12-10T08:00:00Z",
-        lastLogin: "2024-02-01T10:15:00Z",
-        profile: {
-          address: "321 Elm St, San Antonio, TX 78201",
-          preferredContact: "email",
-          savedSearches: [{make: "Honda", model: "Civic"}],
-          favorites: ["VEH010", "VEH015"],
-          notificationPrefs: { email: true, sms: true }
-        }
-      },
-      {
-        id: "USR005",
-        email: "david.brown@email.com",
-        password: "Demo123!",
-        role: "buyer",
-        firstName: "David",
-        lastName: "Brown",
-        phone: "555-567-8901",
-        createdAt: "2024-01-05T13:30:00Z",
-        lastLogin: "2024-01-30T15:45:00Z",
-        profile: {
-          address: "654 Maple Rd, Fort Worth, TX 76101",
-          preferredContact: "phone",
-          savedSearches: [],
-          favorites: [],
-          notificationPrefs: { email: false, sms: true }
-        }
-      },
-      // Additional buyers (20 more to reach 25 total)
-      ...Array.from({length: 20}, (_, i) => ({
-        id: `USR${String(i + 6).padStart(3, '0')}`,
-        email: `buyer${i + 6}@email.com`,
-        password: "Demo123!",
-        role: "buyer",
-        firstName: ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Jamie", "Quinn", "Blake", "Drew", "Avery", "Skylar", "Reese", "Dakota", "Sage", "River", "Phoenix", "Rowan", "Parker", "Bailey"][i % 20],
-        lastName: ["Anderson", "Taylor", "Martinez", "Garcia", "Rodriguez", "Lee", "Walker", "Hall", "Allen", "Young", "King", "Wright", "Lopez", "Hill", "Scott", "Green", "Adams", "Baker", "Nelson", "Carter"][i % 20],
-        phone: `555-${String(678 + i).padStart(3, '0')}-${String(9012 + i * 11).slice(-4)}`,
-        createdAt: new Date(2023, 11 + (i % 2), 15 + i).toISOString(),
-        lastLogin: new Date(2024, 0, 25 + (i % 5)).toISOString(),
-        profile: {
-          address: `${100 + i * 50} Street ${i + 1}, Texas ${78000 + i}`,
-          preferredContact: i % 2 === 0 ? "email" : "phone",
-          savedSearches: [],
-          favorites: [],
-          notificationPrefs: { email: true, sms: i % 2 === 0 }
-        }
-      })),
-
       // Dealers (fixed accounts — no public registration)
       {
         id: "DLR001",
@@ -214,27 +103,8 @@ const DB = {
           salesTarget: 150000,
           ytdSales: 0
         }
-      },
-
-      // Sales Agents (independent salespeople)
-      ...Array.from({length: 20}, (_, i) => ({
-        id: `AGT${String(i + 1).padStart(3, '0')}`,
-        email: `sagent${i + 1}@zucomotors.com`,
-        password: "Agent123!",
-        role: "sales_agent",
-        firstName: ["Marcus","Linda","Kevin","Patricia","Daniel","Rachel","Steven","Nicole","Brandon","Tiffany","Chris","Amanda","Derek","Heather","Tyler","Melissa","Jason","Brittany","Ryan","Stephanie"][i],
-        lastName: ["Rivera","Nguyen","Patel","Kim","Brooks","Foster","Hayes","Price","Ross","Perry","Long","Butler","Barnes","Coleman","Reed","Murphy","Bailey","Torres","Gray","Watson"][i],
-        phone: `555-${String(300 + i).padStart(3, '0')}-${String(1000 + i * 37).slice(-4)}`,
-        createdAt: new Date(2024, i % 12, 1 + i).toISOString(),
-        lastLogin: new Date(2026, 0, 20 + (i % 10)).toISOString(),
-        profile: {
-          region: ["North","South","East","West"][i % 4],
-          specialization: ["Sedans","SUVs","Trucks","Luxury","Electric"][i % 5],
-          bio: "",
-          salesTarget: 100000,
-          ytdSales: 0
-        }
-      }))
+      }
+      // Buyers register through the site, sales agents via the application system
     ];
   },
 

@@ -136,7 +136,7 @@
 
       document.getElementById('favoritesCount').textContent = favorites.length;
       document.getElementById('inquiriesCount').textContent = inquiries.filter(i => i.status !== 'closed-won' && i.status !== 'closed-lost').length;
-      document.getElementById('viewsCount').textContent = Math.floor(Math.random() * 10) + 5;
+      document.getElementById('viewsCount').textContent = 0;
     }
 
     // Render vehicle card
