@@ -508,6 +508,16 @@
       if (e.key === 'Enter') { e.preventDefault(); lookupPlate(); }
     });
 
+    // Auto-fill contact fields if logged in
+    if (Auth.isAuthenticated()) {
+      const user = Auth.getCurrentUser();
+      if (user) {
+        document.getElementById('qName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
+        document.getElementById('qEmail').value = user.email || '';
+        document.getElementById('qPhone').value = user.phone || '';
+      }
+    }
+
     const form = document.getElementById('quoteForm');
     const quoteTypeEl = document.getElementById('qQuoteType');
 

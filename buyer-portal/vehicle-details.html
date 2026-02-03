@@ -425,6 +425,16 @@
       document.getElementById('inquiryForm').reset();
     });
 
+    // Auto-fill contact fields if logged in
+    if (Auth.isAuthenticated()) {
+      const user = Auth.getCurrentUser();
+      if (user) {
+        document.getElementById('inqName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
+        document.getElementById('inqEmail').value = user.email || '';
+        document.getElementById('inqPhone').value = user.phone || '';
+      }
+    }
+
     // Initialize
     loadVehicle();
   </script>
