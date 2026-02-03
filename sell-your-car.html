@@ -444,17 +444,16 @@
       // Try CarJam API if configured
       if (CARJAM_PROXY) {
         try {
-          // If using a backend proxy, it should accept ?plate=X and forward to CarJam with the key
-          // If calling CarJam directly (test only), include key and params
-          const params = new URLSearchParams({ plate, basic: '1', f: 'json', translate: '1' });
-          if (CARJAM_KEY) params.set('key', CARJAM_KEY);
-          const res = await fetch(`${CARJAM_PROXY}?${params}`);
+          const res = await fetch(`${CARJAM_PROXY}?plate=${encodeURIComponent(plate)}`);
+          console.log('CarJam proxy status:', res.status);
           if (res.ok) {
             const data = await res.json();
-            if (data?.error) {
-              console.warn('CarJam error:', data.error.message);
+            console.log('CarJam response keys:', Object.keys(data));
+            if (data?.code && data?.code < 0) {
+              console.warn('CarJam error:', data.message);
             } else {
               vehicleData = parseCarJamResponse(data);
+              console.log('Parsed vehicle data:', vehicleData);
             }
           }
         } catch (e) {
