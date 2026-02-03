@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dealer Dashboard - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html" class="active">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="section">
+    <div class="container">
+      <!-- Welcome Section -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 id="welcomeMessage">Dealer Dashboard</h1>
+          <p style="color: var(--gray-600);">Track your performance and manage your inventory</p>
+        </div>
+        <div class="flex gap-4">
+          <a href="add-vehicle.html" class="btn btn-primary">+ Add Vehicle</a>
+          <a href="leads.html" class="btn btn-outline">View Leads</a>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalInventoryValue">$0</div>
+          <div class="stat-label">Total Inventory Value</div>
+          <div class="stat-change positive" id="inventoryChange">+0 vehicles this month</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value" id="activeLeads">0</div>
+          <div class="stat-label">Active Leads</div>
+          <div class="stat-change positive" id="leadsChange">+0 new this week</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value" id="monthSales">$0</div>
+          <div class="stat-label">This Month's Sales</div>
+          <div class="stat-change positive" id="salesChange">+0% from last month</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value" id="commission">$0</div>
+          <div class="stat-label">Commission Earned (YTD)</div>
+          <div class="stat-change positive" id="commissionChange">+$0 this month</div>
+        </div>
+      </div>
+
+      <!-- Secondary KPIs -->
+      <div class="grid grid-3 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="avgMarkup">0%</div>
+          <div class="stat-label">Average Markup</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value" id="inventoryTurnover">0</div>
+          <div class="stat-label">Inventory Turnover (days)</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value" id="conversionRate">0%</div>
+          <div class="stat-label">Lead Conversion Rate</div>
+        </div>
+      </div>
+
+      <!-- Recent Leads -->
+      <section class="mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2>Recent Leads</h2>
+          <a href="leads.html" class="btn btn-outline">View All Leads</a>
+        </div>
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Vehicle Interest</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recentLeadsTable">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 2rem;">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inventory Alerts -->
+      <section class="mb-8">
+        <h2 class="mb-6">Inventory Alerts</h2>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3>⚠️ Stale Inventory</h3>
+            </div>
+            <div class="card-body">
+              <div id="staleInventory">
+                <p style="color: var(--gray-600);">No vehicles have been on the lot for more than 90 days</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>🔥 Hot Inventory</h3>
+            </div>
+            <div class="card-body">
+              <div id="hotInventory">
+                <p style="color: var(--gray-600);">Loading popular vehicles...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sales Performance Chart -->
+      <section>
+        <div class="flex justify-between items-center mb-6">
+          <h2>Sales Performance (Last 6 Months)</h2>
+          <a href="analytics.html" class="btn btn-outline">Full Analytics</a>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="grid grid-3 mb-6">
+              <div style="text-align:center;">
+                <div id="chart6mUnits" style="font-size:var(--text-2xl);font-weight:700;">0</div>
+                <div style="color:var(--gray-600);font-size:var(--text-sm);">Units Sold</div>
+              </div>
+              <div style="text-align:center;">
+                <div id="chart6mRevenue" style="font-size:var(--text-2xl);font-weight:700;color:var(--primary-600);">$0</div>
+                <div style="color:var(--gray-600);font-size:var(--text-sm);">Revenue</div>
+              </div>
+              <div style="text-align:center;">
+                <div id="chart6mProfit" style="font-size:var(--text-2xl);font-weight:700;color:var(--success);">$0</div>
+                <div style="color:var(--gray-600);font-size:var(--text-sm);">Company Profit</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:0.75rem;height:220px;padding:1.5rem 0 2rem;" id="salesChart"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Get current dealer
+    const dealer = Auth.getCurrentUser();
+    if (dealer) {
+      document.getElementById('welcomeMessage').textContent = `Welcome back, ${dealer.firstName}!`;
+    }
+
+    // Calculate KPIs
+    function calculateKPIs() {
+      const vehicles = DB.getVehicles();
+      const myVehicles = vehicles.filter(v => v.assignedAgent === dealer.id);
+      const leads = DB.getInquiriesByAgent(dealer.id);
+      const transactions = DB.getTransactionsByAgent(dealer.id);
+
+      // Total Inventory Value
+      const totalValue = myVehicles
+        .filter(v => v.status === 'Available')
+        .reduce((sum, v) => sum + v.pricing.salePrice, 0);
+      document.getElementById('totalInventoryValue').textContent = Utils.formatCurrency(totalValue);
+      document.getElementById('inventoryChange').textContent = `${myVehicles.filter(v => v.status === 'Available').length} vehicles active`;
+
+      // Active Leads
+      const activeLeads = leads.filter(l => l.status !== 'closed-won' && l.status !== 'closed-lost');
+      document.getElementById('activeLeads').textContent = activeLeads.length;
+      const newLeadsThisWeek = leads.filter(l => {
+        const created = new Date(l.createdAt);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return created >= weekAgo;
+      }).length;
+      document.getElementById('leadsChange').textContent = `+${newLeadsThisWeek} new this week`;
+
+      // This Month's Sales
+      const thisMonth = new Date();
+      const monthTransactions = transactions.filter(t => {
+        const tDate = new Date(t.completedDate);
+        return tDate.getMonth() === thisMonth.getMonth() && tDate.getFullYear() === thisMonth.getFullYear();
+      });
+      const monthSales = monthTransactions.reduce((sum, t) => sum + t.pricing.salePrice, 0);
+      document.getElementById('monthSales').textContent = Utils.formatCurrency(monthSales);
+      document.getElementById('salesChange').textContent = `${monthTransactions.length} vehicles sold`;
+
+      // Commission YTD
+      const ytdTransactions = transactions.filter(t => {
+        const tDate = new Date(t.completedDate);
+        return tDate.getFullYear() === thisMonth.getFullYear();
+      });
+      const ytdCommission = ytdTransactions.reduce((sum, t) => sum + t.commission.commissionAmount, 0);
+      document.getElementById('commission').textContent = Utils.formatCurrency(ytdCommission);
+      const monthCommission = monthTransactions.reduce((sum, t) => sum + t.commission.commissionAmount, 0);
+      document.getElementById('commissionChange').textContent = `+${Utils.formatCurrency(monthCommission)} this month`;
+
+      // Average Markup
+      const avgMarkup = myVehicles
+        .filter(v => v.status === 'Available')
+        .reduce((sum, v) => sum + v.pricing.currentMarkup, 0) / myVehicles.filter(v => v.status === 'Available').length || 0;
+      document.getElementById('avgMarkup').textContent = (avgMarkup * 100).toFixed(1) + '%';
+
+      // Inventory Turnover
+      document.getElementById('inventoryTurnover').textContent = '45';
+
+      // Conversion Rate
+      const totalLeads = leads.length;
+      const wonLeads = leads.filter(l => l.status === 'closed-won').length;
+      const conversionRate = totalLeads > 0 ? (wonLeads / totalLeads * 100) : 0;
+      document.getElementById('conversionRate').textContent = conversionRate.toFixed(1) + '%';
+    }
+
+    // Load recent leads
+    function loadRecentLeads() {
+      const leads = DB.getInquiriesByAgent(dealer.id)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5);
+
+      const tableBody = document.getElementById('recentLeadsTable');
+
+      if (leads.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No leads yet</td></tr>';
+        return;
+      }
+
+      tableBody.innerHTML = leads.map(lead => {
+        const vehicle = DB.getVehicle(lead.vehicleId);
+        const buyer = DB.getUser(lead.buyerId);
+
+        return `
+          <tr>
+            <td>
+              <strong>${buyer ? `${buyer.firstName} ${buyer.lastName}` : 'Unknown'}</strong><br>
+              <span style="font-size: var(--text-sm); color: var(--gray-600);">${buyer?.email || ''}</span>
+            </td>
+            <td>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle'}</td>
+            <td><span class="badge badge-info">${lead.type}</span></td>
+            <td><span class="badge badge-${lead.status === 'open' ? 'warning' : lead.status === 'closed-won' ? 'success' : 'gray'}">${lead.status}</span></td>
+            <td><span class="badge badge-${lead.priority === 'high' ? 'error' : lead.priority === 'medium' ? 'warning' : 'gray'}">${lead.priority}</span></td>
+            <td>${Utils.formatRelativeTime(lead.createdAt)}</td>
+            <td>
+              <a href="leads.html?id=${lead.id}" class="btn btn-primary btn-sm">View</a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Load inventory alerts
+    function loadInventoryAlerts() {
+      const vehicles = DB.getVehicles().filter(v => v.assignedAgent === dealer.id && v.status === 'Available');
+
+      // Stale inventory (on lot for >60 days)
+      const today = new Date();
+      const stale = vehicles.filter(v => {
+        const added = new Date(v.addedDate);
+        const daysOnLot = Math.floor((today - added) / (1000 * 60 * 60 * 24));
+        return daysOnLot > 60;
+      }).slice(0, 3);
+
+      const staleContainer = document.getElementById('staleInventory');
+      if (stale.length > 0) {
+        staleContainer.innerHTML = stale.map(v => {
+          const daysOnLot = Math.floor((today - new Date(v.addedDate)) / (1000 * 60 * 60 * 24));
+          return `
+            <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200);">
+              <strong>${v.year} ${v.make} ${v.model}</strong><br>
+              <span style="color: var(--gray-600); font-size: var(--text-sm);">${daysOnLot} days on lot</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Hot inventory (high views, low days on lot)
+      const hot = vehicles
+        .filter(v => v.views > 100)
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 3);
+
+      const hotContainer = document.getElementById('hotInventory');
+      if (hot.length > 0) {
+        hotContainer.innerHTML = hot.map(v => `
+          <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200);">
+            <strong>${v.year} ${v.make} ${v.model}</strong><br>
+            <span style="color: var(--gray-600); font-size: var(--text-sm);">${v.views} views • ${v.inquiries} inquiries</span>
+          </div>
+        `).join('');
+      } else {
+        hotContainer.innerHTML = '<p style="color: var(--gray-600);">No trending vehicles at the moment</p>';
+      }
+    }
+
+    // Sales Performance Chart (last 6 months)
+    function renderSalesChart() {
+      const agentSales = DB.getAgentSales().filter(s => s.status === 'completed');
+      const now = new Date();
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({ month: d.getMonth(), year: d.getFullYear(), label: monthNames[d.getMonth()] });
+      }
+
+      let totalUnits = 0, totalRev = 0, totalProfit = 0;
+      const monthlyData = months.map(m => {
+        const sales = agentSales.filter(s => {
+          const d = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
+          return d.getMonth() === m.month && d.getFullYear() === m.year;
+        });
+        let rev = 0, profit = 0;
+        sales.forEach(s => {
+          const v = DB.getVehicle(s.vehicleId);
+          const invoiceCost = v ? v.pricing.invoiceCost : 0;
+          rev += s.salePrice;
+          profit += (s.salePrice - invoiceCost) - (s.agentProfit || 0);
+        });
+        totalUnits += sales.length;
+        totalRev += rev;
+        totalProfit += profit;
+        return { label: m.label, count: sales.length, revenue: rev };
+      });
+
+      document.getElementById('chart6mUnits').textContent = totalUnits;
+      document.getElementById('chart6mRevenue').textContent = Utils.formatCurrency(totalRev);
+      document.getElementById('chart6mProfit').textContent = Utils.formatCurrency(totalProfit);
+
+      const maxRev = Math.max(...monthlyData.map(d => d.revenue), 1);
+      document.getElementById('salesChart').innerHTML = monthlyData.map(d => {
+        const height = (d.revenue / maxRev * 100);
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
+          <span style="font-size:var(--text-xs);font-weight:600;margin-bottom:4px;">${d.count} sold</span>
+          <span style="font-size:var(--text-xs);color:var(--gray-500);margin-bottom:4px;">${Utils.formatCurrency(d.revenue)}</span>
+          <div style="width:100%;max-width:80px;background:var(--primary-600);border-radius:var(--radius-sm) var(--radius-sm) 0 0;height:${Math.max(height, 3)}%;transition:all .3s;"></div>
+          <span style="font-size:var(--text-xs);color:var(--gray-600);margin-top:6px;">${d.label}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Initialize
+    calculateKPIs();
+    loadRecentLeads();
+    loadInventoryAlerts();
+    renderSalesChart();
+  </script>
+</body>
+</html>

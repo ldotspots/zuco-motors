@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="../index.html">Home</a>
+          <a href="../about-us.html">About Us</a>
+          <a href="inventory.html">Find a Car</a>
+          <a href="../sell-your-car.html">Sell Your Car</a>
+          <a href="financing.html">Financing</a>
+          <a href="compare.html">Compare</a>
+          <a href="login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="../sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="profile.html" class="active nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container" style="max-width: 800px;">
+      <h1 class="mb-8">My Account</h1>
+
+      <!-- Quick Links -->
+      <div class="card mb-6">
+        <div class="card-body">
+          <div class="flex gap-4">
+            <a href="index.html" class="btn btn-secondary">Dashboard</a>
+            <a href="my-inquiries.html" class="btn btn-secondary">My Inquiries</a>
+            <a href="favorites.html" class="btn btn-secondary">Favorites</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Info -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>Personal Information</h3></div>
+        <div class="card-body">
+          <form id="profileForm">
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" class="form-control" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" class="form-control" disabled>
+              <small style="color: var(--gray-500);">Email cannot be changed</small>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="address">Address</label>
+              <input type="text" id="address" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="preferredContact">Preferred Contact Method</label>
+              <select id="preferredContact" class="form-control">
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Notification Preferences -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>Notification Preferences</h3></div>
+        <div class="card-body">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <input type="checkbox" id="emailNotifs" style="width: auto;">
+            <label for="emailNotifs" style="margin-bottom: 0;">Email notifications</label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <input type="checkbox" id="smsNotifs" style="width: auto;">
+            <label for="smsNotifs" style="margin-bottom: 0;">SMS notifications</label>
+          </div>
+          <button class="btn btn-primary" onclick="saveNotifications()">Save Preferences</button>
+        </div>
+      </div>
+
+      <!-- Change Password -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>Change Password</h3></div>
+        <div class="card-body">
+          <form id="passwordForm">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input type="password" id="currentPassword" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input type="password" id="newPassword" class="form-control" required>
+              <small style="color: var(--gray-500);">Min 8 chars, uppercase, lowercase, number, special character</small>
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input type="password" id="confirmPassword" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Account Info -->
+      <div class="card">
+        <div class="card-header"><h3>Account Information</h3></div>
+        <div class="card-body">
+          <p><strong>Member since:</strong> <span id="memberSince">-</span></p>
+          <p><strong>Last login:</strong> <span id="lastLogin">-</span></p>
+          <p><strong>Account ID:</strong> <span id="accountId">-</span></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Auth-aware nav
+    if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+      document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+    }
+
+    const user = Auth.getCurrentUser();
+
+    function loadProfile() {
+      if (!user) return;
+      document.getElementById('firstName').value = user.firstName || '';
+      document.getElementById('lastName').value = user.lastName || '';
+      document.getElementById('email').value = user.email || '';
+      document.getElementById('phone').value = user.phone || '';
+      document.getElementById('address').value = user.profile?.address || '';
+      document.getElementById('preferredContact').value = user.profile?.preferredContact || 'email';
+      document.getElementById('emailNotifs').checked = user.profile?.notificationPrefs?.email ?? true;
+      document.getElementById('smsNotifs').checked = user.profile?.notificationPrefs?.sms ?? false;
+      document.getElementById('memberSince').textContent = Utils.formatDate(user.createdAt);
+      document.getElementById('lastLogin').textContent = Utils.formatDate(user.lastLogin);
+      document.getElementById('accountId').textContent = user.id;
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const result = Auth.updateProfile({
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        phone: document.getElementById('phone').value,
+        profile: {
+          ...user.profile,
+          address: document.getElementById('address').value,
+          preferredContact: document.getElementById('preferredContact').value
+        }
+      });
+      Utils.showToast(result.success ? 'Profile updated!' : result.error, result.success ? 'success' : 'error');
+    });
+
+    function saveNotifications() {
+      const prefs = {
+        email: document.getElementById('emailNotifs').checked,
+        sms: document.getElementById('smsNotifs').checked
+      };
+      DB.updateUser(user.id, { profile: { ...user.profile, notificationPrefs: prefs } });
+      Utils.showToast('Notification preferences saved!', 'success');
+    }
+
+    document.getElementById('passwordForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const current = document.getElementById('currentPassword').value;
+      const newPw = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+
+      if (newPw !== confirm) {
+        Utils.showToast('Passwords do not match', 'error');
+        return;
+      }
+
+      const validation = Auth.validatePassword(newPw);
+      if (!validation.valid) {
+        Utils.showToast('Password does not meet requirements', 'error');
+        return;
+      }
+
+      const result = Auth.updatePassword(current, newPw);
+      Utils.showToast(result.success ? 'Password updated!' : result.error, result.success ? 'success' : 'error');
+      if (result.success) document.getElementById('passwordForm').reset();
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

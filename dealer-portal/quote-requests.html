@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Requests - Dealer Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html" class="active">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="flex justify-between items-center mb-6">
+        <h1>Sell Your Car — Quote Requests</h1>
+        <span id="quoteCount" class="badge badge-primary">0 requests</span>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-4 mb-8" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-card">
+          <div class="stat-value" id="pendingCount" style="color:var(--warning);">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="contactedCount" style="color:var(--primary-600);">0</div>
+          <div class="stat-label">Contacted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="acceptedCount" style="color:var(--success);">0</div>
+          <div class="stat-label">Accepted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="declinedCount" style="color:var(--gray-500);">0</div>
+          <div class="stat-label">Declined</div>
+        </div>
+      </div>
+
+      <!-- Quotes Table -->
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Plate</th>
+                <th>Vehicle</th>
+                <th>Condition</th>
+                <th>Odometer</th>
+                <th>Contact</th>
+                <th>Notes</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="quotesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const TYPE_LABELS = { instant: 'Instant Offer', agent: 'Agent Appraisal', inspection: 'In-Person Inspection' };
+    const TYPE_BADGE = { instant: 'badge-primary', agent: 'badge-warning', inspection: 'badge-gray' };
+    const STATUS_BADGE = { pending: 'badge-warning', contacted: 'badge-primary', accepted: 'badge-primary', declined: 'badge-gray' };
+    const STATUS_LABEL = { pending: 'Pending', contacted: 'Contacted', accepted: 'Accepted', declined: 'Declined' };
+    const COND_LABEL = { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor' };
+
+    function render() {
+      const quotes = DB.getQuoteRequests();
+      const pending = quotes.filter(q => q.status === 'pending');
+      const contacted = quotes.filter(q => q.status === 'contacted');
+      const accepted = quotes.filter(q => q.status === 'accepted');
+      const declined = quotes.filter(q => q.status === 'declined');
+
+      document.getElementById('quoteCount').textContent = `${quotes.length} requests`;
+      document.getElementById('pendingCount').textContent = pending.length;
+      document.getElementById('contactedCount').textContent = contacted.length;
+      document.getElementById('acceptedCount').textContent = accepted.length;
+      document.getElementById('declinedCount').textContent = declined.length;
+
+      const sorted = [...quotes].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      document.getElementById('quotesTable').innerHTML = sorted.map(q => {
+        const badge = STATUS_BADGE[q.status] || 'badge-gray';
+        const label = STATUS_LABEL[q.status] || q.status;
+        const typeBadge = TYPE_BADGE[q.quoteType] || 'badge-gray';
+
+        let actions = '';
+        if (q.status === 'pending') {
+          actions = `
+            <button class="btn btn-sm btn-primary" onclick="updateStatus('${q.id}', 'contacted')">Mark Contacted</button>
+            <button class="btn btn-sm" style="background:var(--gray-300);color:var(--gray-700);" onclick="updateStatus('${q.id}', 'declined')">Decline</button>`;
+        } else if (q.status === 'contacted') {
+          actions = `
+            <button class="btn btn-sm" style="background:var(--success);color:white;" onclick="updateStatus('${q.id}', 'accepted')">Accept</button>
+            <button class="btn btn-sm" style="background:var(--gray-300);color:var(--gray-700);" onclick="updateStatus('${q.id}', 'declined')">Decline</button>`;
+        } else {
+          actions = '-';
+        }
+
+        return `<tr>
+          <td><strong>${Utils.formatDate(q.createdAt)}</strong></td>
+          <td><span class="badge ${typeBadge}">${TYPE_LABELS[q.quoteType] || q.quoteType}</span></td>
+          <td>${q.plate ? `<span class="badge badge-gray" style="font-weight:600;letter-spacing:1px;">${q.plate}</span>` : '-'}</td>
+          <td><strong>${q.year} ${q.make} ${q.model}</strong>${q.fuel ? `<br><span style="font-size:var(--text-sm);color:var(--gray-500);">${q.fuel.charAt(0).toUpperCase() + q.fuel.slice(1)}</span>` : ''}</td>
+          <td>${COND_LABEL[q.condition] || q.condition}</td>
+          <td>${Utils.formatNumber(q.mileage)} km</td>
+          <td>
+            <strong>${q.contactName}</strong>
+            <br><a href="tel:${q.contactPhone}" style="font-size:var(--text-sm);color:var(--primary-600);">${q.contactPhone}</a>
+            <br><span style="font-size:var(--text-sm);color:var(--gray-500);">${q.contactEmail}</span>
+          </td>
+          <td style="max-width:200px;font-size:var(--text-sm);color:var(--gray-600);">${q.notes || '-'}</td>
+          <td><span class="badge ${badge}">${label}</span></td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--gray-500);">No quote requests yet</td></tr>';
+    }
+
+    function updateStatus(id, status) {
+      DB.updateQuoteRequest(id, { status, updatedAt: new Date().toISOString() });
+      Utils.showToast(`Quote marked as ${STATUS_LABEL[status]}`, 'success');
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Past Sales - Zuco Motors Dealer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html" class="active">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-8">Past Sales</h1>
+
+      <!-- KPIs -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalCount">0</div>
+          <div class="stat-label">Completed Sales</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalRevenue">$0</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalCompanyProfit" style="color:var(--success);">$0</div>
+          <div class="stat-label">Company Profit</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalAgentPayouts">$0</div>
+          <div class="stat-label">Agent Payouts</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex gap-4 mb-6" style="flex-wrap:wrap;">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search customer or vehicle..." style="max-width:250px;" oninput="render()">
+        <select id="agentFilter" class="form-control" style="max-width:200px;" onchange="render()">
+          <option value="all">All Agents</option>
+        </select>
+        <input type="date" id="dateFrom" class="form-control" style="max-width:170px;" onchange="render()">
+        <input type="date" id="dateTo" class="form-control" style="max-width:170px;" onchange="render()">
+      </div>
+
+      <!-- Sales Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="flex justify-between items-center">
+            <h3>Completed Transactions</h3>
+            <span id="saleCount" class="badge badge-primary">0 sales</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Sale Date</th>
+                <th>Vehicle Details</th>
+                <th>Customer</th>
+                <th>Agent</th>
+                <th>Invoice Cost</th>
+                <th>Sale Price</th>
+                <th>Gross Spread</th>
+                <th>Company Profit</th>
+                <th>Agent Profit</th>
+              </tr>
+            </thead>
+            <tbody id="salesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Populate agent filter
+    const allCompleted = DB.getAgentSales().filter(s => s.status === 'completed');
+    const agentNames = [...new Set(allCompleted.map(s => s.agentName))].sort();
+    const agentSelect = document.getElementById('agentFilter');
+    agentNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      agentSelect.appendChild(opt);
+    });
+
+    function render() {
+      let sales = [...allCompleted];
+
+      // Filters
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const agent = document.getElementById('agentFilter').value;
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+
+      if (agent !== 'all') sales = sales.filter(s => s.agentName === agent);
+      if (dateFrom) sales = sales.filter(s => s.saleDate >= dateFrom);
+      if (dateTo) sales = sales.filter(s => s.saleDate <= dateTo);
+      if (search) {
+        sales = sales.filter(s => {
+          const v = DB.getVehicle(s.vehicleId);
+          const vStr = v ? `${v.year} ${v.make} ${v.model} ${v.trim}`.toLowerCase() : '';
+          return (s.buyerName || '').toLowerCase().includes(search) || vStr.includes(search);
+        });
+      }
+
+      // KPIs (from filtered results)
+      let totalRev = 0, totalComp = 0, totalAgent = 0;
+      sales.forEach(s => {
+        const v = DB.getVehicle(s.vehicleId);
+        const invoiceCost = v ? v.pricing.invoiceCost : 0;
+        const grossSpread = s.salePrice - invoiceCost;
+        const companyMargin = grossSpread - (s.agentProfit || 0);
+        totalRev += s.salePrice;
+        totalComp += companyMargin;
+        totalAgent += s.agentProfit || 0;
+      });
+
+      document.getElementById('totalCount').textContent = sales.length;
+      document.getElementById('totalRevenue').textContent = Utils.formatCurrency(totalRev);
+      document.getElementById('totalCompanyProfit').textContent = Utils.formatCurrency(totalComp);
+      document.getElementById('totalAgentPayouts').textContent = Utils.formatCurrency(totalAgent);
+      document.getElementById('saleCount').textContent = `${sales.length} sales`;
+
+      // Sort newest first
+      sales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+
+      document.getElementById('salesTable').innerHTML = sales.map(s => {
+        const v = DB.getVehicle(s.vehicleId);
+        const invoiceCost = v ? v.pricing.invoiceCost : 0;
+        const grossSpread = s.salePrice - invoiceCost;
+        const companyMargin = grossSpread - (s.agentProfit || 0);
+
+        const vehicleDetails = v ? `
+          <strong>${v.year} ${v.make} ${v.model}</strong>
+          <br><span style="font-size:var(--text-sm);color:var(--gray-600);">${v.trim || ''}</span>
+          <br><span style="font-size:var(--text-sm);color:var(--gray-500);">${v.condition} &middot; ${v.bodyStyle || ''} &middot; ${v.exteriorColor || ''}</span>
+          ${v.vin ? `<br><span style="font-size:var(--text-sm);color:var(--gray-400);">VIN: ${v.vin}</span>` : ''}
+        ` : '<span style="color:var(--gray-500);">Vehicle removed</span>';
+
+        const customerInfo = `
+          <strong>${s.buyerName || 'Unknown'}</strong>
+          ${s.buyerPhone ? `<br><a href="tel:${s.buyerPhone}" style="font-size:var(--text-sm);color:var(--primary-600);">${s.buyerPhone}</a>` : ''}
+          ${s.buyerEmail ? `<br><a href="mailto:${s.buyerEmail}" style="font-size:var(--text-sm);color:var(--primary-600);">${s.buyerEmail}</a>` : ''}
+        `;
+
+        return `<tr>
+          <td>${Utils.formatDate(s.saleDate)}</td>
+          <td>${vehicleDetails}</td>
+          <td>${customerInfo}</td>
+          <td>${s.agentName}</td>
+          <td>${Utils.formatCurrency(invoiceCost)}</td>
+          <td>${Utils.formatCurrency(s.salePrice)}</td>
+          <td>${Utils.formatCurrency(grossSpread)}</td>
+          <td style="color:var(--success);font-weight:600;">${Utils.formatCurrency(companyMargin)}</td>
+          <td>${Utils.formatCurrency(s.agentProfit)}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--gray-500);">No completed sales found</td></tr>';
+    }
+
+    render();
+  </script>
+</body>
+</html>

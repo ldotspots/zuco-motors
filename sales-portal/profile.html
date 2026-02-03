@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html" class="active">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container" style="max-width:800px;">
+      <h1 class="mb-8">Agent Profile</h1>
+
+      <!-- Profile Card -->
+      <div class="card mb-6">
+        <div class="card-body" style="text-align:center;padding:2rem;">
+          <div style="width:100px;height:100px;background:var(--primary-100);border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:3rem;">👤</div>
+          <h2 id="agentName">-</h2>
+          <p style="color:var(--gray-600);" id="agentRegion">-</p>
+          <span class="badge badge-primary" id="agentId">-</span>
+        </div>
+      </div>
+
+      <!-- Personal Info -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>Personal Information</h3></div>
+        <div class="card-body">
+          <form id="profileForm">
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" class="form-control" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" class="form-control" disabled>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Work Info -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>Agent Information</h3></div>
+        <div class="card-body">
+          <table style="width:100%;">
+            <tr><td style="padding:0.75rem;font-weight:600;">Region</td><td id="region" style="padding:0.75rem;">-</td></tr>
+            <tr><td style="padding:0.75rem;font-weight:600;">Specialization</td><td id="spec" style="padding:0.75rem;">-</td></tr>
+            <tr><td style="padding:0.75rem;font-weight:600;">Sales Target</td><td id="target" style="padding:0.75rem;">-</td></tr>
+            <tr><td style="padding:0.75rem;font-weight:600;">YTD Sales</td><td id="ytd" style="padding:0.75rem;">-</td></tr>
+            <tr><td style="padding:0.75rem;font-weight:600;">Member Since</td><td id="since" style="padding:0.75rem;">-</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Change Password -->
+      <div class="card">
+        <div class="card-header"><h3>Change Password</h3></div>
+        <div class="card-body">
+          <form id="passwordForm">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input type="password" id="currentPassword" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input type="password" id="newPassword" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <input type="password" id="confirmPassword" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+
+    if (agent) {
+      document.getElementById('agentName').textContent = `${agent.firstName} ${agent.lastName}`;
+      document.getElementById('agentRegion').textContent = agent.profile?.region || 'Sales Agent';
+      document.getElementById('agentId').textContent = agent.id;
+      document.getElementById('firstName').value = agent.firstName;
+      document.getElementById('lastName').value = agent.lastName;
+      document.getElementById('email').value = agent.email;
+      document.getElementById('phone').value = agent.phone || '';
+      document.getElementById('region').textContent = agent.profile?.region || '-';
+      document.getElementById('spec').textContent = agent.profile?.specialization || '-';
+      document.getElementById('target').textContent = Utils.formatCurrency(agent.profile?.salesTarget || 0);
+      document.getElementById('ytd').textContent = Utils.formatCurrency(agent.profile?.ytdSales || 0);
+      document.getElementById('since').textContent = Utils.formatDate(agent.createdAt);
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      Auth.updateProfile({
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        phone: document.getElementById('phone').value
+      });
+      Utils.showToast('Profile updated!', 'success');
+    });
+
+    document.getElementById('passwordForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newPw = document.getElementById('newPassword').value;
+      if (newPw !== document.getElementById('confirmPassword').value) {
+        Utils.showToast('Passwords do not match', 'error');
+        return;
+      }
+      const result = Auth.updatePassword(document.getElementById('currentPassword').value, newPw);
+      Utils.showToast(result.success ? 'Password updated!' : result.error, result.success ? 'success' : 'error');
+      if (result.success) document.getElementById('passwordForm').reset();
+    });
+  </script>
+</body>
+</html>

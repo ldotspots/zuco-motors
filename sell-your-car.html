@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell Your Car - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .sell-hero {
+      background: linear-gradient(135deg, var(--gray-900) 0%, var(--primary-800) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .sell-hero h1 { color: var(--white); font-size: 3rem; margin-bottom: 1rem; }
+    .sell-hero p { font-size: 1.25rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+
+    .sell-section { padding: 4rem 0; }
+    .sell-section:nth-child(even) { background: var(--gray-50); }
+
+    .quote-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) { .quote-options { grid-template-columns: 1fr; } }
+    .quote-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all var(--transition-normal);
+    }
+    .quote-card:hover { border-color: var(--primary-600); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .quote-card svg {
+      width: 56px;
+      height: 56px;
+      stroke: var(--gray-900);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-bottom: 1.5rem;
+    }
+    .quote-card h3 { margin-bottom: 0.75rem; font-size: var(--text-xl); }
+    .quote-card p { color: var(--gray-600); font-size: var(--text-sm); margin-bottom: 1.5rem; line-height: 1.6; }
+    .quote-card .badge { font-size: var(--text-sm); padding: 0.4rem 1rem; }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) { .how-grid { grid-template-columns: repeat(2, 1fr); } }
+    .how-step { text-align: center; padding: 1.5rem; }
+    .how-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary-600);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-xl);
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+    .how-step h3 { margin-bottom: 0.5rem; }
+    .how-step p { color: var(--gray-600); font-size: var(--text-sm); }
+
+    .quote-form-section { max-width: 700px; margin: 0 auto; }
+
+    .form-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 2rem 0 1.5rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .form-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="index.html">Home</a>
+          <a href="about-us.html">About Us</a>
+          <a href="buyer-portal/inventory.html">Find a Car</a>
+          <a href="sell-your-car.html" class="active">Sell Your Car</a>
+          <a href="buyer-portal/financing.html">Financing</a>
+          <a href="buyer-portal/compare.html">Compare</a>
+          <a href="buyer-portal/login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="buyer-portal/favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="buyer-portal/profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="sell-hero">
+    <div class="container">
+      <h1>Sell Your Car</h1>
+      <p>Get a fair, transparent quote for your vehicle. Multiple options to suit your timeline.</p>
+    </div>
+  </section>
+
+  <!-- Quote Options -->
+  <section class="sell-section">
+    <div class="container">
+      <h2 class="mb-4" style="text-align:center;">Choose Your Quote Option</h2>
+      <p style="text-align:center;color:var(--gray-600);margin-bottom:3rem;max-width:600px;margin-left:auto;margin-right:auto;">We offer three ways to sell your car. Pick the one that works best for you.</p>
+      <div class="quote-options">
+        <div class="quote-card">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <h3>Instant Offer</h3>
+          <p>Get an automated valuation based on your vehicle's details. Quick, simple, and no obligation. Perfect if you want a fast answer.</p>
+          <span class="badge badge-primary">Fastest</span>
+        </div>
+        <div class="quote-card">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h3>Agent Appraisal</h3>
+          <p>One of our sales agents will review your vehicle details and provide a personalised offer within 24 hours. More accurate pricing.</p>
+          <span class="badge badge-warning">Recommended</span>
+        </div>
+        <div class="quote-card">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <h3>In-Person Inspection</h3>
+          <p>Book a visit to our dealership for a full vehicle inspection. Get the highest possible offer with a same-day payout option.</p>
+          <span class="badge badge-gray">Best Price</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="sell-section">
+    <div class="container">
+      <h2 class="mb-8" style="text-align:center;">How It Works</h2>
+      <div class="how-grid">
+        <div class="how-step">
+          <div class="how-number">1</div>
+          <h3>Submit Details</h3>
+          <p>Fill in your vehicle info — make, model, year, mileage, and condition.</p>
+        </div>
+        <div class="how-step">
+          <div class="how-number">2</div>
+          <h3>Get Your Quote</h3>
+          <p>Receive a no-obligation offer based on current market data and vehicle condition.</p>
+        </div>
+        <div class="how-step">
+          <div class="how-number">3</div>
+          <h3>Accept & Sell</h3>
+          <p>Happy with the offer? We handle the paperwork and payment — hassle-free.</p>
+        </div>
+        <div class="how-step">
+          <div class="how-number">4</div>
+          <h3>Get Paid</h3>
+          <p>Receive payment via bank transfer or cheque. Fast, secure, and straightforward.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quote Form -->
+  <section class="sell-section">
+    <div class="container">
+      <div class="quote-form-section">
+        <h2 class="mb-4" style="text-align:center;">Get Your Free Quote</h2>
+        <p style="text-align:center;color:var(--gray-600);margin-bottom:2rem;">Tell us about your vehicle and we'll get back to you with an offer.</p>
+        <div class="card">
+          <div class="card-body">
+            <form id="quoteForm">
+              <div class="form-divider">Vehicle Lookup</div>
+              <div class="form-group">
+                <label for="qPlate">NZ Registration Plate</label>
+                <div style="display:flex;gap:0.5rem;">
+                  <input type="text" id="qPlate" class="form-control" placeholder="e.g. ABC123" style="text-transform:uppercase;flex:1;max-width:200px;font-weight:600;letter-spacing:1px;">
+                  <button type="button" id="lookupBtn" class="btn btn-primary" onclick="lookupPlate()">Look Up</button>
+                </div>
+                <div id="lookupStatus" style="font-size:var(--text-sm);margin-top:0.5rem;"></div>
+              </div>
+
+              <!-- Lookup result card -->
+              <div id="lookupResult" style="display:none;" class="mb-4">
+                <div class="card" style="background:var(--gray-50);border:1px solid var(--gray-200);">
+                  <div class="card-body" style="padding:1rem 1.25rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                      <strong id="lookupVehicle" style="font-size:var(--text-lg);"></strong>
+                      <span class="badge badge-primary" id="lookupPlateDisplay"></span>
+                    </div>
+                    <div id="lookupDetails" style="font-size:var(--text-sm);color:var(--gray-600);display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem 1rem;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-divider">Vehicle Information</div>
+              <div class="grid grid-3">
+                <div class="form-group">
+                  <label for="qMake">Make *</label>
+                  <input type="text" id="qMake" class="form-control" required placeholder="e.g. Toyota">
+                </div>
+                <div class="form-group">
+                  <label for="qModel">Model *</label>
+                  <input type="text" id="qModel" class="form-control" required placeholder="e.g. Camry">
+                </div>
+                <div class="form-group">
+                  <label for="qYear">Year *</label>
+                  <input type="number" id="qYear" class="form-control" required placeholder="e.g. 2020" min="1990" max="2026">
+                </div>
+              </div>
+              <div class="grid grid-3">
+                <div class="form-group">
+                  <label for="qMileage">Odometer (km) *</label>
+                  <input type="number" id="qMileage" class="form-control" required placeholder="e.g. 72000" min="0">
+                </div>
+                <div class="form-group">
+                  <label for="qCondition">Condition *</label>
+                  <select id="qCondition" class="form-control" required>
+                    <option value="">Select condition</option>
+                    <option value="excellent">Excellent — Like new, no issues</option>
+                    <option value="good">Good — Minor cosmetic wear</option>
+                    <option value="fair">Fair — Some mechanical or cosmetic issues</option>
+                    <option value="poor">Poor — Significant issues or damage</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="qFuel">Fuel Type</label>
+                  <select id="qFuel" class="form-control">
+                    <option value="">Unknown</option>
+                    <option value="petrol">Petrol</option>
+                    <option value="diesel">Diesel</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="electric">Electric</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="qQuoteType">Quote Type *</label>
+                <select id="qQuoteType" class="form-control" required>
+                  <option value="instant">Instant Offer — Automated valuation</option>
+                  <option value="agent">Agent Appraisal — Personalised review within 24h</option>
+                  <option value="inspection">In-Person Inspection — Book a dealership visit</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="qNotes">Additional Notes</label>
+                <textarea id="qNotes" class="form-control" rows="3" placeholder="Any modifications, service history, damage, etc."></textarea>
+              </div>
+
+              <div class="form-divider">Your Contact Details</div>
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label for="qName">Full Name *</label>
+                  <input type="text" id="qName" class="form-control" required placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                  <label for="qPhone">Phone *</label>
+                  <input type="tel" id="qPhone" class="form-control" required placeholder="(555) 123-4567">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="qEmail">Email *</label>
+                <input type="email" id="qEmail" class="form-control" required placeholder="you@email.com">
+              </div>
+
+              <!-- Instant estimate preview -->
+              <div id="estimatePreview" style="display:none;" class="mb-4">
+                <div class="card" style="background:var(--gray-50);border:1px solid var(--gray-200);">
+                  <div class="card-body" style="text-align:center;">
+                    <div style="color:var(--gray-500);font-size:var(--text-sm);margin-bottom:0.25rem;">Estimated Value Range</div>
+                    <div id="estimateRange" style="font-size:var(--text-2xl);font-weight:700;color:var(--primary-600);"></div>
+                    <div style="color:var(--gray-500);font-size:var(--text-xs);margin-top:0.25rem;">Based on current market data. Final offer may vary.</div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-lg w-full">Submit Quote Request</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Zuco Motors</h3>
+          <p style="color: var(--gray-400);">Your trusted partner in finding the perfect vehicle. Quality, transparency, and customer satisfaction are our priorities.</p>
+        </div>
+        <div class="footer-section">
+          <h3>For Buyers</h3>
+          <ul>
+            <li><a href="buyer-portal/inventory.html">Find a Car</a></li>
+            <li><a href="buyer-portal/financing.html">Financing</a></li>
+            <li><a href="buyer-portal/compare.html">Compare Vehicles</a></li>
+            <li><a href="buyer-portal/login.html">My Account</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>For Sellers</h3>
+          <ul>
+            <li><a href="sell-your-car.html">Sell Your Car</a></li>
+            <li><a href="become-a-seller.html">Become a Sales Agent</a></li>
+            <li><a href="sales-portal/login.html">Agent Login</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <ul>
+            <li><a href="about-us.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul>
+            <li>Email: info@zucomotors.com</li>
+            <li>Phone: (555) 123-4567</li>
+            <li>Address: 123 Auto Plaza, TX</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+        document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+      }
+    });
+
+    // ── NZ Plate Lookup ──────────────────────────────────────────
+    // In production, requests would go through a backend proxy to CarJam's API:
+    //   GET https://www.carjam.co.nz/a/vehicle:abcd?key=YOUR_KEY&plate=ABC123
+    // For demo purposes we use a mock database of NZ plates.
+
+    const MOCK_PLATES = {
+      'ABC123': { make: 'Toyota', model: 'Corolla', submodel: 'GX', year: 2018, cc: 1798, fuel: 'petrol', colour: 'Silver', body: 'Hatchback', seats: 5, odometer: 72400, transmission: 'Automatic', vin: 'JTDKN3DU5J1234567' },
+      'DEF456': { make: 'Mazda', model: 'CX-5', submodel: 'GSX', year: 2020, cc: 2488, fuel: 'petrol', colour: 'Soul Red', body: 'SUV', seats: 5, odometer: 45200, transmission: 'Automatic', vin: 'JM3KFBCM0L0123456' },
+      'GHI789': { make: 'Honda', model: 'Jazz', submodel: 'RS', year: 2019, cc: 1498, fuel: 'petrol', colour: 'Blue', body: 'Hatchback', seats: 5, odometer: 58300, transmission: 'CVT', vin: 'JHMGK5H70KX012345' },
+      'JKL012': { make: 'Hyundai', model: 'Tucson', submodel: 'Elite', year: 2021, cc: 1999, fuel: 'diesel', colour: 'White', body: 'SUV', seats: 5, odometer: 31000, transmission: 'Automatic', vin: 'KMHJ3814MU012345' },
+      'MNO345': { make: 'Ford', model: 'Ranger', submodel: 'XLT', year: 2019, cc: 3198, fuel: 'diesel', colour: 'Black', body: 'Ute', seats: 5, odometer: 89500, transmission: 'Automatic', vin: 'MNAUMFF70LW012345' },
+      'PQR678': { make: 'Suzuki', model: 'Swift', submodel: 'GL', year: 2017, cc: 1242, fuel: 'petrol', colour: 'White', body: 'Hatchback', seats: 5, odometer: 94200, transmission: 'Automatic', vin: 'TSMMBA71S00123456' },
+      'STU901': { make: 'Mitsubishi', model: 'Outlander', submodel: 'VRX', year: 2020, cc: 2360, fuel: 'petrol', colour: 'Grey', body: 'SUV', seats: 7, odometer: 52100, transmission: 'CVT', vin: 'JA4J4VA85LZ012345' },
+      'VWX234': { make: 'Nissan', model: 'Leaf', submodel: 'G', year: 2019, cc: 0, fuel: 'electric', colour: 'White', body: 'Hatchback', seats: 5, odometer: 41800, transmission: 'Automatic', vin: 'SJNFAAZE1U0012345' },
+      'YZA567': { make: 'Toyota', model: 'Hilux', submodel: 'SR5', year: 2021, cc: 2755, fuel: 'diesel', colour: 'Graphite', body: 'Ute', seats: 5, odometer: 38700, transmission: 'Automatic', vin: 'MROFR22G5M1012345' },
+      'BCD890': { make: 'Kia', model: 'Sportage', submodel: 'LX', year: 2018, cc: 1999, fuel: 'diesel', colour: 'Blue', body: 'SUV', seats: 5, odometer: 78600, transmission: 'Automatic', vin: 'KNAPH81A9J5012345' },
+      'EFG123': { make: 'Volkswagen', model: 'Golf', submodel: 'TSI', year: 2020, cc: 1395, fuel: 'petrol', colour: 'White', body: 'Hatchback', seats: 5, odometer: 35400, transmission: 'DSG', vin: 'WVWZZZAUZLW012345' },
+      'HIJ456': { make: 'Subaru', model: 'Outback', submodel: 'Premium', year: 2019, cc: 2498, fuel: 'petrol', colour: 'Green', body: 'Wagon', seats: 5, odometer: 67200, transmission: 'CVT', vin: 'JF2BS9LC6KH012345' },
+      'KLM789': { make: 'Tesla', model: 'Model 3', submodel: 'Standard Range Plus', year: 2021, cc: 0, fuel: 'electric', colour: 'White', body: 'Sedan', seats: 5, odometer: 28500, transmission: 'Automatic', vin: '5YJ3E1EA7MF012345' },
+      'NOP012': { make: 'Toyota', model: 'RAV4', submodel: 'GXL Hybrid', year: 2022, cc: 2487, fuel: 'hybrid', colour: 'Silver', body: 'SUV', seats: 5, odometer: 19800, transmission: 'CVT', vin: 'JTMW1RFV2ND012345' },
+      'QRS345': { make: 'Holden', model: 'Commodore', submodel: 'SV6', year: 2016, cc: 3564, fuel: 'petrol', colour: 'Red', body: 'Sedan', seats: 5, odometer: 112000, transmission: 'Automatic', vin: '6G11J5S39GL012345' },
+      'TUV678': { make: 'BMW', model: '320i', submodel: 'M Sport', year: 2019, cc: 1998, fuel: 'petrol', colour: 'Black', body: 'Sedan', seats: 5, odometer: 55300, transmission: 'Automatic', vin: 'WBA5R1C56KA012345' },
+      'WXY901': { make: 'Mercedes-Benz', model: 'C200', submodel: 'AMG Line', year: 2020, cc: 1497, fuel: 'petrol', colour: 'Silver', body: 'Sedan', seats: 5, odometer: 42100, transmission: 'Automatic', vin: 'W1KAF4DB4LR012345' },
+      'ZAB234': { make: 'Audi', model: 'A3', submodel: 'TFSI', year: 2018, cc: 1395, fuel: 'petrol', colour: 'Grey', body: 'Sedan', seats: 5, odometer: 68900, transmission: 'S-Tronic', vin: 'WAUZZZ8V9JA012345' },
+      'CDE567': { make: 'Isuzu', model: 'D-Max', submodel: 'LS-T', year: 2021, cc: 2999, fuel: 'diesel', colour: 'White', body: 'Ute', seats: 5, odometer: 34200, transmission: 'Automatic', vin: 'MPATFS86JMT012345' },
+      'FGH890': { make: 'MG', model: 'ZS EV', submodel: 'Excite', year: 2022, cc: 0, fuel: 'electric', colour: 'Blue', body: 'SUV', seats: 5, odometer: 15600, transmission: 'Automatic', vin: 'LSJWB4093NB012345' }
+    };
+
+    // ── CarJam API Configuration ──────────────────────────────────
+    // CarJam API: https://www.carjam.co.nz/api/car/?key=YOUR_KEY&plate=ABC123&basic=1&f=json&translate=1
+    // Test API:   https://test.carjam.co.nz/api/car/?key=YOUR_KEY&plate=TEST_PLATE&basic=1&f=json&translate=1
+    // In production, proxy through your backend to avoid exposing the API key:
+    //   const CARJAM_PROXY = '/api/carjam'; // backend forwards to CarJam with key
+    // For direct use (test only — exposes key in browser):
+    //   const CARJAM_PROXY = 'https://test.carjam.co.nz/api/car';
+    //   const CARJAM_KEY = 'your-test-key';
+    const CARJAM_PROXY = '/.netlify/functions/carjam'; // Serverless proxy injects API key server-side
+    const CARJAM_KEY = null; // Key is in Netlify env vars, not exposed to browser
+
+    function parseCarJamResponse(data) {
+      // CarJam returns data under message.idh (basic info) when using &basic=1&f=json&translate=1
+      // With translate=1, human-readable values are in message.hidh
+      const idh = data?.message?.hidh || data?.message?.idh || {};
+      if (!idh.make) return null;
+      return {
+        make: idh.make || '',
+        model: idh.model || '',
+        submodel: idh.submodel || '',
+        year: parseInt(idh.year_of_manufacture) || 0,
+        cc: parseInt(idh.cc_rating) || 0,
+        fuel: (idh.fuel_type || '').toLowerCase(),
+        colour: idh.main_colour || '',
+        body: idh.body_style || '',
+        seats: parseInt(idh.number_of_seats) || 5,
+        odometer: parseInt(idh.latest_odometer_reading) || 0,
+        transmission: idh.transmission || '',
+        vin: idh.vin || ''
+      };
+    }
+
+    async function lookupPlate() {
+      const plate = document.getElementById('qPlate').value.trim().toUpperCase().replace(/\s+/g, '');
+      const statusEl = document.getElementById('lookupStatus');
+      const resultEl = document.getElementById('lookupResult');
+
+      if (!plate) {
+        statusEl.innerHTML = '<span style="color:var(--error);">Please enter a plate number</span>';
+        return;
+      }
+
+      statusEl.innerHTML = '<span style="color:var(--gray-500);">Looking up plate...</span>';
+      document.getElementById('lookupBtn').disabled = true;
+
+      let vehicleData = null;
+
+      // Try CarJam API if configured
+      if (CARJAM_PROXY) {
+        try {
+          // If using a backend proxy, it should accept ?plate=X and forward to CarJam with the key
+          // If calling CarJam directly (test only), include key and params
+          const params = new URLSearchParams({ plate, basic: '1', f: 'json', translate: '1' });
+          if (CARJAM_KEY) params.set('key', CARJAM_KEY);
+          const res = await fetch(`${CARJAM_PROXY}?${params}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.error) {
+              console.warn('CarJam error:', data.error.message);
+            } else {
+              vehicleData = parseCarJamResponse(data);
+            }
+          }
+        } catch (e) {
+          console.warn('CarJam lookup failed, falling back to mock:', e.message);
+        }
+      }
+
+      // Fall back to mock data
+      if (!vehicleData) {
+        // Simulate network delay for realism
+        await new Promise(r => setTimeout(r, 600));
+        vehicleData = MOCK_PLATES[plate] || null;
+      }
+
+      document.getElementById('lookupBtn').disabled = false;
+
+      if (!vehicleData) {
+        statusEl.innerHTML = '<span style="color:var(--error);">Plate not found. Please enter your vehicle details manually below.</span>';
+        resultEl.style.display = 'none';
+        return;
+      }
+
+      // Show result card
+      statusEl.innerHTML = '<span style="color:var(--success);">Vehicle found! Details auto-filled below.</span>';
+      document.getElementById('lookupPlateDisplay').textContent = plate;
+      document.getElementById('lookupVehicle').textContent =
+        `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} ${vehicleData.submodel || ''}`.trim();
+      document.getElementById('lookupDetails').innerHTML = [
+        vehicleData.colour ? `<span>Colour: <strong>${vehicleData.colour}</strong></span>` : '',
+        vehicleData.body ? `<span>Body: <strong>${vehicleData.body}</strong></span>` : '',
+        vehicleData.cc ? `<span>Engine: <strong>${vehicleData.cc}cc</strong></span>` : '',
+        vehicleData.fuel ? `<span>Fuel: <strong>${vehicleData.fuel.charAt(0).toUpperCase() + vehicleData.fuel.slice(1)}</strong></span>` : '',
+        vehicleData.transmission ? `<span>Trans: <strong>${vehicleData.transmission}</strong></span>` : '',
+        vehicleData.odometer ? `<span>Odo: <strong>${Utils.formatNumber(vehicleData.odometer)} km</strong></span>` : '',
+      ].filter(Boolean).join('');
+      resultEl.style.display = 'block';
+
+      // Auto-fill form fields
+      document.getElementById('qMake').value = vehicleData.make;
+      document.getElementById('qModel').value = vehicleData.model + (vehicleData.submodel ? ' ' + vehicleData.submodel : '');
+      document.getElementById('qYear').value = vehicleData.year;
+      if (vehicleData.odometer) document.getElementById('qMileage').value = vehicleData.odometer;
+      if (vehicleData.fuel) {
+        const fuelMap = { petrol: 'petrol', diesel: 'diesel', hybrid: 'hybrid', electric: 'electric' };
+        const fuelVal = fuelMap[vehicleData.fuel.toLowerCase()] || '';
+        if (fuelVal) document.getElementById('qFuel').value = fuelVal;
+      }
+
+      // Store plate on form for submission
+      form._plateData = { plate, vin: vehicleData.vin || '' };
+
+      tryShowEstimate();
+    }
+
+    // Allow Enter key in plate field to trigger lookup
+    document.getElementById('qPlate').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); lookupPlate(); }
+    });
+
+    // ── Valuation Model ──────────────────────────────────────────
+    // NZD base prices (new) by make — used when specific model not found
+    const BASE_PRICES_NZD = {
+      // Japanese
+      'Toyota':    { _default: 38000, 'Corolla': 35000, 'Camry': 42000, 'RAV4': 48000, 'Hilux': 55000, 'Yaris': 28000, 'Land Cruiser': 95000, 'Highlander': 62000, 'C-HR': 36000 },
+      'Honda':     { _default: 34000, 'Jazz': 26000, 'Civic': 36000, 'CR-V': 44000, 'HR-V': 38000, 'Accord': 46000 },
+      'Mazda':     { _default: 38000, 'Mazda2': 28000, 'Mazda3': 36000, 'Mazda6': 48000, 'CX-3': 34000, 'CX-5': 46000, 'CX-9': 58000, 'BT-50': 52000 },
+      'Nissan':    { _default: 34000, 'Leaf': 52000, 'Qashqai': 40000, 'X-Trail': 45000, 'Navara': 52000, 'Note': 26000, 'Juke': 34000 },
+      'Suzuki':    { _default: 26000, 'Swift': 24000, 'Vitara': 32000, 'Jimny': 30000, 'Ignis': 22000, 'S-Cross': 34000, 'Baleno': 22000 },
+      'Subaru':    { _default: 42000, 'Impreza': 34000, 'Outback': 50000, 'Forester': 46000, 'XV': 40000, 'WRX': 48000, 'BRZ': 45000 },
+      'Mitsubishi':{ _default: 36000, 'Outlander': 44000, 'ASX': 34000, 'Triton': 48000, 'Eclipse Cross': 38000, 'Pajero Sport': 52000 },
+      // Korean
+      'Hyundai':   { _default: 36000, 'i30': 32000, 'Tucson': 44000, 'Santa Fe': 56000, 'Kona': 38000, 'Ioniq 5': 72000, 'Venue': 28000 },
+      'Kia':       { _default: 36000, 'Sportage': 42000, 'Seltos': 36000, 'Cerato': 32000, 'Sorento': 56000, 'Stonic': 30000, 'EV6': 78000, 'Niro': 48000 },
+      // Utes
+      'Ford':      { _default: 42000, 'Ranger': 56000, 'Everest': 62000, 'Focus': 34000, 'Escape': 42000, 'Mustang': 72000 },
+      'Isuzu':     { _default: 48000, 'D-Max': 52000, 'MU-X': 56000 },
+      // European
+      'Volkswagen':{ _default: 44000, 'Golf': 42000, 'Tiguan': 52000, 'Polo': 32000, 'T-Cross': 36000, 'Amarok': 62000, 'T-Roc': 44000 },
+      'BMW':       { _default: 65000, '320i': 68000, 'X1': 62000, 'X3': 82000, 'X5': 120000, '118i': 52000 },
+      'Mercedes-Benz': { _default: 70000, 'A-Class': 55000, 'C200': 72000, 'C300': 82000, 'GLA': 64000, 'GLC': 88000 },
+      'Audi':      { _default: 62000, 'A3': 52000, 'A4': 68000, 'Q3': 58000, 'Q5': 82000, 'Q7': 110000 },
+      // EV / Other
+      'Tesla':     { _default: 72000, 'Model 3': 68000, 'Model Y': 78000, 'Model S': 140000, 'Model X': 160000 },
+      'MG':        { _default: 32000, 'ZS': 28000, 'ZS EV': 48000, 'HS': 36000, 'MG3': 22000 },
+      'Holden':    { _default: 32000, 'Commodore': 38000, 'Colorado': 48000, 'Trax': 28000, 'Captiva': 34000 },
+      'BYD':       { _default: 55000, 'Atto 3': 52000, 'Dolphin': 44000 },
+    };
+
+    // Depreciation: steeper in first 3 years, then flattens
+    function getAgeFactor(age) {
+      if (age <= 0) return 1.0;
+      if (age === 1) return 0.85;
+      if (age === 2) return 0.76;
+      if (age === 3) return 0.68;
+      if (age <= 5) return 0.68 - ((age - 3) * 0.05); // 0.63, 0.58
+      if (age <= 10) return 0.58 - ((age - 5) * 0.04); // 0.54 ... 0.38
+      return Math.max(0.15, 0.38 - ((age - 10) * 0.03));
+    }
+
+    // Mileage penalty (km-based for NZ)
+    function getMileageFactor(km) {
+      const avgAnnualKm = 14000;
+      if (km <= 30000) return 1.0;
+      if (km <= 80000) return 1.0 - ((km - 30000) / 250000);
+      if (km <= 150000) return 0.8 - ((km - 80000) / 350000);
+      return Math.max(0.35, 0.6 - ((km - 150000) / 400000));
+    }
+
+    const CONDITION_FACTOR = { excellent: 1.05, good: 0.92, fair: 0.72, poor: 0.48 };
+
+    // EV/hybrid bonus
+    function getFuelAdjustment(fuel) {
+      if (fuel === 'electric') return 1.08;
+      if (fuel === 'hybrid') return 1.04;
+      return 1.0;
+    }
+
+    function getBasePrice(make, model) {
+      // Normalise model — take first word to match lookup keys
+      const makeData = BASE_PRICES_NZD[make];
+      if (!makeData) return 30000; // unknown make fallback
+      // Try exact model match first, then first-word match
+      const modelClean = (model || '').trim();
+      if (makeData[modelClean]) return makeData[modelClean];
+      const firstWord = modelClean.split(/\s+/)[0];
+      if (makeData[firstWord]) return makeData[firstWord];
+      return makeData._default;
+    }
+
+    const form = document.getElementById('quoteForm');
+    const quoteTypeEl = document.getElementById('qQuoteType');
+    const estimatePreview = document.getElementById('estimatePreview');
+
+    function tryShowEstimate() {
+      const make = document.getElementById('qMake').value.trim();
+      const model = document.getElementById('qModel').value.trim();
+      const year = parseInt(document.getElementById('qYear').value);
+      const km = parseInt(document.getElementById('qMileage').value);
+      const condition = document.getElementById('qCondition').value;
+      const fuel = document.getElementById('qFuel').value;
+      const qType = quoteTypeEl.value;
+
+      if (qType !== 'instant' || !make || !model || !year || !km || !condition) {
+        estimatePreview.style.display = 'none';
+        return;
+      }
+
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - year;
+      const base = getBasePrice(make, model);
+      const ageFactor = getAgeFactor(age);
+      const kmFactor = getMileageFactor(km);
+      const condFactor = CONDITION_FACTOR[condition] || 0.75;
+      const fuelAdj = getFuelAdjustment(fuel);
+
+      const estimate = Math.round(base * ageFactor * kmFactor * condFactor * fuelAdj);
+      // Offer range: dealer buys below market, so apply a buy margin
+      const buyMargin = 0.88; // dealer pays ~88% of estimated market value
+      const offerBase = Math.round(estimate * buyMargin);
+      const low = Math.round(offerBase * 0.92);
+      const high = Math.round(offerBase * 1.08);
+
+      // Round to nearest $100
+      const lowR = Math.round(low / 100) * 100;
+      const highR = Math.round(high / 100) * 100;
+
+      document.getElementById('estimateRange').textContent =
+        `$${Utils.formatNumber(lowR)} — $${Utils.formatNumber(highR)}`;
+      estimatePreview.style.display = 'block';
+    }
+
+    // Attach listeners to vehicle fields
+    ['qMake', 'qModel', 'qYear', 'qMileage', 'qCondition', 'qQuoteType', 'qFuel'].forEach(id => {
+      document.getElementById(id).addEventListener('change', tryShowEstimate);
+      document.getElementById(id).addEventListener('input', tryShowEstimate);
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const qType = quoteTypeEl.value;
+      const typeLabels = { instant: 'Instant Offer', agent: 'Agent Appraisal', inspection: 'In-Person Inspection' };
+
+      DB.addQuoteRequest({
+        id: Utils.generateId('QUOTE'),
+        plate: form._plateData?.plate || '',
+        vin: form._plateData?.vin || '',
+        make: document.getElementById('qMake').value,
+        model: document.getElementById('qModel').value,
+        year: parseInt(document.getElementById('qYear').value),
+        mileage: parseInt(document.getElementById('qMileage').value),
+        fuel: document.getElementById('qFuel').value,
+        condition: document.getElementById('qCondition').value,
+        quoteType: qType,
+        notes: document.getElementById('qNotes').value,
+        contactName: document.getElementById('qName').value,
+        contactPhone: document.getElementById('qPhone').value,
+        contactEmail: document.getElementById('qEmail').value,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+
+      Utils.showToast(`${typeLabels[qType]} request submitted! We'll be in touch soon.`, 'success');
+      form.reset();
+      form._plateData = null;
+      estimatePreview.style.display = 'none';
+      document.getElementById('lookupResult').style.display = 'none';
+      document.getElementById('lookupStatus').innerHTML = '';
+    });
+  </script>
+</body>
+</html>

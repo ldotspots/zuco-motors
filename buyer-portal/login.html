@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buyer Login - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, var(--primary-50) 0%, var(--gray-100) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .auth-container {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      max-width: 500px;
+      width: 100%;
+      padding: 3rem;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .auth-header .logo {
+      font-size: var(--text-3xl);
+      color: var(--primary-600);
+      margin-bottom: 0.5rem;
+      justify-content: center;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 1rem;
+      background: none;
+      border: none;
+      font-size: var(--text-base);
+      font-weight: 600;
+      color: var(--gray-500);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all var(--transition-fast);
+    }
+
+    .auth-tab.active {
+      color: var(--primary-600);
+      border-bottom-color: var(--primary-600);
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+    }
+
+    .social-login {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .social-btn {
+      padding: 0.75rem;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+    }
+
+    .social-btn:hover {
+      background: var(--gray-50);
+      border-color: var(--gray-400);
+    }
+
+    .divider {
+      text-align: center;
+      margin: 2rem 0;
+      color: var(--gray-500);
+      position: relative;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 45%;
+      height: 1px;
+      background: var(--gray-300);
+    }
+
+    .divider::before {
+      left: 0;
+    }
+
+    .divider::after {
+      right: 0;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></div>
+      <p style="color: var(--gray-600);">Welcome back! Please sign in to your account.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Sign In</button>
+      <button class="auth-tab" data-tab="register">Sign Up</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="auth-form active">
+      <!-- Social Login -->
+      <div class="social-login">
+        <button type="button" class="social-btn" onclick="alert('Social login coming soon!')">
+          Google
+        </button>
+        <button type="button" class="social-btn" onclick="alert('Social login coming soon!')">
+          Facebook
+        </button>
+      </div>
+
+      <div class="divider">or</div>
+
+      <div class="form-group">
+        <label for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" name="email" class="form-control" required placeholder="you@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" name="password" class="form-control" required placeholder="Enter your password">
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="rememberMe" name="rememberMe">
+        <label for="rememberMe" style="margin-bottom: 0;">Remember me</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full btn-lg">Sign In</button>
+
+      <div class="text-center" style="margin-top: 1rem;">
+        <a href="#" onclick="alert('Password recovery coming soon!'); return false;">Forgot password?</a>
+      </div>
+    </form>
+
+    <!-- Register Form -->
+    <form id="registerForm" class="auth-form">
+      <div class="form-group">
+        <label for="registerFirstName">First Name</label>
+        <input type="text" id="registerFirstName" name="firstName" class="form-control" required placeholder="John">
+      </div>
+
+      <div class="form-group">
+        <label for="registerLastName">Last Name</label>
+        <input type="text" id="registerLastName" name="lastName" class="form-control" required placeholder="Smith">
+      </div>
+
+      <div class="form-group">
+        <label for="registerEmail">Email Address</label>
+        <input type="email" id="registerEmail" name="email" class="form-control" required placeholder="you@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="registerPhone">Phone Number</label>
+        <input type="tel" id="registerPhone" name="phone" class="form-control" placeholder="(555) 123-4567">
+      </div>
+
+      <div class="form-group">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" name="password" class="form-control" required placeholder="Create a password">
+        <small style="color: var(--gray-600);">Must be at least 8 characters with uppercase, lowercase, number, and special character</small>
+      </div>
+
+      <div class="form-group">
+        <label for="registerConfirmPassword">Confirm Password</label>
+        <input type="password" id="registerConfirmPassword" name="confirmPassword" class="form-control" required placeholder="Confirm your password">
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+        <label for="agreeTerms" style="margin-bottom: 0;">I agree to the Terms of Service and Privacy Policy</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full btn-lg">Create Account</button>
+    </form>
+
+    <div class="back-link">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+  </div>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Tab Switching
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+
+        // Update tabs
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update forms
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        document.getElementById(`${tabName}Form`).classList.add('active');
+      });
+    });
+
+    // Login Form Submit
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+
+      const result = Auth.login(email, password, rememberMe);
+
+      if (result.success) {
+        Utils.showToast('Login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          Auth.redirectAfterLogin();
+        }, 1000);
+      } else {
+        Utils.showToast(result.error, 'error');
+      }
+    });
+
+    // Register Form Submit
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const firstName = document.getElementById('registerFirstName').value;
+      const lastName = document.getElementById('registerLastName').value;
+      const email = document.getElementById('registerEmail').value;
+      const phone = document.getElementById('registerPhone').value;
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('registerConfirmPassword').value;
+      const agreeTerms = document.getElementById('agreeTerms').checked;
+
+      // Validation
+      if (!Auth.validateEmail(email)) {
+        Utils.showToast('Please enter a valid email address', 'error');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        Utils.showToast('Passwords do not match', 'error');
+        return;
+      }
+
+      const passwordValidation = Auth.validatePassword(password);
+      if (!passwordValidation.valid) {
+        Utils.showToast('Password does not meet requirements', 'error');
+        return;
+      }
+
+      if (!agreeTerms) {
+        Utils.showToast('You must agree to the terms and conditions', 'error');
+        return;
+      }
+
+      // Register
+      const result = Auth.register({
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        role: 'buyer'
+      });
+
+      if (result.success) {
+        Utils.showToast('Account created successfully! Please sign in.', 'success');
+        // Switch to login tab
+        document.querySelector('[data-tab="login"]').click();
+        // Pre-fill email
+        document.getElementById('loginEmail').value = email;
+      } else {
+        Utils.showToast(result.error, 'error');
+      }
+    });
+
+    // Demo accounts helper
+    console.log('Demo Buyer Accounts:');
+    console.log('Email: john.buyer@email.com | Password: Demo123!');
+    console.log('Email: sarah.buyer@email.com | Password: Demo123!');
+    console.log('Email: mike.customer@email.com | Password: Demo123!');
+  </script>
+</body>
+</html>

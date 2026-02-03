@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html" class="active">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-4" id="greeting">Welcome back!</h1>
+      <p class="mb-8" style="color:var(--gray-600);">Here's your sales overview</p>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="allocatedCount">0</div>
+          <div class="stat-label">Allocated Vehicles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="upcomingAppts">0</div>
+          <div class="stat-label">Upcoming Appointments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalSales">0</div>
+          <div class="stat-label">Total Sales</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalProfit">$0</div>
+          <div class="stat-label">Total Profit</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mb-8">
+        <!-- Upcoming Appointments -->
+        <div class="card">
+          <div class="card-header"><h3>Upcoming Appointments</h3></div>
+          <div class="card-body" id="appointmentsList">
+            <p style="color:var(--gray-500);">No upcoming appointments</p>
+          </div>
+        </div>
+
+        <!-- Recent Sales -->
+        <div class="card">
+          <div class="card-header"><h3>Recent Sales</h3></div>
+          <div class="card-body" id="recentSales">
+            <p style="color:var(--gray-500);">No sales yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header"><h3>Quick Actions</h3></div>
+        <div class="card-body">
+          <div class="flex gap-4">
+            <a href="vehicles.html" class="btn btn-primary">Browse & Claim Vehicles</a>
+            <a href="my-vehicles.html" class="btn btn-secondary">Manage My Vehicles</a>
+            <a href="viewings.html" class="btn btn-secondary">View Schedule</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+    if (agent) {
+      document.getElementById('greeting').textContent = `Welcome back, ${agent.firstName}!`;
+    }
+
+    const allocations = DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active');
+    const appointments = DB.getViewingBookingsByAgent(agent?.id).filter(b => b.status === 'pending' || b.status === 'approved');
+    const sales = DB.getAgentSalesByAgent(agent?.id).filter(s => s.status === 'completed');
+    const totalProfit = sales.reduce((s, sale) => s + sale.agentProfit, 0);
+
+    const TYPE_LABELS = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
+
+    document.getElementById('allocatedCount').textContent = allocations.length;
+    document.getElementById('upcomingAppts').textContent = appointments.length;
+    document.getElementById('totalSales').textContent = sales.length;
+    document.getElementById('totalProfit').textContent = Utils.formatCurrency(totalProfit);
+
+    // Upcoming appointments
+    if (appointments.length) {
+      const sorted = [...appointments].sort((a, b) => new Date(a.date + 'T' + a.timeSlot) - new Date(b.date + 'T' + b.timeSlot));
+      document.getElementById('appointmentsList').innerHTML = sorted.slice(0, 5).map(appt => {
+        const vehicle = DB.getVehicle(appt.vehicleId);
+        const typeLabel = TYPE_LABELS[appt.bookingType] || 'Viewing';
+        const statusBadge = appt.status === 'approved'
+          ? '<span class="badge badge-primary" style="font-size:10px;">Approved</span>'
+          : '<span class="badge badge-warning" style="font-size:10px;">Pending</span>';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
+          <div>
+            <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
+            <div style="font-size:var(--text-sm);color:var(--gray-500);">${appt.customerName} — ${typeLabel}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:var(--text-sm);font-weight:600;">${Utils.formatDate(appt.date)}</div>
+            <div style="font-size:var(--text-sm);color:var(--gray-500);">${appt.timeSlot} ${statusBadge}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Recent sales
+    if (sales.length) {
+      const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+      document.getElementById('recentSales').innerHTML = sorted.slice(0, 5).map(sale => {
+        const vehicle = DB.getVehicle(sale.vehicleId);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--gray-200);">
+          <div>
+            <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
+            <div style="font-size:var(--text-sm);color:var(--gray-500);">Buyer: ${sale.buyerName}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:600;color:var(--success);">+${Utils.formatCurrency(sale.agentProfit)}</div>
+            <div style="font-size:var(--text-sm);color:var(--gray-500);">${Utils.formatDate(sale.saleDate)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

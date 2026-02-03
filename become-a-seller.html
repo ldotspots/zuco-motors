@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Become a Seller - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .seller-hero {
+      background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .seller-hero h1 { color: var(--white); font-size: 3rem; margin-bottom: 1rem; }
+    .seller-hero p { font-size: 1.25rem; opacity: 0.85; max-width: 600px; margin: 0 auto; }
+
+    .seller-section { padding: 4rem 0; }
+    .seller-section:nth-child(even) { background: var(--gray-50); }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) { .steps-grid { grid-template-columns: 1fr; } }
+    .step-card { text-align: center; padding: 2rem; }
+    .step-number {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary-600);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+    .step-card h3 { margin-bottom: 0.5rem; }
+    .step-card p { color: var(--gray-600); font-size: var(--text-sm); }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) { .benefits-grid { grid-template-columns: repeat(2, 1fr); } }
+    .benefit-card {
+      padding: 2rem;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+    .benefit-card svg {
+      width: 40px;
+      height: 40px;
+      stroke: var(--gray-900);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-bottom: 1rem;
+    }
+    .benefit-card h3 { margin-bottom: 0.5rem; }
+    .benefit-card p { color: var(--gray-600); font-size: var(--text-sm); }
+
+    .apply-section { max-width: 640px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="index.html">Home</a>
+          <a href="about-us.html">About Us</a>
+          <a href="buyer-portal/inventory.html">Find a Car</a>
+          <a href="sell-your-car.html">Sell Your Car</a>
+          <a href="buyer-portal/financing.html">Financing</a>
+          <a href="buyer-portal/compare.html">Compare</a>
+          <a href="buyer-portal/login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="buyer-portal/favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="buyer-portal/profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="seller-hero">
+    <div class="container">
+      <h1>Join Our Sales Team</h1>
+      <p>Earn competitive commissions selling quality vehicles on your own schedule</p>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="seller-section">
+    <div class="container">
+      <h2 class="mb-8" style="text-align:center;">How It Works</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Apply</h3>
+          <p>Fill out the application form below with your details and experience. We review every application personally.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Get Approved</h3>
+          <p>Our team will review your application and get back to you. Once approved, you'll receive your agent credentials.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Start Selling</h3>
+          <p>Claim vehicles from our inventory, book appointments with buyers, and earn commission on every sale you close.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section class="seller-section">
+    <div class="container">
+      <h2 class="mb-8" style="text-align:center;">Why Sell With Us</h2>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <h3>Flexible Schedule</h3>
+          <p>Work on your own terms. Book viewings and test drives around your availability — no fixed hours required.</p>
+        </div>
+        <div class="benefit-card">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <h3>Competitive Commission</h3>
+          <p>Transparent pricing model with clear profit room on every vehicle. You see exactly what you earn before you sell.</p>
+        </div>
+        <div class="benefit-card">
+          <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <h3>Vehicle Access</h3>
+          <p>Browse and claim from our full inventory of new, certified pre-owned, and used vehicles — all inspected and ready to sell.</p>
+        </div>
+        <div class="benefit-card">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h3>Support & Training</h3>
+          <p>Access to our dealer portal tools, scheduling system, and ongoing support from the Zuco Motors team.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Application Form -->
+  <section class="seller-section">
+    <div class="container">
+      <div class="apply-section">
+        <h2 class="mb-8" style="text-align:center;">Apply Now</h2>
+        <div class="card">
+          <div class="card-body">
+            <form id="applyForm">
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label for="firstName">First Name *</label>
+                  <input type="text" id="firstName" class="form-control" required placeholder="Your first name">
+                </div>
+                <div class="form-group">
+                  <label for="lastName">Last Name *</label>
+                  <input type="text" id="lastName" class="form-control" required placeholder="Your last name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" class="form-control" required placeholder="you@email.com">
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone *</label>
+                <input type="tel" id="phone" class="form-control" required placeholder="(555) 123-4567">
+              </div>
+              <div class="form-group">
+                <label for="experience">Sales Experience</label>
+                <select id="experience" class="form-control">
+                  <option value="none">No prior experience</option>
+                  <option value="1-2">1-2 years</option>
+                  <option value="3-5">3-5 years</option>
+                  <option value="5+">5+ years</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="message">Tell us about yourself</label>
+                <textarea id="message" class="form-control" rows="4" placeholder="Why do you want to join Zuco Motors? Any relevant experience or skills..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg w-full">Submit Application</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Zuco Motors</h3>
+          <p style="color: var(--gray-400);">Your trusted partner in finding the perfect vehicle. Quality, transparency, and customer satisfaction are our priorities.</p>
+        </div>
+        <div class="footer-section">
+          <h3>For Buyers</h3>
+          <ul>
+            <li><a href="buyer-portal/inventory.html">Find a Car</a></li>
+            <li><a href="buyer-portal/financing.html">Financing</a></li>
+            <li><a href="buyer-portal/compare.html">Compare Vehicles</a></li>
+            <li><a href="buyer-portal/login.html">My Account</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>For Sales Agents</h3>
+          <ul>
+            <li><a href="sales-portal/login.html">Agent Login</a></li>
+            <li><a href="become-a-seller.html">Become a Seller</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <ul>
+            <li><a href="about-us.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul>
+            <li>Email: info@zucomotors.com</li>
+            <li>Phone: (555) 123-4567</li>
+            <li>Address: 123 Auto Plaza, TX</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+        document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+      }
+    });
+    document.getElementById('applyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      Utils.showToast('Application submitted! We\'ll be in touch soon.', 'success');
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>

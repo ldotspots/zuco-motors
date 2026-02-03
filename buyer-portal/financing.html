@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financing Calculator - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="../index.html">Home</a>
+          <a href="../about-us.html">About Us</a>
+          <a href="inventory.html">Find a Car</a>
+          <a href="../sell-your-car.html">Sell Your Car</a>
+          <a href="financing.html" class="active">Financing</a>
+          <a href="compare.html">Compare</a>
+          <a href="login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="../sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-4">Financing Calculator</h1>
+      <p style="color: var(--gray-600);" class="mb-8">Estimate your monthly payments and explore financing options</p>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <!-- Calculator Form -->
+        <div class="card">
+          <div class="card-header"><h3>Loan Details</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="vehiclePrice">Vehicle Price ($)</label>
+              <input type="number" id="vehiclePrice" class="form-control" value="35000" min="0" step="500">
+            </div>
+            <div class="form-group">
+              <label for="downPayment">Down Payment ($)</label>
+              <input type="number" id="downPayment" class="form-control" value="5000" min="0" step="500">
+            </div>
+            <div class="form-group">
+              <label for="tradeInValue">Trade-In Value ($)</label>
+              <input type="number" id="tradeInValue" class="form-control" value="0" min="0" step="500">
+            </div>
+            <div class="form-group">
+              <label for="interestRate">Interest Rate (%)</label>
+              <input type="number" id="interestRate" class="form-control" value="5.9" min="0" max="30" step="0.1">
+            </div>
+            <div class="form-group">
+              <label for="loanTerm">Loan Term</label>
+              <select id="loanTerm" class="form-control">
+                <option value="24">24 months (2 years)</option>
+                <option value="36">36 months (3 years)</option>
+                <option value="48">48 months (4 years)</option>
+                <option value="60" selected>60 months (5 years)</option>
+                <option value="72">72 months (6 years)</option>
+                <option value="84">84 months (7 years)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="taxRate">Sales Tax Rate (%)</label>
+              <input type="number" id="taxRate" class="form-control" value="8.25" min="0" max="15" step="0.25">
+            </div>
+            <button class="btn btn-primary w-full" onclick="calculate()">Calculate Payment</button>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div>
+          <div class="card mb-6">
+            <div class="card-header"><h3>Monthly Payment</h3></div>
+            <div class="card-body text-center">
+              <div id="monthlyPayment" style="font-size: var(--text-5xl); font-weight: 700; color: var(--primary-600);">$0</div>
+              <p style="color: var(--gray-600);">per month</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>Loan Summary</h3></div>
+            <div class="card-body">
+              <table style="width: 100%;">
+                <tr><td style="padding: 0.75rem; font-weight: 600;">Vehicle Price</td><td id="summaryPrice" style="padding: 0.75rem; text-align: right;">$0</td></tr>
+                <tr><td style="padding: 0.75rem; font-weight: 600;">Down Payment</td><td id="summaryDown" style="padding: 0.75rem; text-align: right;">-$0</td></tr>
+                <tr><td style="padding: 0.75rem; font-weight: 600;">Trade-In Value</td><td id="summaryTrade" style="padding: 0.75rem; text-align: right;">-$0</td></tr>
+                <tr><td style="padding: 0.75rem; font-weight: 600;">Sales Tax</td><td id="summaryTax" style="padding: 0.75rem; text-align: right;">$0</td></tr>
+                <tr style="border-top: 2px solid var(--gray-300);"><td style="padding: 0.75rem; font-weight: 700;">Loan Amount</td><td id="summaryLoan" style="padding: 0.75rem; text-align: right; font-weight: 700;">$0</td></tr>
+                <tr><td style="padding: 0.75rem; font-weight: 600;">Total Interest</td><td id="summaryInterest" style="padding: 0.75rem; text-align: right; color: var(--error);">$0</td></tr>
+                <tr style="border-top: 2px solid var(--gray-300);"><td style="padding: 0.75rem; font-weight: 700;">Total Cost</td><td id="summaryTotal" style="padding: 0.75rem; text-align: right; font-weight: 700;">$0</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rate Comparison -->
+          <div class="card mt-6">
+            <div class="card-header"><h3>Term Comparison</h3></div>
+            <div class="card-body">
+              <div id="termComparison"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Auth-aware nav
+    if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+      document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+    }
+
+    // Pre-fill from URL params
+    const params = Utils.getQueryParams();
+    if (params.price) document.getElementById('vehiclePrice').value = params.price;
+    if (params.vehicleId) {
+      const vehicle = DB.getVehicle(params.vehicleId);
+      if (vehicle) document.getElementById('vehiclePrice').value = vehicle.pricing.salePrice;
+    }
+
+    function calculate() {
+      const price = parseFloat(document.getElementById('vehiclePrice').value) || 0;
+      const down = parseFloat(document.getElementById('downPayment').value) || 0;
+      const tradeIn = parseFloat(document.getElementById('tradeInValue').value) || 0;
+      const rate = parseFloat(document.getElementById('interestRate').value) || 0;
+      const months = parseInt(document.getElementById('loanTerm').value) || 60;
+      const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+
+      const tax = price * (taxRate / 100);
+      const loanAmount = price + tax - down - tradeIn;
+      const monthly = Utils.calculateMonthlyPayment(Math.max(loanAmount, 0), rate, months);
+      const totalInterest = Utils.calculateTotalInterest(monthly, months, Math.max(loanAmount, 0));
+      const totalCost = down + tradeIn + (monthly * months);
+
+      document.getElementById('monthlyPayment').textContent = Utils.formatCurrency(monthly);
+      document.getElementById('summaryPrice').textContent = Utils.formatCurrency(price);
+      document.getElementById('summaryDown').textContent = '-' + Utils.formatCurrency(down);
+      document.getElementById('summaryTrade').textContent = '-' + Utils.formatCurrency(tradeIn);
+      document.getElementById('summaryTax').textContent = Utils.formatCurrency(tax);
+      document.getElementById('summaryLoan').textContent = Utils.formatCurrency(Math.max(loanAmount, 0));
+      document.getElementById('summaryInterest').textContent = Utils.formatCurrency(totalInterest);
+      document.getElementById('summaryTotal').textContent = Utils.formatCurrency(totalCost);
+
+      // Term comparison
+      const terms = [36, 48, 60, 72, 84];
+      const comparison = document.getElementById('termComparison');
+      comparison.innerHTML = `<table style="width: 100%;"><thead><tr><th>Term</th><th>Monthly</th><th>Total Interest</th><th>Total Cost</th></tr></thead><tbody>` +
+        terms.map(t => {
+          const m = Utils.calculateMonthlyPayment(Math.max(loanAmount, 0), rate, t);
+          const ti = Utils.calculateTotalInterest(m, t, Math.max(loanAmount, 0));
+          const isSelected = t === months;
+          return `<tr style="${isSelected ? 'background: var(--primary-50); font-weight: 600;' : ''}">
+            <td style="padding: 0.5rem;">${t} mo</td>
+            <td style="padding: 0.5rem;">${Utils.formatCurrency(m)}</td>
+            <td style="padding: 0.5rem;">${Utils.formatCurrency(ti)}</td>
+            <td style="padding: 0.5rem;">${Utils.formatCurrency(down + tradeIn + (m * t))}</td>
+          </tr>`;
+        }).join('') + `</tbody></table>`;
+    }
+
+    calculate();
+  </script>
+</body>
+</html>

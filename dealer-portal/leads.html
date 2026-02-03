@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Leads - Zuco Motors Dealer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html" class="active">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-8">Manage Leads</h1>
+
+      <!-- Stats -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalLeads">0</div>
+          <div class="stat-label">Total Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="openLeads">0</div>
+          <div class="stat-label">Open</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="negotiating">0</div>
+          <div class="stat-label">Negotiating</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="convRate">0%</div>
+          <div class="stat-label">Conversion Rate</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters mb-6">
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="statusFilter" class="form-control" onchange="renderLeads()">
+              <option value="all">All Statuses</option>
+              <option value="open">Open</option>
+              <option value="contacted">Contacted</option>
+              <option value="negotiating">Negotiating</option>
+              <option value="closed-won">Won</option>
+              <option value="closed-lost">Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select id="priorityFilter" class="form-control" onchange="renderLeads()">
+              <option value="all">All Priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="typeFilter" class="form-control" onchange="renderLeads()">
+              <option value="all">All Types</option>
+              <option value="purchase">Purchase</option>
+              <option value="trade-in">Trade-In</option>
+              <option value="financing">Financing</option>
+              <option value="test-drive">Test Drive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leads Table -->
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Vehicle Interest</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Offer</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Lead Detail Modal -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Lead Details</h3>
+        <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="detailModalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Update Modal -->
+  <div class="modal" id="statusModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Lead Status</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newStatus">New Status</label>
+          <select id="newStatus" class="form-control">
+            <option value="open">Open</option>
+            <option value="contacted">Contacted</option>
+            <option value="negotiating">Negotiating</option>
+            <option value="closed-won">Won</option>
+            <option value="closed-lost">Lost</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="newPriority">Priority</label>
+          <select id="newPriority" class="form-control">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStatus()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const dealer = Auth.getCurrentUser();
+    let currentLeadId = null;
+
+    function renderLeads() {
+      // Show ALL inquiries (from all sources)
+      let leads = DB.getInquiries() || [];
+
+      // Stats
+      document.getElementById('totalLeads').textContent = leads.length;
+      document.getElementById('openLeads').textContent = leads.filter(l => l.status === 'open').length;
+      document.getElementById('negotiating').textContent = leads.filter(l => l.status === 'negotiating').length;
+      const won = leads.filter(l => l.status === 'closed-won').length;
+      document.getElementById('convRate').textContent = leads.length ? (won / leads.length * 100).toFixed(1) + '%' : '0%';
+
+      // Filters
+      const status = document.getElementById('statusFilter').value;
+      const priority = document.getElementById('priorityFilter').value;
+      const type = document.getElementById('typeFilter').value;
+
+      // Hide archived leads unless filtering by Won status
+      if (status !== 'closed-won') leads = leads.filter(l => !l.archivedAt);
+      if (status !== 'all') leads = leads.filter(l => l.status === status);
+      if (priority !== 'all') leads = leads.filter(l => l.priority === priority);
+      if (type !== 'all') leads = leads.filter(l => l.type === type);
+
+      leads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      document.getElementById('leadsTable').innerHTML = leads.map(lead => {
+        const vehicle = DB.getVehicle(lead.vehicleId);
+        const buyer = lead.buyerId ? DB.getUser(lead.buyerId) : null;
+        // Use contactName/contactEmail/contactPhone from inquiry form, fall back to buyer record
+        const name = lead.contactName || (buyer ? `${buyer.firstName} ${buyer.lastName}` : 'Unknown');
+        const email = lead.contactEmail || buyer?.email || '';
+        const phone = lead.contactPhone || buyer?.phone || '';
+        const statusClass = lead.status === 'open' ? 'warning' : lead.status === 'contacted' ? 'info' : lead.status === 'negotiating' ? 'primary' : lead.status === 'closed-won' ? 'success' : 'gray';
+        const prioClass = lead.priority === 'high' ? 'error' : lead.priority === 'medium' ? 'warning' : 'gray';
+        const claimedBy = lead.claimedByAgentName ? `<br><span style="font-size:var(--text-sm);color:var(--primary-600);">Claimed by: ${lead.claimedByAgentName}</span>` : '';
+
+        return `
+          <tr>
+            <td>
+              <strong>${Utils.sanitizeHTML ? Utils.sanitizeHTML(name) : name}</strong><br>
+              <span style="font-size:var(--text-sm);color:var(--gray-600);">${email}</span><br>
+              <span style="font-size:var(--text-sm);color:var(--gray-600);">${phone}</span>
+            </td>
+            <td>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}${claimedBy}</td>
+            <td><span class="badge badge-info">${lead.type || '-'}</span></td>
+            <td><span class="badge badge-${statusClass}">${lead.status}</span></td>
+            <td><span class="badge badge-${prioClass}">${lead.priority || 'medium'}</span></td>
+            <td>${lead.offer ? Utils.formatCurrency(lead.offer.proposedPrice) : '-'}</td>
+            <td>${Utils.formatRelativeTime(lead.createdAt)}</td>
+            <td>
+              <button onclick="viewLead('${lead.id}')" class="btn btn-outline btn-sm">View</button>
+              <button onclick="openStatusModal('${lead.id}', '${lead.status}', '${lead.priority || 'medium'}')" class="btn btn-outline btn-sm">Update</button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;">No leads found</td></tr>';
+    }
+
+    function viewLead(id) {
+      const lead = DB.getInquiry ? DB.getInquiry(id) : (DB.getInquiries() || []).find(l => l.id === id);
+      if (!lead) return;
+      const vehicle = DB.getVehicle(lead.vehicleId);
+      const buyer = lead.buyerId ? DB.getUser(lead.buyerId) : null;
+      const name = lead.contactName || (buyer ? `${buyer.firstName} ${buyer.lastName}` : 'Unknown');
+      const email = lead.contactEmail || buyer?.email || '';
+      const phone = lead.contactPhone || buyer?.phone || '';
+
+      document.getElementById('detailModalBody').innerHTML = `
+        <div class="grid grid-2 mb-4" style="gap:1rem;">
+          <div><strong>Name:</strong> ${Utils.sanitizeHTML ? Utils.sanitizeHTML(name) : name}</div>
+          <div><strong>Email:</strong> ${email}</div>
+          <div><strong>Phone:</strong> ${phone}</div>
+          <div><strong>Type:</strong> <span style="text-transform:capitalize;">${lead.type || '-'}</span></div>
+          <div><strong>Status:</strong> <span style="text-transform:capitalize;">${lead.status}</span></div>
+          <div><strong>Vehicle:</strong> ${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</div>
+        </div>
+        ${lead.message ? `<div class="mb-4"><strong>Message:</strong><p style="background:var(--gray-50);padding:1rem;border-radius:var(--radius-md);margin-top:0.5rem;">${Utils.sanitizeHTML ? Utils.sanitizeHTML(lead.message) : lead.message}</p></div>` : '<div class="mb-4"><strong>Message:</strong> <em style="color:var(--gray-500);">No message provided</em></div>'}
+        ${lead.claimedByAgentName ? `<div class="mb-4"><strong>Claimed by:</strong> ${lead.claimedByAgentName}</div>` : ''}
+        <div><strong>Submitted:</strong> ${Utils.formatDate(lead.createdAt)}</div>
+      `;
+      document.getElementById('detailModal').classList.add('show');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.remove('show');
+    }
+
+    function openStatusModal(leadId, status, priority) {
+      currentLeadId = leadId;
+      document.getElementById('newStatus').value = status;
+      document.getElementById('newPriority').value = priority;
+      document.getElementById('statusModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('statusModal').classList.remove('show');
+      currentLeadId = null;
+    }
+
+    function saveStatus() {
+      if (!currentLeadId) return;
+      const newStatus = document.getElementById('newStatus').value;
+      const lead = DB.getInquiry ? DB.getInquiry(currentLeadId) : (DB.getInquiries() || []).find(l => l.id === currentLeadId);
+
+      DB.updateInquiry(currentLeadId, {
+        status: newStatus,
+        priority: document.getElementById('newPriority').value,
+        updatedAt: new Date().toISOString()
+      });
+
+      // When a lead is marked closed-won, auto-create a sale order
+      if (newStatus === 'closed-won' && lead) {
+        const vehicle = DB.getVehicle(lead.vehicleId);
+        if (vehicle && vehicle.status === 'Available') {
+          const buyer = lead.buyerId ? DB.getUser(lead.buyerId) : null;
+          const agentName = lead.claimedByAgentName || 'Developer Sale';
+          const agentId = lead.claimedByAgentId || dealer?.id;
+          const salePrice = vehicle.pricing.salePrice;
+          const invoiceCost = vehicle.pricing.invoiceCost;
+          const grossSpread = salePrice - invoiceCost;
+          const companyMargin = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
+          const agentProfit = lead.claimedByAgentId ? (grossSpread - companyMargin) : 0;
+
+          DB.addAgentSale({
+            id: Utils.generateId('SALE'),
+            vehicleId: lead.vehicleId,
+            agentId: agentId,
+            agentName: agentName,
+            buyerName: lead.contactName || (buyer ? `${buyer.firstName} ${buyer.lastName}` : '') || 'Unknown',
+            buyerPhone: lead.contactPhone || buyer?.phone || '',
+            buyerEmail: lead.contactEmail || buyer?.email || '',
+            salePrice: salePrice,
+            agentCostPrice: invoiceCost + companyMargin,
+            agentProfit: agentProfit,
+            saleDate: new Date().toISOString().split('T')[0],
+            status: 'pending',
+            submittedAt: new Date().toISOString(),
+            leadId: lead.id
+          });
+
+          // Reserve vehicle
+          DB.updateVehicle(lead.vehicleId, { status: 'Reserved' });
+          DB.getAllocationsByVehicle(lead.vehicleId).filter(a => a.status === 'active').forEach(a => {
+            DB.updateAllocation(a.id, { status: 'reserved' });
+          });
+
+          Utils.showToast('Lead won! Sale order created — check Sales Orders page', 'success');
+        } else {
+          Utils.showToast('Lead updated! Vehicle not available for auto-order.', 'warning');
+        }
+      } else {
+        Utils.showToast('Lead updated!', 'success');
+      }
+
+      closeModal();
+      renderLeads();
+    }
+
+    renderLeads();
+  </script>
+</body>
+</html>

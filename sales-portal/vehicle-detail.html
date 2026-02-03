@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Detail - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container" style="max-width:1000px;">
+      <a href="vehicles.html" class="btn btn-secondary btn-sm mb-4">&larr; Back to Vehicles</a>
+      <div id="content"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+    const params = Utils.getQueryParams();
+    const vehicleId = params.id;
+    const vehicle = DB.getVehicle(vehicleId);
+
+    if (!vehicle) {
+      document.getElementById('content').innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:3rem;">Vehicle not found.</div></div>';
+    } else {
+      const pricing = DB.getAgentVehiclePricing(vehicleId);
+      const isReserved = vehicle.status === 'Reserved';
+      const isSold = vehicle.status === 'Sold';
+      const allocations = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+      const myAlloc = allocations.find(a => a.agentId === agent?.id);
+      const isMine = !!myAlloc;
+      const full = allocations.length >= 10;
+
+      document.title = `${vehicle.year} ${vehicle.make} ${vehicle.model} - ZMNZ Sales Agent`;
+
+      document.getElementById('content').innerHTML = `
+        <div class="grid grid-2 mb-8" style="gap:2rem;">
+          <!-- Image placeholder -->
+          <div style="background:var(--gray-200);height:300px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:var(--text-xl);">
+            ${vehicle.year} ${vehicle.make} ${vehicle.model}
+          </div>
+
+          <!-- Info -->
+          <div>
+            <h1 style="margin-bottom:0.5rem;">${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''}</h1>
+            <div class="flex gap-2 mb-4">
+              <span class="badge badge-primary">${vehicle.condition}</span>
+              <span class="badge badge-gray">${vehicle.bodyStyle}</span>
+              <span class="badge badge-gray">${Utils.formatNumber(vehicle.mileage)} mi</span>
+              <span class="badge ${full ? 'badge-gray' : 'badge-primary'}">${allocations.length}/10 agents</span>
+            </div>
+
+            <!-- Agent Pricing -->
+            <div class="card mb-4">
+              <div class="card-body">
+                <h3 style="margin-bottom:1rem;">Your Pricing</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                  <div><span style="color:var(--gray-500);font-size:var(--text-sm);">List Price</span><div style="font-size:var(--text-xl);font-weight:700;">${Utils.formatCurrency(pricing.salePrice)}</div></div>
+                  <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Your Cost</span><div style="font-size:var(--text-xl);font-weight:700;">${Utils.formatCurrency(pricing.agentCostPrice)}</div></div>
+                  <div style="grid-column:1/-1;"><span style="color:var(--gray-500);font-size:var(--text-sm);">Profit Room</span><div style="font-size:var(--text-2xl);font-weight:700;color:var(--success);">${Utils.formatCurrency(pricing.profitRoom)}</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              ${isReserved
+                ? '<span class="badge badge-warning" style="font-size:var(--text-sm);padding:0.5rem 1rem;">Reserved — Sale Pending</span>'
+                : isSold
+                  ? '<span class="badge badge-gray" style="font-size:var(--text-sm);padding:0.5rem 1rem;">Sold</span>'
+                  : isMine
+                    ? `<button class="btn btn-sm" style="background:var(--gray-300);color:var(--gray-700);" onclick="release()">Release Allocation</button>`
+                    : full
+                      ? '<span class="btn btn-sm" style="background:var(--gray-300);color:var(--gray-600);pointer-events:none;">Fully Allocated</span>'
+                      : `<button class="btn btn-primary" onclick="claim()">Claim This Vehicle</button>`
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Specs -->
+        <div class="card mb-8">
+          <div class="card-header"><h3>Specifications</h3></div>
+          <div class="card-body">
+            <div class="grid grid-4" style="gap:1rem;">
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Engine</span><div style="font-weight:600;">${vehicle.specs.engine}</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Transmission</span><div style="font-weight:600;">${vehicle.specs.transmission}</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Drivetrain</span><div style="font-weight:600;">${vehicle.specs.drivetrain}</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Fuel Type</span><div style="font-weight:600;">${vehicle.specs.fuelType}</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Horsepower</span><div style="font-weight:600;">${vehicle.specs.horsepower} hp</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">MPG City</span><div style="font-weight:600;">${vehicle.specs.mpgCity}</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">MPG Highway</span><div style="font-weight:600;">${vehicle.specs.mpgHighway}</div></div>
+              <div><span style="color:var(--gray-500);font-size:var(--text-sm);">Exterior</span><div style="font-weight:600;">${vehicle.exteriorColor}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        ${vehicle.features && vehicle.features.length ? `
+        <div class="card mb-8">
+          <div class="card-header"><h3>Features</h3></div>
+          <div class="card-body">
+            <div class="flex gap-2" style="flex-wrap:wrap;">
+              ${vehicle.features.map(f => `<span class="badge badge-gray">${f}</span>`).join('')}
+            </div>
+          </div>
+        </div>` : ''}
+
+        <!-- Book Appointment (only if claimed and vehicle is available) -->
+        ${isMine && !isReserved && !isSold ? `
+        <div class="card" id="booking">
+          <div class="card-header"><h3>Book Appointment</h3></div>
+          <div class="card-body">
+            <form id="bookingForm">
+              <div class="grid grid-3">
+                <div class="form-group">
+                  <label for="bookingType">Reason *</label>
+                  <select id="bookingType" class="form-control" required>
+                    <option value="viewing">Car Viewing</option>
+                    <option value="test_drive">Test Drive</option>
+                    <option value="consultation">Consultation</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="bookDate">Date *</label>
+                  <input type="date" id="bookDate" class="form-control" required min="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="form-group">
+                  <label for="bookTime">Time Slot *</label>
+                  <select id="bookTime" class="form-control" required>
+                    <option value="">Select a date first</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label for="bookCustomer">Customer Name *</label>
+                  <input type="text" id="bookCustomer" class="form-control" required placeholder="Customer full name">
+                </div>
+                <div class="form-group">
+                  <label for="bookPhone">Customer Phone *</label>
+                  <input type="tel" id="bookPhone" class="form-control" required placeholder="(555) 123-4567">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="bookEmail">Customer Email *</label>
+                <input type="email" id="bookEmail" class="form-control" required placeholder="customer@email.com">
+              </div>
+              <div class="form-group" id="proofGroup">
+                <label for="bookProof">Confirmation Proof (image) <span id="proofRequired">*</span></label>
+                <input type="file" id="bookProof" class="form-control" accept="image/*">
+                <small style="color:var(--gray-500);">Upload a screenshot of your confirmation with the customer (WhatsApp, SMS, email, etc.)</small>
+              </div>
+              <div id="bookProofPreview" style="margin-bottom:1rem;"></div>
+              <button type="submit" class="btn btn-primary btn-lg">Submit Booking Request</button>
+            </form>
+          </div>
+        </div>` : ''}
+      `;
+
+      // Wire up unified booking form
+      const bookingForm = document.getElementById('bookingForm');
+      if (bookingForm) {
+        let proofDataUrl = null;
+        const bookDateEl = document.getElementById('bookDate');
+        const bookTypeEl = document.getElementById('bookingType');
+        const proofInput = document.getElementById('bookProof');
+        const proofRequired = document.getElementById('proofRequired');
+
+        // Toggle proof required based on booking type
+        bookTypeEl.addEventListener('change', () => {
+          const isViewing = bookTypeEl.value === 'viewing';
+          proofRequired.textContent = isViewing ? '*' : '(optional)';
+        });
+
+        // Date -> time slots
+        bookDateEl.addEventListener('change', () => {
+          const slots = Utils.findAvailableViewingSlots(vehicleId, bookDateEl.value);
+          const sel = document.getElementById('bookTime');
+          sel.innerHTML = slots.length
+            ? slots.map(s => `<option value="${s}">${s}</option>`).join('')
+            : '<option value="">No slots available</option>';
+        });
+
+        // Proof image preview
+        proofInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) { proofDataUrl = null; return; }
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            proofDataUrl = ev.target.result;
+            document.getElementById('bookProofPreview').innerHTML = `<img src="${proofDataUrl}" style="max-height:120px;border-radius:var(--radius-md);border:1px solid var(--gray-200);">`;
+          };
+          reader.readAsDataURL(file);
+        });
+
+        bookingForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const bType = bookTypeEl.value;
+          if (bType === 'viewing' && !proofDataUrl) {
+            Utils.showToast('Please upload confirmation proof for car viewings', 'error');
+            return;
+          }
+          if (!document.getElementById('bookTime').value) {
+            Utils.showToast('No time slot selected', 'error');
+            return;
+          }
+          const typeLabels = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
+          if (!confirm(`Submit this ${typeLabels[bType]} booking? The dealership will review and approve it.`)) return;
+
+          DB.addViewingBooking({
+            id: Utils.generateId('VWG'),
+            vehicleId,
+            agentId: agent.id,
+            agentName: `${agent.firstName} ${agent.lastName}`,
+            customerName: document.getElementById('bookCustomer').value,
+            customerPhone: document.getElementById('bookPhone').value,
+            customerEmail: document.getElementById('bookEmail').value,
+            date: bookDateEl.value,
+            timeSlot: document.getElementById('bookTime').value,
+            bookingType: bType,
+            confirmationProof: proofDataUrl || null,
+            status: 'pending',
+            dealerNotes: '',
+            createdAt: new Date().toISOString(),
+            approvedAt: null,
+            rejectedAt: null
+          });
+
+          Utils.showToast('Booking submitted! Awaiting dealer approval.', 'success');
+          setTimeout(() => window.location.href = 'viewings.html', 1500);
+        });
+      }
+    }
+
+    function claim() {
+      const existing = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+      if (existing.length >= 10) { Utils.showToast('Fully allocated', 'error'); return; }
+      if (existing.find(a => a.agentId === agent.id)) { Utils.showToast('Already claimed', 'warning'); return; }
+      DB.addAllocation({
+        id: Utils.generateId('ALC'),
+        vehicleId,
+        agentId: agent.id,
+        agentName: `${agent.firstName} ${agent.lastName}`,
+        status: 'active',
+        claimedDate: new Date().toISOString().split('T')[0]
+      });
+      Utils.showToast('Vehicle claimed!', 'success');
+      setTimeout(() => location.reload(), 500);
+    }
+
+    function release() {
+      if (!confirm('Release this vehicle allocation?')) return;
+      const alloc = DB.getAllocationsByVehicle(vehicleId).find(a => a.agentId === agent.id && a.status === 'active');
+      if (alloc) DB.updateAllocation(alloc.id, { status: 'released' });
+      Utils.showToast('Released', 'success');
+      setTimeout(() => location.reload(), 500);
+    }
+  </script>
+</body>
+</html>

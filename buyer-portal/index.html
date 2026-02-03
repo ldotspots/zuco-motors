@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="../index.html">Home</a>
+          <a href="../about-us.html">About Us</a>
+          <a href="inventory.html">Find a Car</a>
+          <a href="../sell-your-car.html">Sell Your Car</a>
+          <a href="financing.html">Financing</a>
+          <a href="compare.html">Compare</a>
+          <a href="login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="../sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="section">
+    <div class="container">
+      <!-- Welcome Section -->
+      <div class="mb-8">
+        <h1 id="welcomeMessage">Welcome back!</h1>
+        <p style="color: var(--gray-600);">Find your perfect vehicle from our extensive inventory.</p>
+      </div>
+
+      <!-- Quick Search -->
+      <div class="card mb-8">
+        <div class="card-body">
+          <h3 class="mb-4">Quick Search</h3>
+          <form id="quickSearchForm" class="flex gap-4">
+            <input type="text" id="searchQuery" class="form-control" placeholder="Search by make, model, year...">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-3 mb-8" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-value" id="favoritesCount">0</div>
+          <div class="stat-label">Saved Vehicles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="inquiriesCount">0</div>
+          <div class="stat-label">Active Inquiries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="viewsCount">0</div>
+          <div class="stat-label">Recently Viewed</div>
+        </div>
+      </div>
+
+      <!-- Featured Vehicles -->
+      <section class="mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2>Featured Vehicles</h2>
+          <a href="inventory.html" class="btn btn-outline">View All</a>
+        </div>
+        <div class="grid grid-3" id="featuredVehicles">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Saved Vehicles -->
+      <section class="mb-8" id="savedVehiclesSection" style="display: none;">
+        <div class="flex justify-between items-center mb-6">
+          <h2>Your Saved Vehicles</h2>
+          <a href="favorites.html" class="btn btn-outline">View All</a>
+        </div>
+        <div class="grid grid-3" id="savedVehicles"></div>
+      </section>
+
+      <!-- Recent Activity -->
+      <section>
+        <h2 class="mb-6">Recent Activity</h2>
+        <div class="card">
+          <div class="card-body">
+            <div id="recentActivity">
+              <p style="color: var(--gray-600); text-align: center; padding: 2rem;">No recent activity</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Auth-aware nav
+    if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+      document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+    }
+
+    // Get current user
+    const user = Auth.getCurrentUser();
+    if (user) {
+      document.getElementById('welcomeMessage').textContent = `Welcome back, ${user.firstName}!`;
+    }
+
+    // Update stats
+    function updateStats() {
+      const favorites = user?.profile?.favorites || [];
+      const inquiries = DB.getInquiriesByBuyer(user?.id) || [];
+
+      document.getElementById('favoritesCount').textContent = favorites.length;
+      document.getElementById('inquiriesCount').textContent = inquiries.filter(i => i.status !== 'closed-won' && i.status !== 'closed-lost').length;
+      document.getElementById('viewsCount').textContent = Math.floor(Math.random() * 10) + 5;
+    }
+
+    // Render vehicle card
+    function renderVehicleCard(vehicle) {
+      return `
+        <div class="vehicle-card">
+          <div style="background: var(--gray-200); height: 200px; display: flex; align-items: center; justify-content: center; color: var(--gray-500);">
+            ${vehicle.year} ${vehicle.make} ${vehicle.model}
+          </div>
+          <div class="vehicle-card-body">
+            <h3 class="vehicle-card-title">${vehicle.year} ${vehicle.make} ${vehicle.model}</h3>
+            <div class="vehicle-card-price">${Utils.formatCurrency(vehicle.pricing.salePrice)}</div>
+            <div class="vehicle-card-specs">
+              <span>${Utils.formatNumber(vehicle.mileage)} mi</span>
+              <span>${vehicle.specs.transmission}</span>
+              <span>${vehicle.condition}</span>
+            </div>
+            <div class="vehicle-card-actions">
+              <a href="vehicle-details.html?id=${vehicle.id}" class="btn btn-primary w-full">View Details</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Load featured vehicles
+    function loadFeaturedVehicles() {
+      const vehicles = DB.getVehicles();
+      const featured = vehicles
+        .filter(v => v.status === 'Available')
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 6);
+
+      const container = document.getElementById('featuredVehicles');
+      if (featured.length > 0) {
+        container.innerHTML = featured.map(renderVehicleCard).join('');
+      } else {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--gray-600);">No featured vehicles available</p>';
+      }
+    }
+
+    // Load saved vehicles
+    function loadSavedVehicles() {
+      if (!user || !user.profile.favorites || user.profile.favorites.length === 0) {
+        return;
+      }
+
+      const vehicles = DB.getVehicles();
+      const saved = vehicles.filter(v => user.profile.favorites.includes(v.id)).slice(0, 3);
+
+      if (saved.length > 0) {
+        document.getElementById('savedVehiclesSection').style.display = 'block';
+        document.getElementById('savedVehicles').innerHTML = saved.map(renderVehicleCard).join('');
+      }
+    }
+
+    // Load recent activity
+    function loadRecentActivity() {
+      if (!user) return;
+
+      const inquiries = DB.getInquiriesByBuyer(user.id).slice(0, 5);
+      const activityHTML = inquiries.map(inq => {
+        const vehicle = DB.getVehicle(inq.vehicleId);
+        return `
+          <div style="padding: 1rem; border-bottom: 1px solid var(--gray-200);">
+            <div class="flex justify-between items-center">
+              <div>
+                <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Vehicle'}</strong>
+                <p style="color: var(--gray-600); font-size: var(--text-sm);">${inq.message}</p>
+              </div>
+              <span class="badge badge-${inq.status === 'open' ? 'warning' : inq.status === 'closed-won' ? 'success' : 'gray'}">
+                ${inq.status}
+              </span>
+            </div>
+            <div style="color: var(--gray-500); font-size: var(--text-sm); margin-top: 0.5rem;">
+              ${Utils.formatRelativeTime(inq.createdAt)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (inquiries.length > 0) {
+        document.getElementById('recentActivity').innerHTML = activityHTML;
+      }
+    }
+
+    // Quick search
+    document.getElementById('quickSearchForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const query = document.getElementById('searchQuery').value;
+      window.location.href = `inventory.html?query=${encodeURIComponent(query)}`;
+    });
+
+    // Initialize
+    updateStats();
+    loadFeaturedVehicles();
+    loadSavedVehicles();
+    loadRecentActivity();
+  </script>
+</body>
+</html>

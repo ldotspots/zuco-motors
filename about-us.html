@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .about-hero {
+      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .about-hero h1 { color: var(--white); font-size: 3rem; margin-bottom: 1rem; }
+    .about-hero p { font-size: 1.25rem; opacity: 0.95; max-width: 600px; margin: 0 auto; }
+
+    .about-section { padding: 4rem 0; }
+    .about-section:nth-child(even) { background: var(--gray-50); }
+
+    .about-story { max-width: 800px; margin: 0 auto; text-align: center; }
+    .about-story p { font-size: var(--text-lg); color: var(--gray-600); line-height: 1.8; margin-bottom: 1.5rem; }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) { .values-grid { grid-template-columns: repeat(2, 1fr); } }
+    .value-card {
+      text-align: center;
+      padding: 2rem;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+    .value-card svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--gray-900);
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-bottom: 1rem;
+    }
+    .value-card h3 { margin-bottom: 0.5rem; }
+    .value-card p { color: var(--gray-600); font-size: var(--text-sm); }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
+    .team-card { text-align: center; }
+    .team-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--gray-200);
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-500);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+    }
+    .team-card h3 { margin-bottom: 0.25rem; font-size: var(--text-lg); }
+    .team-card p { color: var(--gray-500); font-size: var(--text-sm); }
+
+    .cta-section {
+      text-align: center;
+      padding: 4rem 0;
+      background: var(--gray-900);
+      color: white;
+    }
+    .cta-section h2 { color: white; margin-bottom: 1rem; }
+    .cta-section p { color: var(--gray-400); margin-bottom: 2rem; font-size: var(--text-lg); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="index.html">Home</a>
+          <a href="about-us.html" class="active">About Us</a>
+          <a href="buyer-portal/inventory.html">Find a Car</a>
+          <a href="sell-your-car.html">Sell Your Car</a>
+          <a href="buyer-portal/financing.html">Financing</a>
+          <a href="buyer-portal/compare.html">Compare</a>
+          <a href="buyer-portal/login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="buyer-portal/favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="buyer-portal/profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="about-hero">
+    <div class="container">
+      <h1>About Zuco Motors</h1>
+      <p>A modern dealership platform built on transparency, quality, and trust</p>
+    </div>
+  </section>
+
+  <!-- Our Story -->
+  <section class="about-section">
+    <div class="container about-story">
+      <h2 class="mb-8">Our Story</h2>
+      <p>Zuco Motors was founded with a simple belief: buying a car should be straightforward, transparent, and fair. We saw an industry full of friction, hidden costs, and outdated processes — and set out to change it.</p>
+      <p>Our platform connects buyers directly with knowledgeable sales agents who are incentivised to find you the right vehicle, not just the most expensive one. Every vehicle is inspected, every price is transparent, and every transaction is backed by our commitment to quality.</p>
+      <p>Whether you're buying your first car or upgrading your fleet, Zuco Motors gives you the tools, information, and support to make the best decision.</p>
+    </div>
+  </section>
+
+  <!-- Our Values -->
+  <section class="about-section">
+    <div class="container">
+      <h2 class="mb-8" style="text-align:center;">Our Values</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <h3>Transparency</h3>
+          <p>No hidden fees, no surprises. Every price, every cost, and every detail is visible upfront so you can make informed decisions.</p>
+        </div>
+        <div class="value-card">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <h3>Quality</h3>
+          <p>Every vehicle on our platform is inspected and verified. We stand behind what we sell and hold ourselves to the highest standards.</p>
+        </div>
+        <div class="value-card">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h3>Customer First</h3>
+          <p>Our agents work for you, not against you. From first inquiry to final handshake, your experience is our priority.</p>
+        </div>
+        <div class="value-card">
+          <svg viewBox="0 0 24 24"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>
+          <h3>Innovation</h3>
+          <p>We use technology to make the car buying and selling process faster, simpler, and more enjoyable for everyone involved.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Team -->
+  <section class="about-section">
+    <div class="container">
+      <h2 class="mb-8" style="text-align:center;">The Team</h2>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar">LM</div>
+          <h3>Luca M.</h3>
+          <p>Founder & Director</p>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">JR</div>
+          <h3>James R.</h3>
+          <p>Sales Director</p>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">SK</div>
+          <h3>Sarah K.</h3>
+          <p>Operations Manager</p>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar">DT</div>
+          <h3>David T.</h3>
+          <p>Head of Customer Experience</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Ready to Find Your Next Car?</h2>
+      <p>Browse our full inventory and find the perfect vehicle today.</p>
+      <div class="flex gap-4" style="justify-content:center;">
+        <a href="buyer-portal/inventory.html" class="btn btn-primary btn-lg">Find a Car</a>
+        <a href="become-a-seller.html" class="btn btn-secondary btn-lg">Become a Seller</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Zuco Motors</h3>
+          <p style="color: var(--gray-400);">Your trusted partner in finding the perfect vehicle. Quality, transparency, and customer satisfaction are our priorities.</p>
+        </div>
+        <div class="footer-section">
+          <h3>For Buyers</h3>
+          <ul>
+            <li><a href="buyer-portal/inventory.html">Find a Car</a></li>
+            <li><a href="buyer-portal/financing.html">Financing</a></li>
+            <li><a href="buyer-portal/compare.html">Compare Vehicles</a></li>
+            <li><a href="buyer-portal/login.html">My Account</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>For Sales Agents</h3>
+          <ul>
+            <li><a href="sales-portal/login.html">Agent Login</a></li>
+            <li><a href="become-a-seller.html">Become a Seller</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <ul>
+            <li><a href="about-us.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul>
+            <li>Email: info@zucomotors.com</li>
+            <li>Phone: (555) 123-4567</li>
+            <li>Address: 123 Auto Plaza, TX</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+        document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+      }
+    });
+  </script>
+</body>
+</html>

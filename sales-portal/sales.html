@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html" class="active">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-8">Sales & Orders</h1>
+
+      <!-- KPIs -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalSales">0</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="pendingCount">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="completedCount">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalProfit">$0</div>
+          <div class="stat-label">Total Profit (Completed)</div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="flex gap-4 mb-6">
+        <select id="filterStatus" class="form-control" style="max-width:200px;" onchange="render()">
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="ready_for_collection">Ready for Collection</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <!-- Sales History -->
+      <div class="card">
+        <div class="card-header">
+          <div class="flex justify-between items-center">
+            <h3>Order History</h3>
+            <span id="dealCount" class="badge badge-primary">0 orders</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Vehicle</th>
+                <th>Buyer</th>
+                <th>Sale Price</th>
+                <th>Your Profit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="salesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+
+    function render() {
+      const allSales = DB.getAgentSalesByAgent(agent?.id);
+      const filter = document.getElementById('filterStatus').value;
+      let sales = filter === 'all' ? allSales : allSales.filter(s => s.status === filter);
+
+      // KPIs (always from all sales)
+      const completed = allSales.filter(s => s.status === 'completed');
+      const pending = allSales.filter(s => s.status === 'pending' || s.status === 'ready_for_collection');
+      document.getElementById('totalSales').textContent = allSales.length;
+      document.getElementById('pendingCount').textContent = pending.length;
+      document.getElementById('completedCount').textContent = completed.length;
+      document.getElementById('totalProfit').textContent = Utils.formatCurrency(completed.reduce((s, x) => s + x.agentProfit, 0));
+      document.getElementById('dealCount').textContent = `${sales.length} orders`;
+
+      const statusBadge = {
+        pending: 'badge-warning',
+        ready_for_collection: 'badge-primary',
+        completed: 'badge-primary',
+        cancelled: 'badge-gray'
+      };
+      const statusLabel = {
+        pending: 'Pending Approval',
+        ready_for_collection: 'Ready for Collection',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+      };
+
+      const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+      document.getElementById('salesTable').innerHTML = sorted.map(s => {
+        const v = DB.getVehicle(s.vehicleId);
+        const badge = statusBadge[s.status] || 'badge-gray';
+        const label = statusLabel[s.status] || s.status;
+        return `<tr>
+          <td>${Utils.formatDate(s.saleDate)}</td>
+          <td>${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'}</td>
+          <td>${s.buyerName}</td>
+          <td>${Utils.formatCurrency(s.salePrice)}</td>
+          <td style="font-weight:600;color:var(--success);">${Utils.formatCurrency(s.agentProfit)}</td>
+          <td><span class="badge ${badge}">${label}</span></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gray-500);">No sales recorded yet</td></tr>';
+    }
+
+    render();
+  </script>
+</body>
+</html>

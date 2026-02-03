@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Vehicles - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html" class="active">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="flex justify-between items-center mb-8">
+        <h1>My Allocated Vehicles</h1>
+        <a href="vehicles.html" class="btn btn-primary">Browse & Claim More</a>
+      </div>
+
+      <div id="vehicleList"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+
+    function render() {
+      const allocations = DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active' || a.status === 'reserved');
+
+      if (!allocations.length) {
+        document.getElementById('vehicleList').innerHTML = `
+          <div class="card"><div class="card-body" style="text-align:center;padding:3rem;">
+            <p style="color:var(--gray-500);margin-bottom:1rem;">You haven't claimed any vehicles yet.</p>
+            <a href="vehicles.html" class="btn btn-primary">Browse Vehicles</a>
+          </div></div>`;
+        return;
+      }
+
+      document.getElementById('vehicleList').innerHTML = allocations.map(alloc => {
+        const v = DB.getVehicle(alloc.vehicleId);
+        if (!v) return '';
+        const pricing = DB.getAgentVehiclePricing(v.id);
+        return `<div class="card mb-4">
+          <div class="card-body">
+            <div class="flex justify-between items-center">
+              <div style="flex:1;">
+                <h3 style="margin-bottom:0.25rem;">${v.year} ${v.make} ${v.model} ${v.trim || ''}</h3>
+                <div class="flex gap-2 mb-2">
+                  <span class="badge badge-gray">${v.condition}</span>
+                  <span class="badge badge-gray">${v.bodyStyle}</span>
+                  <span class="badge badge-gray">${Utils.formatNumber(v.mileage)} mi</span>
+                </div>
+                <div style="display:flex;gap:2rem;font-size:var(--text-sm);">
+                  <span>List Price: <strong>${Utils.formatCurrency(pricing.salePrice)}</strong></span>
+                  <span>Your Cost: <strong>${Utils.formatCurrency(pricing.agentCostPrice)}</strong></span>
+                  <span>Profit Room: <strong style="color:var(--success);">${Utils.formatCurrency(pricing.profitRoom)}</strong></span>
+                </div>
+                <div style="font-size:var(--text-xs);color:var(--gray-500);margin-top:0.5rem;">Claimed: ${alloc.claimedDate ? Utils.formatDate(alloc.claimedDate) : 'N/A'}</div>
+              </div>
+              <div class="flex gap-2">
+                <a href="vehicle-detail.html?id=${v.id}" class="btn btn-secondary btn-sm">Details</a>
+                ${alloc.status === 'reserved'
+                  ? '<span class="badge badge-warning" style="padding:0.5rem 1rem;">Sale Pending</span>'
+                  : `<button class="btn btn-primary btn-sm" onclick="bookAppointment('${v.id}')">Book Appointment</button>
+                <button class="btn btn-sm" style="background:var(--gray-300);color:var(--gray-700);" onclick="release('${alloc.id}')">Release</button>`}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function release(allocId) {
+      if (!confirm('Release this vehicle allocation?')) return;
+      DB.updateAllocation(allocId, { status: 'released' });
+      Utils.showToast('Vehicle released', 'success');
+      render();
+    }
+
+    function bookAppointment(vehicleId) {
+      window.location.href = `vehicle-detail.html?id=${vehicleId}#booking`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leads - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="leads.html" class="active">Leads</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-4">Leads & Inquiries</h1>
+      <p class="mb-8" style="color:var(--gray-600);">Inquiries from buyers interested in your allocated vehicles</p>
+
+      <!-- KPIs -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalLeads">0</div>
+          <div class="stat-label">Total Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="openLeads">0</div>
+          <div class="stat-label">Open</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="contactedLeads">0</div>
+          <div class="stat-label">Contacted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="closedLeads">0</div>
+          <div class="stat-label">Closed</div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="flex gap-4 mb-6">
+        <select id="filterStatus" class="form-control" style="max-width:200px;">
+          <option value="all">All Statuses</option>
+          <option value="open">Open</option>
+          <option value="contacted">Contacted</option>
+          <option value="negotiating">Negotiating</option>
+          <option value="closed-won">Closed Won</option>
+          <option value="closed-lost">Closed Lost</option>
+        </select>
+        <select id="filterType" class="form-control" style="max-width:200px;">
+          <option value="all">All Types</option>
+          <option value="purchase">Purchase</option>
+          <option value="test-drive">Test Drive</option>
+          <option value="trade-in">Trade-In</option>
+          <option value="financing">Financing</option>
+        </select>
+      </div>
+
+      <!-- Leads Table -->
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Vehicle</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Lead Detail Modal -->
+  <div id="leadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--white);border-radius:var(--radius-xl);max-width:600px;width:90%;max-height:80vh;overflow-y:auto;padding:2rem;margin:auto;position:relative;top:50%;transform:translateY(-50%);">
+      <div class="flex justify-between items-center mb-4">
+        <h2>Lead Details</h2>
+        <button onclick="closeModal()" class="btn btn-secondary btn-sm">Close</button>
+      </div>
+      <div id="leadModalContent"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+
+    function getMyLeads() {
+      // Get vehicles this agent has allocated
+      const myAllocVehicleIds = new Set(
+        DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active').map(a => a.vehicleId)
+      );
+      return DB.getInquiries().filter(inq => {
+        // Already claimed by this agent
+        if (inq.claimedByAgentId === agent?.id) return true;
+        // Claimed by another agent — hide it
+        if (inq.claimedByAgentId) return false;
+        // Unclaimed: show if assigned to this agent, for an allocated vehicle, or unassigned
+        return inq.agentId === agent?.id || myAllocVehicleIds.has(inq.vehicleId) || !inq.agentId;
+      });
+    }
+
+    function render() {
+      const statusFilter = document.getElementById('filterStatus').value;
+      const typeFilter = document.getElementById('filterType').value;
+
+      let leads = getMyLeads();
+      if (statusFilter !== 'all') leads = leads.filter(l => l.status === statusFilter);
+      if (typeFilter !== 'all') leads = leads.filter(l => l.type === typeFilter);
+      leads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // KPIs (use all my leads, unfiltered)
+      const all = getMyLeads();
+      document.getElementById('totalLeads').textContent = all.length;
+      document.getElementById('openLeads').textContent = all.filter(l => l.status === 'open').length;
+      document.getElementById('contactedLeads').textContent = all.filter(l => l.status === 'contacted' || l.status === 'negotiating').length;
+      document.getElementById('closedLeads').textContent = all.filter(l => l.status === 'closed-won' || l.status === 'closed-lost').length;
+
+      const statusColors = {
+        'open': 'badge-primary',
+        'contacted': 'badge-gray',
+        'negotiating': 'badge-primary',
+        'closed-won': 'badge-primary',
+        'closed-lost': 'badge-gray'
+      };
+
+      document.getElementById('leadsTable').innerHTML = leads.map(l => {
+        const v = DB.getVehicle(l.vehicleId);
+        const isMine = l.claimedByAgentId === agent?.id;
+        const unclaimed = !l.claimedByAgentId;
+        return `<tr>
+          <td>${Utils.formatDate(l.createdAt)}</td>
+          <td><span style="text-transform:capitalize;">${l.type || '-'}</span></td>
+          <td>${v ? `<a href="vehicle-detail.html?id=${v.id}">${v.year} ${v.make} ${v.model}</a>` : 'Unknown'}</td>
+          <td>${l.contactName || (l.buyerId ? 'Registered Buyer' : '-')}</td>
+          <td>${isMine ? (l.contactEmail || '-') : '<em style="color:var(--gray-400);">Claim to reveal</em>'}</td>
+          <td>${isMine ? (l.contactPhone || '-') : '<em style="color:var(--gray-400);">Claim to reveal</em>'}</td>
+          <td><span class="badge ${statusColors[l.status] || 'badge-gray'}" style="text-transform:capitalize;">${l.status}</span></td>
+          <td>
+            ${unclaimed
+              ? `<button class="btn btn-sm btn-primary" onclick="claimLead('${l.id}')">Claim Lead</button>`
+              : `<button class="btn btn-sm btn-secondary" onclick="viewLead('${l.id}')">View</button>`
+            }
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No leads found</td></tr>';
+    }
+
+    function claimLead(id) {
+      // Re-read to check if another agent claimed it in the meantime
+      const lead = DB.getInquiry(id);
+      if (!lead) return;
+      if (lead.claimedByAgentId) {
+        Utils.showToast('This lead has already been claimed by another agent', 'error');
+        render();
+        return;
+      }
+      DB.updateInquiry(id, {
+        claimedByAgentId: agent.id,
+        claimedByAgentName: `${agent.firstName} ${agent.lastName}`,
+        claimedAt: new Date().toISOString(),
+        status: 'contacted',
+        updatedAt: new Date().toISOString()
+      });
+      Utils.showToast('Lead claimed! Contact details revealed.', 'success');
+      render();
+    }
+
+    function viewLead(id) {
+      const lead = DB.getInquiry(id);
+      if (!lead) return;
+      const v = DB.getVehicle(lead.vehicleId);
+
+      document.getElementById('leadModalContent').innerHTML = `
+        <div class="mb-4">
+          <strong>Vehicle:</strong> ${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'}
+        </div>
+        <div class="grid grid-2 mb-4" style="gap:1rem;">
+          <div><strong>Name:</strong> ${lead.contactName || '-'}</div>
+          <div><strong>Email:</strong> ${lead.contactEmail || '-'}</div>
+          <div><strong>Phone:</strong> ${lead.contactPhone || '-'}</div>
+          <div><strong>Type:</strong> <span style="text-transform:capitalize;">${lead.type || '-'}</span></div>
+        </div>
+        ${lead.message ? `<div class="mb-4"><strong>Message:</strong><p style="background:var(--gray-50);padding:1rem;border-radius:var(--radius-md);margin-top:0.5rem;">${Utils.sanitizeHTML(lead.message)}</p></div>` : ''}
+        <div class="mb-4"><strong>Submitted:</strong> ${Utils.formatDate(lead.createdAt)}</div>
+        <div class="form-group">
+          <label><strong>Update Status:</strong></label>
+          <select id="leadStatusSelect" class="form-control">
+            <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>Contacted</option>
+            <option value="negotiating" ${lead.status === 'negotiating' ? 'selected' : ''}>Negotiating</option>
+            <option value="closed-won" ${lead.status === 'closed-won' ? 'selected' : ''}>Closed Won</option>
+            <option value="closed-lost" ${lead.status === 'closed-lost' ? 'selected' : ''}>Closed Lost</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="updateLeadStatus('${lead.id}')">Save Status</button>
+      `;
+      document.getElementById('leadModal').style.display = 'block';
+    }
+
+    function updateLeadStatus(id) {
+      const status = document.getElementById('leadStatusSelect').value;
+      DB.updateInquiry(id, { status, updatedAt: new Date().toISOString() });
+      Utils.showToast('Lead status updated', 'success');
+      closeModal();
+      render();
+    }
+
+    function closeModal() {
+      document.getElementById('leadModal').style.display = 'none';
+    }
+
+    document.getElementById('filterStatus').addEventListener('change', render);
+    document.getElementById('filterType').addEventListener('change', render);
+    render();
+  </script>
+</body>
+</html>

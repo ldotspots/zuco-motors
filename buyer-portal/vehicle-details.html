@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Details - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .vehicle-header {
+      background: var(--white);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .vehicle-gallery {
+      background: var(--gray-200);
+      height: 400px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2rem;
+      color: var(--gray-600);
+      font-size: var(--text-xl);
+    }
+
+    .specs-table {
+      width: 100%;
+    }
+
+    .specs-table td {
+      padding: 0.75rem;
+    }
+
+    .specs-table td:first-child {
+      font-weight: 600;
+      color: var(--gray-700);
+      width: 40%;
+    }
+
+    .feature-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--gray-100);
+      border-radius: var(--radius-md);
+      margin: 0.25rem;
+      font-size: var(--text-sm);
+    }
+
+    .action-buttons {
+      position: sticky;
+      bottom: 0;
+      background: var(--white);
+      padding: 1.5rem 0;
+      box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="../index.html">Home</a>
+          <a href="../about-us.html">About Us</a>
+          <a href="inventory.html" class="active">Find a Car</a>
+          <a href="../sell-your-car.html">Sell Your Car</a>
+          <a href="financing.html">Financing</a>
+          <a href="compare.html">Compare</a>
+          <a href="login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="../sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Vehicle Header -->
+  <div class="vehicle-header">
+    <div class="container">
+      <div class="flex justify-between items-center">
+        <div>
+          <a href="inventory.html" style="color: var(--gray-600); margin-bottom: 0.5rem; display: inline-block;">← Back to Inventory</a>
+          <h1 id="vehicleTitle">Loading...</h1>
+          <p id="vehicleSubtitle" style="color: var(--gray-600); font-size: var(--text-lg);"></p>
+        </div>
+        <div style="text-align: right;">
+          <div id="vehiclePrice" style="font-size: var(--text-4xl); font-weight: 700; color: var(--primary-600); margin-bottom: 0.5rem;">-</div>
+          <span id="vehicleBadge" class="badge badge-success">Available</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="section">
+    <div class="container">
+      <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem;">
+        <!-- Left Column -->
+        <div>
+          <!-- Gallery -->
+          <div class="vehicle-gallery" id="vehicleGallery">
+            Vehicle Image Placeholder
+          </div>
+
+          <!-- Description -->
+          <div class="card mb-6">
+            <div class="card-header">
+              <h2>Vehicle Overview</h2>
+            </div>
+            <div class="card-body">
+              <p id="vehicleDescription">This vehicle features premium quality and excellent condition. Perfect for your daily driving needs.</p>
+            </div>
+          </div>
+
+          <!-- Specifications -->
+          <div class="card mb-6">
+            <div class="card-header">
+              <h2>Specifications</h2>
+            </div>
+            <div class="card-body">
+              <table class="specs-table" id="specsTable">
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="card mb-6">
+            <div class="card-header">
+              <h2>Features & Options</h2>
+            </div>
+            <div class="card-body">
+              <div id="featuresList"></div>
+            </div>
+          </div>
+
+          <!-- Vehicle History -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Vehicle History</h2>
+            </div>
+            <div class="card-body">
+              <div class="grid grid-3">
+                <div class="text-center">
+                  <div style="font-size: var(--text-3xl); font-weight: 700; color: var(--gray-900);" id="accidents">0</div>
+                  <div style="color: var(--gray-600); font-size: var(--text-sm);">Accidents Reported</div>
+                </div>
+                <div class="text-center">
+                  <div style="font-size: var(--text-3xl); font-weight: 700; color: var(--gray-900);" id="owners">0</div>
+                  <div style="color: var(--gray-600); font-size: var(--text-sm);">Previous Owners</div>
+                </div>
+                <div class="text-center">
+                  <div style="font-size: var(--text-3xl); font-weight: 700; color: var(--gray-900);" id="views">0</div>
+                  <div style="color: var(--gray-600); font-size: var(--text-sm);">Times Viewed</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+          <!-- Actions Card -->
+          <div class="card mb-6" style="position: sticky; top: 80px;">
+            <div class="card-header">
+              <h3>Interested in this vehicle?</h3>
+            </div>
+            <div class="card-body">
+              <div class="flex flex-col gap-4">
+                <button onclick="document.getElementById('inquirySection').scrollIntoView({behavior:'smooth'})" class="btn btn-primary w-full">
+                  Get in Touch
+                </button>
+                <button onclick="getFinancing()" class="btn btn-outline w-full">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Get Financing Quote
+                </button>
+                <button id="favoriteBtn" onclick="toggleFavorite()" class="btn btn-secondary w-full">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Save to Favorites
+                </button>
+                <button onclick="addToCompare()" class="btn btn-secondary w-full">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg> Add to Compare
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inquiry Form -->
+      <section class="mt-8" id="inquirySection">
+        <div class="card mb-8">
+          <div class="card-header"><h2>Get in Touch</h2></div>
+          <div class="card-body">
+            <p style="color:var(--gray-600);margin-bottom:1.5rem;">Interested in this vehicle? Fill out the form below and one of our sales agents will get back to you.</p>
+            <form id="inquiryForm">
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label for="inqName">Your Name *</label>
+                  <input type="text" id="inqName" class="form-control" required placeholder="Full name">
+                </div>
+                <div class="form-group">
+                  <label for="inqEmail">Email *</label>
+                  <input type="email" id="inqEmail" class="form-control" required placeholder="you@email.com">
+                </div>
+              </div>
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label for="inqPhone">Phone</label>
+                  <input type="tel" id="inqPhone" class="form-control" placeholder="(555) 123-4567">
+                </div>
+                <div class="form-group">
+                  <label for="inqType">Inquiry Type *</label>
+                  <select id="inqType" class="form-control" required>
+                    <option value="purchase">Purchase Inquiry</option>
+                    <option value="test-drive">Schedule Test Drive</option>
+                    <option value="trade-in">Trade-In Valuation</option>
+                    <option value="financing">Financing Question</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="inqMessage">Message</label>
+                <textarea id="inqMessage" class="form-control" rows="3" placeholder="Tell us what you'd like to know..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg">Submit Inquiry</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Similar Vehicles -->
+      <section class="mt-8">
+        <h2 class="mb-6">Similar Vehicles</h2>
+        <div class="grid grid-3" id="similarVehicles"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Auth-aware nav
+    if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+      document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+    }
+
+    let currentVehicle = null;
+
+    // Get vehicle ID from URL
+    const params = Utils.getQueryParams();
+    const vehicleId = params.id;
+
+    if (!vehicleId) {
+      window.location.href = 'inventory.html';
+    }
+
+    // Load vehicle details
+    function loadVehicle() {
+      currentVehicle = DB.getVehicle(vehicleId);
+
+      if (!currentVehicle) {
+        Utils.showToast('Vehicle not found', 'error');
+        setTimeout(() => window.location.href = 'inventory.html', 2000);
+        return;
+      }
+
+      // Track view
+      Utils.trackView(vehicleId);
+
+      // Update page
+      document.title = `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model} - Zuco Motors`;
+      document.getElementById('vehicleTitle').textContent =
+        `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`;
+      document.getElementById('vehicleSubtitle').textContent = currentVehicle.trim;
+      document.getElementById('vehiclePrice').textContent = Utils.formatCurrency(currentVehicle.pricing.salePrice);
+      document.getElementById('vehicleBadge').textContent = currentVehicle.status;
+      document.getElementById('vehicleBadge').className = `badge badge-${currentVehicle.status === 'Available' ? 'success' : 'warning'}`;
+
+      // Gallery placeholder
+      document.getElementById('vehicleGallery').textContent =
+        `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`;
+
+      // Specs
+      const specsTable = document.getElementById('specsTable').querySelector('tbody');
+      const specs = [
+        ['Condition', currentVehicle.condition],
+        ['Body Style', currentVehicle.bodyStyle],
+        ['Exterior Color', currentVehicle.exteriorColor],
+        ['Interior Color', currentVehicle.interiorColor],
+        ['Mileage', Utils.formatNumber(currentVehicle.mileage) + ' miles'],
+        ['Engine', currentVehicle.specs.engine],
+        ['Transmission', currentVehicle.specs.transmission],
+        ['Drivetrain', currentVehicle.specs.drivetrain],
+        ['Fuel Type', currentVehicle.specs.fuelType],
+        ['MPG City/Highway', `${currentVehicle.specs.mpgCity}/${currentVehicle.specs.mpgHighway} mpg`],
+        ['Horsepower', `${currentVehicle.specs.horsepower} hp`],
+        ['Torque', `${currentVehicle.specs.torque} lb-ft`],
+        ['Seating', `${currentVehicle.specs.seating} passengers`],
+        ['VIN', currentVehicle.vin],
+        ['Stock #', currentVehicle.id],
+        ['Location', currentVehicle.location]
+      ];
+
+      specsTable.innerHTML = specs.map(([label, value]) =>
+        `<tr><td>${label}</td><td>${value}</td></tr>`
+      ).join('');
+
+      // Features
+      document.getElementById('featuresList').innerHTML =
+        currentVehicle.features.map(f => `<span class="feature-badge">${f}</span>`).join('');
+
+      // History
+      document.getElementById('accidents').textContent = currentVehicle.accidents;
+      document.getElementById('owners').textContent = currentVehicle.owners;
+      document.getElementById('views').textContent = currentVehicle.views || 0;
+
+      // Update favorite button
+      updateFavoriteButton();
+
+      // Pre-fill inquiry form with logged-in user info
+      const buyer = Auth.getCurrentUser();
+      if (buyer) {
+        document.getElementById('inqName').value = `${buyer.firstName} ${buyer.lastName}`;
+        document.getElementById('inqEmail').value = buyer.email;
+        document.getElementById('inqPhone').value = buyer.phone || '';
+      }
+
+      // Load similar vehicles
+      loadSimilarVehicles();
+    }
+
+    // Load similar vehicles
+    function loadSimilarVehicles() {
+      const vehicles = DB.getVehicles()
+        .filter(v => v.id !== vehicleId && v.status === 'Available' && v.make === currentVehicle.make)
+        .slice(0, 3);
+
+      const container = document.getElementById('similarVehicles');
+      container.innerHTML = vehicles.map(v => `
+        <div class="vehicle-card">
+          <div style="background: var(--gray-200); height: 150px; display: flex; align-items: center; justify-content: center; color: var(--gray-500);">
+            ${v.year} ${v.make} ${v.model}
+          </div>
+          <div class="vehicle-card-body">
+            <h4 style="margin-bottom: 0.5rem;">${v.year} ${v.make} ${v.model}</h4>
+            <div style="font-size: var(--text-xl); font-weight: 700; color: var(--primary-600); margin-bottom: 0.5rem;">
+              ${Utils.formatCurrency(v.pricing.salePrice)}
+            </div>
+            <a href="vehicle-details.html?id=${v.id}" class="btn btn-primary w-full btn-sm">View Details</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Toggle favorite
+    function toggleFavorite() {
+      Utils.toggleFavorite(vehicleId);
+      updateFavoriteButton();
+    }
+
+    function updateFavoriteButton() {
+      const btn = document.getElementById('favoriteBtn');
+      const isFav = Utils.isFavorite(vehicleId);
+      const starFilled = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:middle;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+      const starOutline = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+      btn.innerHTML = isFav ? `${starFilled} Saved to Favorites` : `${starOutline} Save to Favorites`;
+      btn.className = isFav ? 'btn btn-success w-full' : 'btn btn-secondary w-full';
+    }
+
+    function getFinancing() {
+      window.location.href = `financing.html?vehicleId=${vehicleId}&price=${currentVehicle.pricing.salePrice}`;
+    }
+
+    function addToCompare() {
+      Utils.addToComparison(vehicleId);
+    }
+
+    // Inquiry form submission
+    document.getElementById('inquiryForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const buyer = Auth.getCurrentUser();
+
+      // Find agents allocated to this vehicle to assign the lead
+      const allocations = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+      // Assign to the first allocated agent, or leave unassigned
+      const assignedAgentId = allocations.length ? allocations[0].agentId : null;
+
+      const inquiry = {
+        id: Utils.generateId('INQ'),
+        vehicleId: vehicleId,
+        buyerId: buyer?.id || null,
+        agentId: assignedAgentId,
+        type: document.getElementById('inqType').value,
+        status: 'open',
+        contactName: document.getElementById('inqName').value,
+        contactEmail: document.getElementById('inqEmail').value,
+        contactPhone: document.getElementById('inqPhone').value,
+        message: document.getElementById('inqMessage').value,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      DB.addInquiry(inquiry);
+      Utils.showToast('Inquiry submitted! A sales agent will be in touch soon.', 'success');
+      document.getElementById('inquiryForm').reset();
+    });
+
+    // Initialize
+    loadVehicle();
+  </script>
+</body>
+</html>

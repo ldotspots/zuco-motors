@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dealer Login - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-900) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .auth-container {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      max-width: 450px;
+      width: 100%;
+      padding: 3rem;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .auth-header .logo {
+      font-size: var(--text-3xl);
+      color: var(--primary-600);
+      margin-bottom: 0.5rem;
+      justify-content: center;
+    }
+
+    .dealer-badge {
+      display: inline-block;
+      background: var(--gray-900);
+      color: var(--white);
+      padding: 0.5rem 1.5rem;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .security-notice {
+      background: var(--primary-50);
+      border-left: 4px solid var(--primary-600);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></div>
+      <span class="dealer-badge">💼 DEALER PORTAL</span>
+      <p style="color: var(--gray-600);">Sign in to access dealer tools and analytics</p>
+    </div>
+
+    <!-- Security Notice -->
+    <div class="security-notice">
+      <strong>🔒 Secure Access</strong><br>
+      This portal is for authorized sales agents only.
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" class="form-control" required placeholder="agent@zucomotors.com" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-control" required placeholder="Enter your password">
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="rememberMe" name="rememberMe">
+        <label for="rememberMe" style="margin-bottom: 0;">Remember me</label>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full btn-lg">Sign In</button>
+
+      <div class="text-center" style="margin-top: 1rem;">
+        <a href="#" onclick="alert('Please contact your manager for password recovery.'); return false;">Forgot password?</a>
+      </div>
+    </form>
+
+    <!-- Demo Accounts Info -->
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
+      <p style="font-size: var(--text-sm); color: var(--gray-600); text-align: center; margin-bottom: 0.5rem;">
+        <strong>Demo Accounts:</strong>
+      </p>
+      <p style="font-size: var(--text-xs); color: var(--gray-500); text-align: center;">
+        agent1@zucomotors.com / Dealer123!<br>
+        agent2@zucomotors.com / Dealer123!<br>
+        manager@zucomotors.com / Admin123!
+      </p>
+    </div>
+
+    <div class="back-link">
+      <a href="../index.html">← Back to Home</a>
+    </div>
+  </div>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Login Form Submit
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+
+      const result = Auth.login(email, password, rememberMe);
+
+      if (result.success) {
+        // Check if user is actually a dealer
+        if (result.user.role !== 'dealer') {
+          Utils.showToast('This portal is for dealers only. Please use the buyer portal.', 'error');
+          Auth.logout();
+          return;
+        }
+
+        Utils.showToast('Login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1000);
+      } else {
+        Utils.showToast(result.error, 'error');
+      }
+    });
+
+    // Demo accounts helper
+    console.log('Demo Dealer Accounts:');
+    console.log('Email: agent1@zucomotors.com | Password: Dealer123!');
+    console.log('Email: agent2@zucomotors.com | Password: Dealer123!');
+    console.log('Email: manager@zucomotors.com | Password: Admin123!');
+  </script>
+</body>
+</html>

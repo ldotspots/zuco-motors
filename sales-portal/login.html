@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Agent Login - ZMNZ Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body { background: var(--gray-900); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-container { width: 100%; max-width: 420px; padding: 2rem; }
+    .login-card { background: var(--white); border-radius: var(--radius-xl); padding: 2.5rem; box-shadow: var(--shadow-xl); }
+    .login-logo { text-align: center; margin-bottom: 1.5rem; }
+    .login-logo img { height: 50px; }
+    .login-badge { display: inline-block; background: var(--primary-100); color: var(--primary-700); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
+    .login-card h2 { text-align: center; margin-bottom: 1.5rem; }
+    .demo-info { background: var(--gray-50); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; font-size: var(--text-sm); }
+    .demo-info code { background: var(--gray-200); padding: 0.1rem 0.3rem; border-radius: var(--radius-sm); font-size: var(--text-xs); }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="../css/images/zmnz (1).png" alt="ZMNZ Motors">
+        <br><span class="login-badge">Sales Agent Portal</span>
+      </div>
+      <h2>Agent Sign In</h2>
+      <div class="demo-info">
+        <strong>Demo Credentials:</strong><br>
+        Email: <code>sagent1@zucomotors.com</code><br>
+        Password: <code>Agent123!</code>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-control" required placeholder="agent@zucomotors.com">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-control" required>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
+          <input type="checkbox" id="remember">
+          <label for="remember" style="margin:0;font-size:var(--text-sm);">Remember me</label>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Sign In</button>
+      </form>
+      <p style="text-align:center;margin-top:1.5rem;font-size:var(--text-sm);color:var(--gray-500);">
+        <a href="../index.html">Back to main site</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('remember').checked;
+      const result = Auth.login(email, password, remember);
+      if (result.success) {
+        if (result.user.role !== 'sales_agent') {
+          Utils.showToast('This portal is for sales agents only', 'error');
+          Auth.logout();
+          return;
+        }
+        Auth.redirectAfterLogin();
+      } else {
+        Utils.showToast(result.error, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

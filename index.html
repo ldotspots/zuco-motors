@@ -1,0 +1,354 @@
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zuco Motors - Find Your Perfect Vehicle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .hero {
+      background: linear-gradient(135deg, var(--gray-900) 0%, var(--primary-800) 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .hero h1 {
+      color: var(--white);
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+    }
+
+    .hero-search {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .hero-search input {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-lg);
+      border: none;
+      font-size: var(--text-lg);
+    }
+
+    .hero-search button {
+      padding: 1rem 2rem;
+      border-radius: var(--radius-lg);
+      font-size: var(--text-lg);
+    }
+
+    .featured-section {
+      padding: 4rem 0;
+    }
+
+    .featured-section h2 {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .features {
+      background: var(--gray-50);
+      padding: 4rem 0;
+    }
+
+    .features h2 {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-item {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .feature-icon {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .feature-icon svg {
+      width: 48px;
+      height: 48px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .feature-item h3 {
+      margin-bottom: 0.5rem;
+      color: var(--gray-900);
+    }
+
+    .feature-item p {
+      color: var(--gray-600);
+    }
+
+    .stats {
+      text-align: center;
+      padding: 4rem 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat-item {
+      padding: 2rem;
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary-600);
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="index.html" class="active">Home</a>
+          <a href="about-us.html">About Us</a>
+          <a href="buyer-portal/inventory.html">Find a Car</a>
+          <a href="sell-your-car.html">Sell Your Car</a>
+          <a href="buyer-portal/financing.html">Financing</a>
+          <a href="buyer-portal/compare.html">Compare</a>
+          <a href="buyer-portal/login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="buyer-portal/favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="buyer-portal/profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>Find Your Perfect Vehicle</h1>
+      <p>Browse our extensive inventory of quality new, certified pre-owned, and used vehicles</p>
+      <form class="hero-search" onsubmit="event.preventDefault(); window.location.href='buyer-portal/inventory.html?query=' + encodeURIComponent(document.getElementById('heroSearch').value);">
+        <input type="text" id="heroSearch" placeholder="Search by make, model, year...">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Featured Vehicles -->
+  <section class="featured-section">
+    <div class="container">
+      <h2>Featured Vehicles</h2>
+      <div class="grid grid-3" id="featuredVehicles">
+        <div class="loading-spinner" style="grid-column: 1/-1;">
+          <div class="spinner"></div>
+        </div>
+      </div>
+      <div class="text-center mt-8">
+        <a href="buyer-portal/inventory.html" class="btn btn-primary btn-lg">View All Vehicles</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="container">
+      <h2>Why Choose Zuco Motors?</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">50+</div>
+          <div class="stat-label">Vehicles Available</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">Expert Sales Agents</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">100+</div>
+          <div class="stat-label">Happy Customers</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Online Support</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2>Platform Features</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+          <h3>Advanced Search</h3>
+          <p>Find exactly what you're looking for with powerful filters and search tools</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><path d="M6 14h2"/><path d="M12 14h6"/></svg></div>
+          <h3>Financing Options</h3>
+          <p>Calculate payments and explore financing options that fit your budget</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="m8 7-4 4 4 4"/><path d="m16 7 4 4-4 4"/></svg></div>
+          <h3>Compare Vehicles</h3>
+          <p>Compare up to 3 vehicles side-by-side to make the best decision</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16V8"/><path d="M11 16V4"/><path d="M15 16v-5"/><path d="M19 16v-8"/></svg></div>
+          <h3>Real-Time Analytics</h3>
+          <p>Dealers get comprehensive analytics and reporting tools</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <h3>Direct Communication</h3>
+          <p>Connect directly with sales agents for personalized service</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+          <h3>Quality Assured</h3>
+          <p>All vehicles inspected and verified for quality and accuracy</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Zuco Motors</h3>
+          <p style="color: var(--gray-400);">Your trusted partner in finding the perfect vehicle. Quality, transparency, and customer satisfaction are our priorities.</p>
+        </div>
+        <div class="footer-section">
+          <h3>For Buyers</h3>
+          <ul>
+            <li><a href="buyer-portal/inventory.html">Find a Car</a></li>
+            <li><a href="buyer-portal/financing.html">Financing</a></li>
+            <li><a href="buyer-portal/compare.html">Compare Vehicles</a></li>
+            <li><a href="buyer-portal/login.html">My Account</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>For Sales Agents</h3>
+          <ul>
+            <li><a href="sales-portal/login.html">Agent Login</a></li>
+            <li><a href="become-a-seller.html">Become a Seller</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <ul>
+            <li><a href="about-us.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <ul>
+            <li>Email: info@zucomotors.com</li>
+            <li>Phone: (555) 123-4567</li>
+            <li>Address: 123 Auto Plaza, TX</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    // If dealer or sales agent, redirect to their portal
+    // Buyers stay on the home page with updated nav
+    document.addEventListener('DOMContentLoaded', () => {
+      if (Auth.isAuthenticated()) {
+        const session = Auth.getSession();
+        if (session.role === 'dealer') {
+          window.location.href = 'dealer-portal/index.html';
+        } else if (session.role === 'sales_agent') {
+          window.location.href = 'sales-portal/index.html';
+        } else if (session.role === 'buyer') {
+          document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+          document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+        }
+      }
+    });
+
+    // Load featured vehicles (no auth required)
+    function loadFeatured() {
+      const vehicles = DB.getVehicles()
+        .filter(v => v.status === 'Available')
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 6);
+
+      const container = document.getElementById('featuredVehicles');
+      container.innerHTML = vehicles.map(v => `
+        <div class="vehicle-card">
+          <div style="background: var(--gray-200); height: 200px; display: flex; align-items: center; justify-content: center; color: var(--gray-500);">
+            ${v.year} ${v.make} ${v.model}
+          </div>
+          <div class="vehicle-card-body">
+            <h3 class="vehicle-card-title">${v.year} ${v.make} ${v.model}</h3>
+            <div class="badge badge-gray mb-3">${v.condition}</div>
+            <div class="vehicle-card-price">${Utils.formatCurrency(v.pricing.salePrice)}</div>
+            <div class="vehicle-card-specs">
+              <span>${Utils.formatNumber(v.mileage)} mi</span>
+              <span>${v.specs.transmission}</span>
+              <span>${v.bodyStyle}</span>
+            </div>
+            <div class="vehicle-card-actions">
+              <a href="buyer-portal/vehicle-details.html?id=${v.id}" class="btn btn-primary w-full">View Details</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadFeatured();
+  </script>
+</body>
+</html>

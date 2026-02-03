@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Inquiries - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="../index.html">Home</a>
+          <a href="../about-us.html">About Us</a>
+          <a href="inventory.html">Find a Car</a>
+          <a href="../sell-your-car.html">Sell Your Car</a>
+          <a href="financing.html">Financing</a>
+          <a href="compare.html">Compare</a>
+          <a href="login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="../sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1>My Inquiries</h1>
+          <p style="color: var(--gray-600);">Track all your vehicle inquiries and communications</p>
+        </div>
+        <div class="flex gap-4">
+          <select id="statusFilter" class="form-control" style="width: auto;" onchange="loadInquiries()">
+            <option value="all">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="contacted">Contacted</option>
+            <option value="negotiating">Negotiating</option>
+            <option value="closed-won">Won</option>
+            <option value="closed-lost">Lost</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalInquiries">0</div>
+          <div class="stat-label">Total Inquiries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="activeInquiries">0</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="wonInquiries">0</div>
+          <div class="stat-label">Successful</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="pendingInquiries">0</div>
+          <div class="stat-label">Awaiting Response</div>
+        </div>
+      </div>
+
+      <!-- Inquiries Table -->
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Agent</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inquiriesTable">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="emptyState" style="display: none; text-align: center; padding: 4rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">💬</div>
+        <h3>No inquiries yet</h3>
+        <p style="color: var(--gray-600); margin: 1rem 0;">Browse vehicles and contact sales agents to start an inquiry.</p>
+        <a href="inventory.html" class="btn btn-primary">Find a Car</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Auth-aware nav
+    if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+      document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+    }
+
+    const user = Auth.getCurrentUser();
+
+    function loadInquiries() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      let inquiries = DB.getInquiriesByBuyer(user?.id) || [];
+
+      // Update stats
+      document.getElementById('totalInquiries').textContent = inquiries.length;
+      document.getElementById('activeInquiries').textContent = inquiries.filter(i => !i.status.startsWith('closed')).length;
+      document.getElementById('wonInquiries').textContent = inquiries.filter(i => i.status === 'closed-won').length;
+      document.getElementById('pendingInquiries').textContent = inquiries.filter(i => i.status === 'open').length;
+
+      // Filter
+      if (statusFilter !== 'all') {
+        inquiries = inquiries.filter(i => i.status === statusFilter);
+      }
+
+      inquiries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      const tableBody = document.getElementById('inquiriesTable');
+      const emptyState = document.getElementById('emptyState');
+
+      if (inquiries.length === 0) {
+        tableBody.closest('.card').style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      tableBody.closest('.card').style.display = 'block';
+      emptyState.style.display = 'none';
+
+      tableBody.innerHTML = inquiries.map(inq => {
+        const vehicle = DB.getVehicle(inq.vehicleId);
+        const agent = DB.getUser(inq.agentId);
+        const statusClass = inq.status === 'open' ? 'warning' : inq.status === 'contacted' ? 'info' : inq.status === 'negotiating' ? 'primary' : inq.status === 'closed-won' ? 'success' : 'gray';
+
+        return `
+          <tr>
+            <td>
+              <strong>${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Unknown'}</strong>
+              ${vehicle ? `<br><span style="font-size: var(--text-sm); color: var(--gray-600);">${Utils.formatCurrency(vehicle.pricing.salePrice)}</span>` : ''}
+            </td>
+            <td><span class="badge badge-info">${inq.type}</span></td>
+            <td><span class="badge badge-${statusClass}">${inq.status}</span></td>
+            <td style="max-width: 250px;">${Utils.truncate(inq.message, 60)}</td>
+            <td>${agent ? `${agent.firstName} ${agent.lastName}` : 'Unassigned'}</td>
+            <td>${Utils.formatRelativeTime(inq.createdAt)}</td>
+            <td>
+              ${vehicle ? `<a href="vehicle-details.html?id=${vehicle.id}" class="btn btn-primary btn-sm">View Vehicle</a>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    loadInquiries();
+  </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Vehicle - Zuco Motors Dealer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container" style="max-width: 900px;">
+      <div class="flex justify-between items-center mb-8">
+        <h1>Add New Vehicle</h1>
+        <a href="inventory.html" class="btn btn-secondary">Back to Inventory</a>
+      </div>
+
+      <form id="addVehicleForm">
+        <!-- Basic Info -->
+        <div class="card mb-6">
+          <div class="card-header"><h3>Vehicle Information</h3></div>
+          <div class="card-body">
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label for="year">Year *</label>
+                <input type="number" id="year" class="form-control" required min="1990" max="2025" value="2024">
+              </div>
+              <div class="form-group">
+                <label for="make">Make *</label>
+                <input type="text" id="make" class="form-control" required placeholder="e.g. Toyota">
+              </div>
+              <div class="form-group">
+                <label for="model">Model *</label>
+                <input type="text" id="model" class="form-control" required placeholder="e.g. Camry">
+              </div>
+            </div>
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label for="trim">Trim</label>
+                <input type="text" id="trim" class="form-control" placeholder="e.g. XSE">
+              </div>
+              <div class="form-group">
+                <label for="bodyStyle">Body Style *</label>
+                <select id="bodyStyle" class="form-control" required>
+                  <option value="Sedan">Sedan</option>
+                  <option value="SUV">SUV</option>
+                  <option value="Truck">Truck</option>
+                  <option value="Coupe">Coupe</option>
+                  <option value="Hatchback">Hatchback</option>
+                  <option value="Minivan">Minivan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="condition">Condition *</label>
+                <select id="condition" class="form-control" required>
+                  <option value="New">New</option>
+                  <option value="Certified Pre-Owned">Certified Pre-Owned</option>
+                  <option value="Used">Used</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="vin">VIN</label>
+                <input type="text" id="vin" class="form-control" placeholder="17-character VIN" maxlength="17">
+              </div>
+              <div class="form-group">
+                <label for="mileage">Mileage *</label>
+                <input type="number" id="mileage" class="form-control" required min="0" value="0">
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="exteriorColor">Exterior Color</label>
+                <input type="text" id="exteriorColor" class="form-control" placeholder="e.g. Black">
+              </div>
+              <div class="form-group">
+                <label for="interiorColor">Interior Color</label>
+                <input type="text" id="interiorColor" class="form-control" placeholder="e.g. Black Leather">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Specs -->
+        <div class="card mb-6">
+          <div class="card-header"><h3>Specifications</h3></div>
+          <div class="card-body">
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label for="engine">Engine</label>
+                <input type="text" id="engine" class="form-control" placeholder="e.g. 2.5L I4">
+              </div>
+              <div class="form-group">
+                <label for="transmission">Transmission</label>
+                <select id="transmission" class="form-control">
+                  <option value="Automatic">Automatic</option>
+                  <option value="Manual">Manual</option>
+                  <option value="CVT">CVT</option>
+                  <option value="Single-Speed">Single-Speed (EV)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="drivetrain">Drivetrain</label>
+                <select id="drivetrain" class="form-control">
+                  <option value="FWD">FWD</option>
+                  <option value="RWD">RWD</option>
+                  <option value="AWD">AWD</option>
+                  <option value="4WD">4WD</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-4">
+              <div class="form-group">
+                <label for="fuelType">Fuel Type</label>
+                <select id="fuelType" class="form-control">
+                  <option value="Gasoline">Gasoline</option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="Electric">Electric</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="horsepower">Horsepower</label>
+                <input type="number" id="horsepower" class="form-control" min="0" value="200">
+              </div>
+              <div class="form-group">
+                <label for="mpgCity">MPG City</label>
+                <input type="number" id="mpgCity" class="form-control" min="0" value="25">
+              </div>
+              <div class="form-group">
+                <label for="mpgHighway">MPG Highway</label>
+                <input type="number" id="mpgHighway" class="form-control" min="0" value="32">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="card mb-6">
+          <div class="card-header"><h3>Pricing</h3></div>
+          <div class="card-body">
+            <div class="grid grid-3">
+              <div class="form-group">
+                <label for="invoiceCost">Invoice Cost ($) *</label>
+                <input type="number" id="invoiceCost" class="form-control" required min="0" step="100">
+              </div>
+              <div class="form-group">
+                <label for="msrp">MSRP ($)</label>
+                <input type="number" id="msrp" class="form-control" min="0" step="100">
+              </div>
+              <div class="form-group">
+                <label for="markup">Markup (%)</label>
+                <input type="number" id="markup" class="form-control" min="0" max="30" step="0.5" value="10">
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="holdback">Holdback ($)</label>
+                <input type="number" id="holdback" class="form-control" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label for="incentives">Incentives ($)</label>
+                <input type="number" id="incentives" class="form-control" min="0" value="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div class="card mb-6">
+          <div class="card-header"><h3>Features</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="features">Features (comma-separated)</label>
+              <textarea id="features" class="form-control" rows="3" placeholder="Bluetooth, Backup Camera, Cruise Control, Apple CarPlay"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <button type="submit" class="btn btn-primary btn-lg">Add Vehicle</button>
+          <a href="inventory.html" class="btn btn-secondary btn-lg">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const dealer = Auth.getCurrentUser();
+
+    document.getElementById('addVehicleForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const invoiceCost = parseFloat(document.getElementById('invoiceCost').value) || 0;
+      const markup = parseFloat(document.getElementById('markup').value) / 100 || 0.10;
+      const holdback = parseFloat(document.getElementById('holdback').value) || 0;
+      const incentives = parseFloat(document.getElementById('incentives').value) || 0;
+      const salePrice = Math.round(invoiceCost * (1 + markup));
+
+      const vehicle = {
+        id: Utils.generateId('VEH'),
+        vin: document.getElementById('vin').value || DB.generateVIN(),
+        year: parseInt(document.getElementById('year').value),
+        make: document.getElementById('make').value,
+        model: document.getElementById('model').value,
+        trim: document.getElementById('trim').value || 'Base',
+        bodyStyle: document.getElementById('bodyStyle').value,
+        condition: document.getElementById('condition').value,
+        mileage: parseInt(document.getElementById('mileage').value) || 0,
+        exteriorColor: document.getElementById('exteriorColor').value || 'White',
+        interiorColor: document.getElementById('interiorColor').value || 'Black',
+        specs: {
+          engine: document.getElementById('engine').value || '2.5L I4',
+          transmission: document.getElementById('transmission').value,
+          drivetrain: document.getElementById('drivetrain').value,
+          fuelType: document.getElementById('fuelType').value,
+          horsepower: parseInt(document.getElementById('horsepower').value) || 200,
+          torque: Math.round((parseInt(document.getElementById('horsepower').value) || 200) * 0.9),
+          mpgCity: parseInt(document.getElementById('mpgCity').value) || 25,
+          mpgHighway: parseInt(document.getElementById('mpgHighway').value) || 32,
+          seating: 5
+        },
+        pricing: {
+          invoiceCost,
+          msrp: parseFloat(document.getElementById('msrp').value) || Math.round(invoiceCost * 1.15),
+          minMarkup: 0.05,
+          maxMarkup: 0.20,
+          currentMarkup: markup,
+          holdback,
+          incentives,
+          salePrice,
+          netCost: invoiceCost - holdback - incentives
+        },
+        features: document.getElementById('features').value.split(',').map(f => f.trim()).filter(Boolean),
+        images: [],
+        status: 'Available',
+        location: 'Main Lot - New Arrivals',
+        addedDate: new Date().toISOString().split('T')[0],
+        lastUpdated: new Date().toISOString().split('T')[0],
+        assignedAgent: dealer?.id,
+        views: 0,
+        inquiries: 0,
+        accidents: 0,
+        owners: document.getElementById('condition').value === 'New' ? 0 : 1
+      };
+
+      DB.addVehicle(vehicle);
+      Utils.showToast('Vehicle added successfully!', 'success');
+      setTimeout(() => window.location.href = 'inventory.html', 1500);
+    });
+  </script>
+</body>
+</html>

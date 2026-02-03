@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Vehicles - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html" class="active">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-8">Browse Available Vehicles</h1>
+
+      <!-- Filters -->
+      <div class="card mb-8">
+        <div class="card-body">
+          <div class="grid grid-4">
+            <div class="form-group">
+              <label>Search</label>
+              <input type="text" id="searchQuery" class="form-control" placeholder="Make, model, year...">
+            </div>
+            <div class="form-group">
+              <label>Body Style</label>
+              <select id="filterBody" class="form-control">
+                <option value="all">All</option>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV">SUV</option>
+                <option value="Truck">Truck</option>
+                <option value="Coupe">Coupe</option>
+                <option value="Hatchback">Hatchback</option>
+                <option value="Minivan">Minivan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Condition</label>
+              <select id="filterCondition" class="form-control">
+                <option value="all">All</option>
+                <option value="New">New</option>
+                <option value="Certified Pre-Owned">Certified Pre-Owned</option>
+                <option value="Used">Used</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sort By</label>
+              <select id="sortBy" class="form-control">
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="profit-desc">Profit Room: High to Low</option>
+                <option value="year-desc">Year: Newest</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="vehicleGrid" class="grid grid-3"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+    const myAllocations = DB.getAllocationsByAgent(agent?.id).filter(a => a.status === 'active');
+    const myVehicleIds = new Set(myAllocations.map(a => a.vehicleId));
+
+    function render() {
+      const query = document.getElementById('searchQuery').value.toLowerCase();
+      const body = document.getElementById('filterBody').value;
+      const condition = document.getElementById('filterCondition').value;
+      const sort = document.getElementById('sortBy').value;
+
+      let vehicles = DB.getVehicles().filter(v => v.status === 'Available');
+
+      if (query) vehicles = vehicles.filter(v => `${v.year} ${v.make} ${v.model} ${v.trim}`.toLowerCase().includes(query));
+      if (body !== 'all') vehicles = vehicles.filter(v => v.bodyStyle === body);
+      if (condition !== 'all') vehicles = vehicles.filter(v => v.condition === condition);
+
+      // Attach agent pricing
+      vehicles = vehicles.map(v => {
+        const pricing = DB.getAgentVehiclePricing(v.id);
+        const allocCount = DB.getAllocationsByVehicle(v.id).filter(a => a.status === 'active').length;
+        return { ...v, agentPricing: pricing, allocCount };
+      });
+
+      // Sort
+      const [field, order] = sort.split('-');
+      vehicles.sort((a, b) => {
+        let aVal, bVal;
+        if (field === 'price') { aVal = a.agentPricing.salePrice; bVal = b.agentPricing.salePrice; }
+        else if (field === 'profit') { aVal = a.agentPricing.profitRoom; bVal = b.agentPricing.profitRoom; }
+        else if (field === 'year') { aVal = a.year; bVal = b.year; }
+        return order === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+
+      document.getElementById('vehicleGrid').innerHTML = vehicles.map(v => {
+        const isMine = myVehicleIds.has(v.id);
+        const full = v.allocCount >= 10;
+        return `<div class="card">
+          <div style="background:var(--gray-200);height:160px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);border-radius:var(--radius-lg) var(--radius-lg) 0 0;">
+            ${v.year} ${v.make} ${v.model}
+          </div>
+          <div class="card-body">
+            <h3 style="margin-bottom:0.5rem;">${v.year} ${v.make} ${v.model} ${v.trim || ''}</h3>
+            <div class="flex gap-2 mb-3">
+              <span class="badge badge-gray">${v.condition}</span>
+              <span class="badge badge-gray">${v.bodyStyle}</span>
+              <span class="badge ${v.allocCount >= 10 ? 'badge-gray' : 'badge-primary'}">${v.allocCount}/10 agents</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;font-size:var(--text-sm);">
+              <div><span style="color:var(--gray-500);">List Price:</span> <strong>${Utils.formatCurrency(v.agentPricing.salePrice)}</strong></div>
+              <div><span style="color:var(--gray-500);">Your Cost:</span> <strong>${Utils.formatCurrency(v.agentPricing.agentCostPrice)}</strong></div>
+              <div style="grid-column:1/-1;"><span style="color:var(--gray-500);">Profit Room:</span> <strong style="color:var(--success);">${Utils.formatCurrency(v.agentPricing.profitRoom)}</strong></div>
+            </div>
+            <div class="flex gap-2">
+              <a href="vehicle-detail.html?id=${v.id}" class="btn btn-secondary btn-sm" style="flex:1;">Details</a>
+              ${isMine
+                ? '<span class="btn btn-sm" style="flex:1;background:var(--success);color:white;text-align:center;pointer-events:none;">Claimed</span>'
+                : full
+                  ? '<span class="btn btn-sm" style="flex:1;background:var(--gray-300);color:var(--gray-600);text-align:center;pointer-events:none;">Full</span>'
+                  : `<button class="btn btn-primary btn-sm" style="flex:1;" onclick="claim('${v.id}')">Claim</button>`
+              }
+            </div>
+          </div>
+        </div>`;
+      }).join('') || '<p style="grid-column:1/-1;text-align:center;color:var(--gray-500);">No vehicles found</p>';
+    }
+
+    function claim(vehicleId) {
+      const existing = DB.getAllocationsByVehicle(vehicleId).filter(a => a.status === 'active');
+      if (existing.length >= 10) { Utils.showToast('This vehicle is fully allocated', 'error'); return; }
+      if (existing.find(a => a.agentId === agent.id)) { Utils.showToast('Already claimed', 'warning'); return; }
+      DB.addAllocation({
+        id: Utils.generateId('ALC'),
+        vehicleId,
+        agentId: agent.id,
+        agentName: `${agent.firstName} ${agent.lastName}`,
+        status: 'active',
+        claimedDate: new Date().toISOString().split('T')[0]
+      });
+      myVehicleIds.add(vehicleId);
+      Utils.showToast('Vehicle claimed!', 'success');
+      render();
+    }
+
+    document.getElementById('searchQuery').addEventListener('input', Utils.debounce(render, 300));
+    document.getElementById('filterBody').addEventListener('change', render);
+    document.getElementById('filterCondition').addEventListener('change', render);
+    document.getElementById('sortBy').addEventListener('change', render);
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Inventory - Zuco Motors Dealer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html" class="active">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="flex justify-between items-center mb-8">
+        <h1>Manage Inventory</h1>
+        <a href="add-vehicle.html" class="btn btn-primary">+ Add Vehicle</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-4 mb-8">
+        <div class="stat-card">
+          <div class="stat-value" id="totalVehicles">0</div>
+          <div class="stat-label">Total Vehicles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="availableCount">0</div>
+          <div class="stat-label">Available</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalValue">$0</div>
+          <div class="stat-label">Total Value</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="avgPrice">$0</div>
+          <div class="stat-label">Avg Price</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters mb-6">
+        <div class="filter-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="statusFilter" class="form-control" onchange="renderInventory()">
+              <option value="all">All</option>
+              <option value="Available">Available</option>
+              <option value="Sold">Sold</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Condition</label>
+            <select id="conditionFilter" class="form-control" onchange="renderInventory()">
+              <option value="all">All</option>
+              <option value="New">New</option>
+              <option value="Certified Pre-Owned">CPO</option>
+              <option value="Used">Used</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sort By</label>
+            <select id="sortBy" class="form-control" onchange="renderInventory()">
+              <option value="added-desc">Recently Added</option>
+              <option value="price">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="views-desc">Most Viewed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Search</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search..." oninput="renderInventory()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory Table -->
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Condition</th>
+                <th>Price</th>
+                <th>Cost</th>
+                <th>Markup</th>
+                <th>Views</th>
+                <th>Inquiries</th>
+                <th>Status</th>
+                <th>Days on Lot</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const dealer = Auth.getCurrentUser();
+
+    function renderInventory() {
+      let vehicles = DB.getVehicles();
+
+      // Stats (before filtering)
+      const available = vehicles.filter(v => v.status === 'Available');
+      document.getElementById('totalVehicles').textContent = vehicles.length;
+      document.getElementById('availableCount').textContent = available.length;
+      document.getElementById('totalValue').textContent = Utils.formatCurrency(vehicles.reduce((s, v) => s + v.pricing.salePrice, 0));
+      document.getElementById('avgPrice').textContent = Utils.formatCurrency(vehicles.length ? vehicles.reduce((s, v) => s + v.pricing.salePrice, 0) / vehicles.length : 0);
+
+      // Filters
+      const status = document.getElementById('statusFilter').value;
+      const condition = document.getElementById('conditionFilter').value;
+      const search = document.getElementById('searchInput').value.toLowerCase();
+
+      if (status !== 'all') vehicles = vehicles.filter(v => v.status === status);
+      if (condition !== 'all') vehicles = vehicles.filter(v => v.condition === condition);
+      if (search) vehicles = vehicles.filter(v => `${v.year} ${v.make} ${v.model}`.toLowerCase().includes(search));
+
+      // Sort
+      const sortBy = document.getElementById('sortBy').value;
+      const [field, order] = sortBy.includes('-desc') ? [sortBy.replace('-desc', ''), 'desc'] : [sortBy, 'asc'];
+      vehicles = Utils.sortVehicles(vehicles, field, order);
+
+      const today = new Date();
+      document.getElementById('inventoryTable').innerHTML = vehicles.map(v => {
+        const daysOnLot = Math.floor((today - new Date(v.addedDate)) / (1000 * 60 * 60 * 24));
+        return `
+          <tr>
+            <td><strong>${v.year} ${v.make} ${v.model}</strong><br><span style="font-size:var(--text-sm);color:var(--gray-600);">${v.trim}</span></td>
+            <td><span class="badge badge-${v.condition === 'New' ? 'success' : v.condition === 'Certified Pre-Owned' ? 'info' : 'gray'}">${v.condition}</span></td>
+            <td>${Utils.formatCurrency(v.pricing.salePrice)}</td>
+            <td>${Utils.formatCurrency(v.pricing.invoiceCost)}</td>
+            <td>${(v.pricing.currentMarkup * 100).toFixed(0)}%</td>
+            <td>${v.views || 0}</td>
+            <td>${v.inquiries || 0}</td>
+            <td><span class="badge badge-${v.status === 'Available' ? 'success' : v.status === 'Sold' ? 'gray' : 'warning'}">${v.status}</span></td>
+            <td>${daysOnLot}d</td>
+            <td>
+              <a href="pricing.html?id=${v.id}" class="btn btn-outline btn-sm">Price</a>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;">No vehicles found</td></tr>';
+    }
+
+    renderInventory();
+  </script>
+</body>
+</html>

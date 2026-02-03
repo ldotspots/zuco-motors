@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Orders - Zuco Motors Dealer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .proof-overlay { position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s; }
+    .proof-overlay.active { opacity:1;pointer-events:auto; }
+    .proof-overlay img { max-width:90vw;max-height:85vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.4); }
+    .proof-close { position:absolute;top:1rem;right:1.5rem;background:rgba(255,255,255,.15);border:none;color:white;font-size:1.5rem;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+    .proof-close:hover { background:rgba(255,255,255,.3); }
+    .proof-meta { position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:white;padding:.5rem 1.25rem;border-radius:var(--radius-md);font-size:var(--text-sm);text-align:center;white-space:nowrap; }
+
+    .calendar-grid { display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 1px; background: var(--gray-200); border-radius: var(--radius-md); overflow: hidden; }
+    .cal-header { background: var(--gray-100); padding: 0.75rem 0.5rem; text-align: center; font-weight: 600; font-size: var(--text-sm); }
+    .cal-header.today { background: var(--primary-100); color: var(--primary-700); }
+    .cal-time { background: var(--gray-50); padding: 0.5rem; font-size: var(--text-sm); color: var(--gray-600); display: flex; align-items: center; justify-content: center; }
+    .cal-cell { background: white; padding: 0.25rem; min-height: 52px; display: flex; flex-direction: column; gap: 2px; }
+    .cal-cell.past { background: var(--gray-50); }
+    .cal-slot { border-radius: var(--radius-sm); padding: 0.25rem 0.4rem; font-size: 11px; line-height: 1.3; }
+    .cal-slot .slot-label { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-slot .slot-sub { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6b7280; }
+    .cal-slot.viewing { background: #dbeafe; border-left: 3px solid #3b82f6; }
+    .cal-slot.test_drive { background: #dcfce7; border-left: 3px solid #22c55e; }
+    .cal-slot.consultation { background: #fef3c7; border-left: 3px solid #f59e0b; }
+    .week-nav { display: flex; align-items: center; gap: 0.5rem; }
+    .week-nav button { background: none; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); padding: 0.3rem 0.6rem; cursor: pointer; font-size: var(--text-sm); }
+    .week-nav button:hover { background: var(--gray-100); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="sales-orders.html" class="active">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-8">Sales Orders</h1>
+
+      <!-- KPIs -->
+      <div class="grid grid-4 mb-8" style="grid-template-columns: repeat(5, 1fr);">
+        <div class="stat-card">
+          <div class="stat-value" id="pendingCount" style="color:var(--warning);">0</div>
+          <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="readyCount" style="color:var(--primary-600);">0</div>
+          <div class="stat-label">Ready for Collection</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="completedCount" style="color:var(--success);">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalRevenue">$0</div>
+          <div class="stat-label">Company Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="netSales" style="color:var(--primary-600);">$0</div>
+          <div class="stat-label">Net Sales</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex gap-4 mb-6">
+        <select id="filterStatus" class="form-control" style="max-width:220px;" onchange="render()">
+          <option value="all">All Statuses</option>
+          <option value="pending" selected>Pending Approval</option>
+          <option value="ready_for_collection">Ready for Collection</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select id="filterTimeframe" class="form-control" style="max-width:220px;" onchange="render()">
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month" selected>This Month</option>
+          <option value="quarter">This Quarter</option>
+          <option value="year">This Year</option>
+        </select>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="flex justify-between items-center">
+            <h3>Agent Sale Orders</h3>
+            <span id="orderCount" class="badge badge-primary">0 orders</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Agent</th>
+                <th>Vehicle</th>
+                <th>Sale Price</th>
+                <th>Agent Profit</th>
+                <th>Company Revenue</th>
+                <th>Lead</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bookings Section -->
+      <h2 class="mb-6" style="margin-top:3rem;">Bookings &amp; Schedule</h2>
+
+      <div class="grid grid-4 mb-8" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-card">
+          <div class="stat-value" id="viewPendingCount" style="color:var(--warning);">0</div>
+          <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="viewApprovedCount" style="color:var(--success);">0</div>
+          <div class="stat-label">Approved (Upcoming)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="viewCompletedCount" style="color:var(--primary-600);">0</div>
+          <div class="stat-label">Completed / Sold</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="viewNoShowCount" style="color:var(--error);">0</div>
+          <div class="stat-label">No-Shows</div>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="card mb-8">
+        <div class="card-header">
+          <div class="flex justify-between items-center">
+            <h3>Weekly Calendar</h3>
+            <div class="week-nav">
+              <button onclick="changeWeek(-1)">&larr;</button>
+              <button onclick="goToday()">Today</button>
+              <span id="weekLabel" style="font-weight:600;min-width:180px;text-align:center;font-size:var(--text-sm);"></span>
+              <button onclick="changeWeek(1)">&rarr;</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div id="calendar" class="calendar-grid"></div>
+        </div>
+      </div>
+      <div class="flex gap-4 mb-8" style="font-size:var(--text-sm);color:var(--gray-600);flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:12px;height:12px;background:#dbeafe;border-left:3px solid #3b82f6;border-radius:2px;margin-right:4px;"></span> Car Viewing</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#dcfce7;border-left:3px solid #22c55e;border-radius:2px;margin-right:4px;"></span> Test Drive</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:2px;margin-right:4px;"></span> Consultation</span>
+      </div>
+
+      <!-- Bookings Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="flex justify-between items-center">
+            <h3>All Bookings</h3>
+            <span id="viewingCount" class="badge badge-primary">0 bookings</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Type</th>
+                <th>Customer</th>
+                <th>Agent</th>
+                <th>Vehicle</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="viewingsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    function getTimeframeStart(tf) {
+      const now = new Date();
+      if (tf === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (tf === 'week') { const d = new Date(now); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d; }
+      if (tf === 'month') return new Date(now.getFullYear(), now.getMonth(), 1);
+      if (tf === 'quarter') { const q = Math.floor(now.getMonth() / 3) * 3; return new Date(now.getFullYear(), q, 1); }
+      if (tf === 'year') return new Date(now.getFullYear(), 0, 1);
+      return null;
+    }
+
+    function render() {
+      const allSalesRaw = DB.getAgentSales();
+      const timeframe = document.getElementById('filterTimeframe').value;
+      const tfStart = getTimeframeStart(timeframe);
+
+      // Apply timeframe filter globally
+      const allSales = tfStart
+        ? allSalesRaw.filter(s => new Date(s.saleDate) >= tfStart)
+        : allSalesRaw;
+
+      const filter = document.getElementById('filterStatus').value;
+      let sales = filter === 'all' ? allSales : allSales.filter(s => s.status === filter);
+
+      // KPIs (within timeframe)
+      const pending = allSales.filter(s => s.status === 'pending');
+      const ready = allSales.filter(s => s.status === 'ready_for_collection');
+      const completed = allSales.filter(s => s.status === 'completed');
+
+      document.getElementById('pendingCount').textContent = pending.length;
+      document.getElementById('readyCount').textContent = ready.length;
+      document.getElementById('completedCount').textContent = completed.length;
+
+      // Company revenue = company's share of gross spread for completed sales
+      const companyRevenue = completed.reduce((sum, s) => {
+        const v = DB.getVehicle(s.vehicleId);
+        if (!v) return sum;
+        const grossSpread = s.salePrice - v.pricing.invoiceCost;
+        return sum + Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
+      }, 0);
+      document.getElementById('totalRevenue').textContent = Utils.formatCurrency(companyRevenue);
+
+      // Net sales = total sale prices for all non-cancelled sales in timeframe
+      const activeSales = allSales.filter(s => s.status !== 'cancelled');
+      const netSales = activeSales.reduce((sum, s) => sum + s.salePrice, 0);
+      document.getElementById('netSales').textContent = Utils.formatCurrency(netSales);
+
+      document.getElementById('orderCount').textContent = `${sales.length} orders`;
+
+      const statusBadge = {
+        pending: 'badge-warning',
+        ready_for_collection: 'badge-primary',
+        completed: 'badge-primary',
+        cancelled: 'badge-gray'
+      };
+      const statusLabel = {
+        pending: 'Pending',
+        ready_for_collection: 'Ready for Collection',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+      };
+
+      const allLeads = DB.getInquiries() || [];
+      const sorted = [...sales].sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+      document.getElementById('ordersTable').innerHTML = sorted.map(s => {
+        const v = DB.getVehicle(s.vehicleId);
+        const compRev = v ? Math.round((s.salePrice - v.pricing.invoiceCost) * DB.COMPANY_MARGIN_RATE) : 0;
+        const badge = statusBadge[s.status] || 'badge-gray';
+        const label = statusLabel[s.status] || s.status;
+
+        // Find related lead (by leadId first, then vehicleId match)
+        const relatedLead = (s.leadId && allLeads.find(l => l.id === s.leadId))
+          || allLeads.find(l => l.vehicleId === s.vehicleId && l.claimedByAgentId === s.agentId)
+          || allLeads.find(l => l.vehicleId === s.vehicleId);
+        const leadBadgeMap = { 'open': 'badge-warning', 'contacted': 'badge-info', 'negotiating': 'badge-primary', 'closed-won': 'badge-primary', 'closed-lost': 'badge-gray' };
+        const leadCell = relatedLead
+          ? `<a href="leads.html" style="text-decoration:none;"><span class="badge ${leadBadgeMap[relatedLead.status] || 'badge-gray'}" style="text-transform:capitalize;cursor:pointer;">${relatedLead.status}</span></a>`
+          : '<span style="color:var(--gray-400);">No lead</span>';
+
+        let actions = '';
+        if (s.status === 'pending') {
+          actions = `
+            <button class="btn btn-sm btn-primary" onclick="approve('${s.id}')">Approve</button>
+            <button class="btn btn-sm" style="background:var(--error);color:white;" onclick="reject('${s.id}')">Reject</button>`;
+        } else if (s.status === 'ready_for_collection') {
+          actions = `<button class="btn btn-sm" style="background:var(--success);color:white;" onclick="markCollected('${s.id}')">Mark Collected</button>`;
+        } else {
+          actions = '-';
+        }
+
+        // Customer info from sale record or related lead
+        const custName = (s.buyerName && s.buyerName !== 'Unknown' ? s.buyerName : null) || (relatedLead ? relatedLead.contactName : null) || s.buyerName || 'Unknown';
+        const custPhone = s.buyerPhone || (relatedLead ? relatedLead.contactPhone : '') || '';
+        const custEmail = s.buyerEmail || (relatedLead ? relatedLead.contactEmail : '') || '';
+
+        return `<tr>
+          <td>${Utils.formatDate(s.saleDate)}</td>
+          <td>
+            <strong>${custName}</strong>
+            ${custPhone ? `<br><a href="tel:${custPhone}" style="font-size:var(--text-sm);color:var(--primary-600);">${custPhone}</a>` : ''}
+            ${custEmail ? `<br><a href="mailto:${custEmail}" style="font-size:var(--text-sm);color:var(--gray-600);">${custEmail}</a>` : ''}
+          </td>
+          <td>${s.agentName}</td>
+          <td>${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'}</td>
+          <td>${Utils.formatCurrency(s.salePrice)}</td>
+          <td>${Utils.formatCurrency(s.agentProfit)}</td>
+          <td style="font-weight:600;color:var(--success);">${Utils.formatCurrency(compRev)}</td>
+          <td>${leadCell}</td>
+          <td><span class="badge ${badge}">${label}</span></td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--gray-500);">No orders found</td></tr>';
+    }
+
+    function approve(saleId) {
+      DB.updateAgentSale(saleId, {
+        status: 'ready_for_collection',
+        approvedAt: new Date().toISOString()
+      });
+      Utils.showToast('Order approved — ready for agent collection', 'success');
+      render();
+    }
+
+    function reject(saleId) {
+      if (!confirm('Reject this sale order? The vehicle will be unlocked and made available again.')) return;
+      const sale = DB.getAgentSale(saleId);
+      DB.updateAgentSale(saleId, {
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString()
+      });
+      // Unlock vehicle
+      if (sale) {
+        DB.updateVehicle(sale.vehicleId, { status: 'Available' });
+        DB.getAllocationsByVehicle(sale.vehicleId).filter(a => a.status === 'reserved').forEach(a => {
+          DB.updateAllocation(a.id, { status: 'active' });
+        });
+        // Revert related lead back to negotiating
+        const allLeads = DB.getInquiries() || [];
+        const relatedLead = (sale.leadId && allLeads.find(l => l.id === sale.leadId))
+          || allLeads.find(l => l.vehicleId === sale.vehicleId);
+        if (relatedLead) {
+          DB.updateInquiry(relatedLead.id, { status: 'negotiating', archivedAt: null });
+        }
+      }
+      Utils.showToast('Order rejected — vehicle unlocked', 'success');
+      render();
+    }
+
+    function markCollected(saleId) {
+      if (!confirm('Confirm the agent has collected the vehicle and paid?')) return;
+      const sale = DB.getAgentSale(saleId);
+      DB.updateAgentSale(saleId, {
+        status: 'completed',
+        completedAt: new Date().toISOString()
+      });
+      // Finalize: mark vehicle as Sold
+      if (sale) {
+        DB.updateVehicle(sale.vehicleId, { status: 'Sold' });
+        DB.getAllocationsByVehicle(sale.vehicleId).filter(a => a.status === 'reserved').forEach(a => {
+          DB.updateAllocation(a.id, { status: 'sold' });
+        });
+        // Archive related lead
+        const allLeads = DB.getInquiries() || [];
+        const relatedLead = (sale.leadId && allLeads.find(l => l.id === sale.leadId))
+          || allLeads.find(l => l.vehicleId === sale.vehicleId && l.claimedByAgentId === sale.agentId)
+          || allLeads.find(l => l.vehicleId === sale.vehicleId);
+        if (relatedLead) {
+          DB.updateInquiry(relatedLead.id, { status: 'closed-won', archivedAt: new Date().toISOString() });
+        }
+      }
+      Utils.showToast('Sale completed!', 'success');
+      render();
+    }
+
+    // === Bookings / Viewings ===
+    const TYPE_LABELS = { viewing: 'Car Viewing', test_drive: 'Test Drive', consultation: 'Consultation' };
+    const TYPE_BADGE = { viewing: 'badge-info', test_drive: 'badge-primary', consultation: 'badge-warning' };
+
+    function renderViewings() {
+      const bookings = DB.getViewingBookings();
+      const pending = bookings.filter(b => b.status === 'pending');
+      const approved = bookings.filter(b => b.status === 'approved');
+      const completed = bookings.filter(b => b.status === 'completed');
+      const noShow = bookings.filter(b => b.status === 'no_show');
+
+      document.getElementById('viewPendingCount').textContent = pending.length;
+      document.getElementById('viewApprovedCount').textContent = approved.length;
+      document.getElementById('viewCompletedCount').textContent = completed.length;
+      document.getElementById('viewNoShowCount').textContent = noShow.length;
+      document.getElementById('viewingCount').textContent = `${bookings.length} bookings`;
+
+      const statusBadge = { pending: 'badge-warning', approved: 'badge-primary', rejected: 'badge-gray', completed: 'badge-primary', no_sale: 'badge-gray', no_show: 'badge-gray' };
+      const statusLabel = { pending: 'Pending', approved: 'Approved', rejected: 'Rejected', completed: 'Sold', no_sale: 'No Sale', no_show: 'No-Show' };
+
+      const sorted = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      document.getElementById('viewingsTable').innerHTML = sorted.map(b => {
+        const v = DB.getVehicle(b.vehicleId);
+        const badge = statusBadge[b.status] || 'badge-gray';
+        const label = statusLabel[b.status] || b.status;
+        const bType = b.bookingType || 'viewing';
+
+        let actions = '';
+        if (b.status === 'pending') {
+          actions = `
+            <button class="btn btn-sm btn-primary" onclick="approveViewing('${b.id}')">Approve</button>
+            <button class="btn btn-sm" style="background:var(--error);color:white;" onclick="rejectViewing('${b.id}')">Reject</button>`;
+        } else if (b.status === 'approved') {
+          actions = `
+            <button class="btn btn-sm" style="background:var(--success);color:white;" onclick="saleCompleted('${b.id}')">Sale Completed</button>
+            <button class="btn btn-sm" style="background:var(--gray-500);color:white;" onclick="noSaleViewing('${b.id}')">No Sale</button>
+            <button class="btn btn-sm" style="background:var(--gray-300);color:var(--gray-700);" onclick="noShowViewing('${b.id}')">No-Show</button>`;
+        } else {
+          actions = '-';
+        }
+
+        const proofCell = b.confirmationProof
+          ? `<img src="${b.confirmationProof}" style="max-height:40px;cursor:pointer;border-radius:4px;" onclick="viewProof('${b.id}')" title="Click to view proof">`
+          : '-';
+
+        return `<tr>
+          <td><strong>${Utils.formatDate(b.date)}</strong><br><span style="font-size:var(--text-sm);color:var(--gray-600);">${b.timeSlot}</span></td>
+          <td><span class="badge ${TYPE_BADGE[bType] || 'badge-gray'}">${TYPE_LABELS[bType] || bType}</span></td>
+          <td>
+            <strong>${b.customerName}</strong>
+            ${b.customerPhone ? `<br><a href="tel:${b.customerPhone}" style="font-size:var(--text-sm);color:var(--primary-600);">${b.customerPhone}</a>` : ''}
+            ${b.customerEmail ? `<br><span style="font-size:var(--text-sm);color:var(--gray-500);">${b.customerEmail}</span>` : ''}
+          </td>
+          <td>${b.agentName}</td>
+          <td>${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'}</td>
+          <td>${proofCell}</td>
+          <td><span class="badge ${badge}">${label}</span>${b.dealerNotes ? `<br><small style="color:var(--gray-500);">${b.dealerNotes}</small>` : ''}</td>
+          <td>${actions}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-500);">No bookings yet</td></tr>';
+    }
+
+    function approveViewing(id) {
+      DB.updateViewingBooking(id, { status: 'approved', approvedAt: new Date().toISOString() });
+      Utils.showToast('Booking approved', 'success');
+      renderViewings(); renderCalendar();
+    }
+
+    function rejectViewing(id) {
+      const reason = prompt('Reason for rejection (optional):') || '';
+      DB.updateViewingBooking(id, { status: 'rejected', rejectedAt: new Date().toISOString(), dealerNotes: reason });
+      Utils.showToast('Booking rejected', 'success');
+      renderViewings(); renderCalendar();
+    }
+
+    function saleCompleted(id) {
+      const b = DB.getViewingBooking(id);
+      if (!b) return;
+      const v = DB.getVehicle(b.vehicleId);
+      if (!v) { Utils.showToast('Vehicle not found', 'error'); return; }
+
+      const pricing = DB.getAgentVehiclePricing(b.vehicleId);
+      const defaultPrice = v.pricing.salePrice;
+      const input = prompt(`Enter final sale price for ${v.year} ${v.make} ${v.model}:`, defaultPrice);
+      if (input === null) return;
+      const salePrice = parseFloat(input);
+      if (isNaN(salePrice) || salePrice <= 0) { Utils.showToast('Invalid sale price', 'error'); return; }
+
+      const agentProfit = Math.max(0, salePrice - pricing.agentCostPrice);
+      const invoiceCost = v.pricing.invoiceCost;
+      const grossSpread = salePrice - invoiceCost;
+      const companyMargin = grossSpread - agentProfit;
+
+      // Create agent sale record
+      DB.addAgentSale({
+        id: Utils.generateId('SALE'),
+        vehicleId: b.vehicleId,
+        agentId: b.agentId,
+        agentName: b.agentName,
+        buyerName: b.customerName,
+        buyerPhone: b.customerPhone || '',
+        buyerEmail: b.customerEmail || '',
+        salePrice: salePrice,
+        agentCostPrice: pricing.agentCostPrice,
+        agentProfit: agentProfit,
+        saleDate: new Date().toISOString().split('T')[0],
+        status: 'completed',
+        submittedAt: b.createdAt,
+        completedAt: new Date().toISOString(),
+        bookingId: b.id
+      });
+
+      // Mark vehicle as Sold
+      DB.updateVehicle(b.vehicleId, { status: 'Sold' });
+      DB.getAllocationsByVehicle(b.vehicleId).filter(a => a.status === 'active' || a.status === 'reserved').forEach(a => {
+        DB.updateAllocation(a.id, { status: 'sold' });
+      });
+
+      // Mark booking as completed
+      DB.updateViewingBooking(id, { status: 'completed', completedAt: new Date().toISOString() });
+
+      Utils.showToast(`Sale completed! ${Utils.formatCurrency(salePrice)} — Agent profit: ${Utils.formatCurrency(agentProfit)}`, 'success');
+      render(); renderViewings(); renderCalendar();
+    }
+
+    function noSaleViewing(id) {
+      DB.updateViewingBooking(id, { status: 'no_sale', dealerNotes: 'Customer visited — no sale' });
+      Utils.showToast('Marked as no sale — vehicle remains available', 'success');
+      renderViewings(); renderCalendar();
+    }
+
+    function noShowViewing(id) {
+      DB.updateViewingBooking(id, { status: 'no_show', dealerNotes: 'Customer did not show up' });
+      Utils.showToast('Marked as no-show', 'success');
+      renderViewings(); renderCalendar();
+    }
+
+    function viewProof(bookingId) {
+      const b = DB.getViewingBooking(bookingId);
+      if (!b || !b.confirmationProof) return;
+      const v = DB.getVehicle(b.vehicleId);
+      const overlay = document.getElementById('proofOverlay');
+      document.getElementById('proofImage').src = b.confirmationProof;
+      document.getElementById('proofMeta').textContent =
+        `${b.customerName} — ${v ? `${v.year} ${v.make} ${v.model}` : 'Unknown'} — ${Utils.formatDate(b.date)} ${b.timeSlot} — Agent: ${b.agentName}`;
+      overlay.classList.add('active');
+    }
+
+    function closeProof() {
+      document.getElementById('proofOverlay').classList.remove('active');
+      document.getElementById('proofImage').src = '';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProof(); });
+
+    // === Calendar ===
+    const SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00'];
+    const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let weekOffset = 0;
+
+    function getWeekStart(offset) {
+      const now = new Date();
+      const day = now.getDay();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1 + (offset * 7));
+    }
+    function formatDateKey(d) { return d.toISOString().split('T')[0]; }
+    function changeWeek(dir) { weekOffset += dir; renderCalendar(); }
+    function goToday() { weekOffset = 0; renderCalendar(); }
+
+    function renderCalendar() {
+      const bookings = DB.getViewingBookings().filter(b => b.status !== 'rejected');
+      const weekStart = getWeekStart(weekOffset);
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        days.push(d);
+      }
+
+      const todayKey = formatDateKey(new Date());
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('weekLabel').textContent =
+        `${days[0].getDate()} ${monthNames[days[0].getMonth()]} — ${days[6].getDate()} ${monthNames[days[6].getMonth()]} ${days[6].getFullYear()}`;
+
+      const statusLabel = { pending: 'Pending', approved: 'Approved', completed: 'Sold', no_sale: 'No Sale', no_show: 'No-Show' };
+      const now = new Date();
+
+      let html = '<div class="cal-header"></div>';
+      days.forEach(d => {
+        const key = formatDateKey(d);
+        html += `<div class="cal-header${key === todayKey ? ' today' : ''}">${DAY_NAMES[d.getDay()]}<br>${d.getDate()}</div>`;
+      });
+
+      SLOTS.forEach(slot => {
+        html += `<div class="cal-time">${slot}</div>`;
+        days.forEach(d => {
+          const key = formatDateKey(d);
+          const slotDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(slot));
+          const isPast = slotDate < now;
+          let cells = [];
+
+          const slotBookings = bookings.filter(b => b.date === key && b.timeSlot === slot);
+          slotBookings.forEach(b => {
+            const v = DB.getVehicle(b.vehicleId);
+            const bType = b.bookingType || 'viewing';
+            cells.push(`<div class="cal-slot ${bType}">
+              <span class="slot-label">${b.customerName}</span>
+              <span class="slot-sub">${v ? `${v.year} ${v.make} ${v.model}` : ''}</span>
+              <span class="slot-sub">${b.agentName} — ${statusLabel[b.status] || b.status}</span>
+            </div>`);
+          });
+
+          html += `<div class="cal-cell${isPast ? ' past' : ''}">${cells.join('')}</div>`;
+        });
+      });
+
+      document.getElementById('calendar').innerHTML = html;
+    }
+
+    render();
+    renderViewings();
+    renderCalendar();
+  </script>
+
+  <!-- Proof Viewer Modal -->
+  <div id="proofOverlay" class="proof-overlay" onclick="if(event.target===this)closeProof()">
+    <button class="proof-close" onclick="closeProof()" title="Close">&times;</button>
+    <img id="proofImage" src="" alt="Confirmation Proof">
+    <div id="proofMeta" class="proof-meta"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing Manager - Zuco Motors Dealer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="inventory.html">Inventory</a>
+          <a href="leads.html">Leads</a>
+          <a href="pricing.html" class="active">Pricing</a>
+          <a href="sales-orders.html">Sales Orders</a>
+          <a href="quote-requests.html">Quote Requests</a>
+          <a href="analytics.html">Analytics</a>
+          <a href="past-sales.html">Past Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-8">Pricing Manager</h1>
+
+      <!-- Vehicle Selector or single vehicle -->
+      <div id="vehicleSelector" class="card mb-8">
+        <div class="card-header"><h3>Select Vehicle to Price</h3></div>
+        <div class="card-body">
+          <select id="vehicleSelect" class="form-control" onchange="loadVehiclePricing()">
+            <option value="">Choose a vehicle...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pricing Details -->
+      <div id="pricingDetails" style="display:none;">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
+          <!-- Cost Overview -->
+          <div class="card">
+            <div class="card-header"><h3>Cost Overview</h3></div>
+            <div class="card-body">
+              <table style="width:100%;">
+                <tr><td style="padding:0.75rem;font-weight:700;font-size:var(--text-lg);">Dealer Cost</td><td id="netCost" style="padding:0.75rem;text-align:right;font-weight:700;font-size:var(--text-lg);">$0</td></tr>
+                <tr style="border-top:1px solid var(--gray-200);"><td style="padding:0.75rem;font-weight:600;">Agent Cost</td><td id="agentCost" style="padding:0.75rem;text-align:right;color:var(--gray-700);">$0</td></tr>
+                <tr><td style="padding:0.75rem;font-weight:600;">Agent Profit Room</td><td id="agentProfitRoom" style="padding:0.75rem;text-align:right;color:var(--gray-600);">$0</td></tr>
+                <tr style="border-top:1px solid var(--gray-200);"><td style="padding:0.75rem;font-weight:600;">Company Margin</td><td id="companyMargin" style="padding:0.75rem;text-align:right;color:var(--success);font-weight:600;">$0</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pricing Controls -->
+          <div class="card">
+            <div class="card-header"><h3>Set Markup</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Current Markup: <strong id="markupDisplay">0%</strong></label>
+                <input type="range" id="markupSlider" min="0" max="100" step="0.5" value="10" style="width:100%;" oninput="updatePricing()">
+                <div class="flex justify-between" style="font-size:var(--text-sm);color:var(--gray-500);">
+                  <span>0%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+
+              <div style="margin-top:2rem;">
+                <table style="width:100%;">
+                  <tr><td style="padding:0.75rem;font-weight:600;">Sale Price</td><td id="salePrice" style="padding:0.75rem;text-align:right;font-size:var(--text-xl);font-weight:700;color:var(--primary-600);">$0</td></tr>
+                  <tr><td style="padding:0.75rem;font-weight:600;">Gross Profit</td><td id="grossProfit" style="padding:0.75rem;text-align:right;color:var(--success);font-weight:600;">$0</td></tr>
+                  <tr><td style="padding:0.75rem;font-weight:600;">Margin</td><td id="marginPercent" style="padding:0.75rem;text-align:right;">0%</td></tr>
+                </table>
+              </div>
+
+              <button class="btn btn-primary w-full mt-6" onclick="savePricing()">Save Pricing</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MSRP Comparison -->
+        <div class="card mt-6">
+          <div class="card-header"><h3>Market Comparison</h3></div>
+          <div class="card-body">
+            <div class="grid grid-3">
+              <div class="stat-card text-center">
+                <div class="stat-label">Below MSRP</div>
+                <div id="belowMsrp" class="stat-value" style="color:var(--success);">$0</div>
+              </div>
+              <div class="stat-card text-center">
+                <div class="stat-label">MSRP</div>
+                <div id="msrp" class="stat-value">$0</div>
+              </div>
+              <div class="stat-card text-center">
+                <div class="stat-label">Your Price</div>
+                <div id="yourPrice" class="stat-value" style="color:var(--primary-600);">$0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 Zuco Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const dealer = Auth.getCurrentUser();
+    let currentVehicle = null;
+
+    // Populate vehicle selector
+    const vehicles = DB.getVehicles().filter(v => v.status === 'Available');
+    const select = document.getElementById('vehicleSelect');
+    vehicles.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = `${v.year} ${v.make} ${v.model} ${v.trim} - ${Utils.formatCurrency(v.pricing.salePrice)}`;
+      select.appendChild(opt);
+    });
+
+    // Check URL params
+    const params = Utils.getQueryParams();
+    if (params.id) {
+      select.value = params.id;
+      loadVehiclePricing();
+    }
+
+    function loadVehiclePricing() {
+      const id = document.getElementById('vehicleSelect').value;
+      if (!id) {
+        document.getElementById('pricingDetails').style.display = 'none';
+        return;
+      }
+
+      currentVehicle = DB.getVehicle(id);
+      if (!currentVehicle) return;
+
+      document.getElementById('pricingDetails').style.display = 'block';
+
+      const p = currentVehicle.pricing;
+      document.getElementById('netCost').textContent = Utils.formatCurrency(p.invoiceCost - p.holdback - p.incentives);
+
+      const slider = document.getElementById('markupSlider');
+      slider.value = (p.currentMarkup * 100).toFixed(1);
+
+      document.getElementById('msrp').textContent = Utils.formatCurrency(p.msrp);
+
+      updatePricing();
+    }
+
+    function updatePricing() {
+      if (!currentVehicle) return;
+      const markup = parseFloat(document.getElementById('markupSlider').value) / 100;
+      const p = currentVehicle.pricing;
+      const netCost = p.invoiceCost - p.holdback - p.incentives;
+      const salePrice = Math.round(p.invoiceCost * (1 + markup));
+      const grossProfit = salePrice - netCost;
+      const margin = salePrice > 0 ? (grossProfit / salePrice * 100) : 0;
+      document.getElementById('markupDisplay').textContent = (markup * 100).toFixed(1) + '%';
+      document.getElementById('salePrice').textContent = Utils.formatCurrency(salePrice);
+      document.getElementById('grossProfit').textContent = Utils.formatCurrency(grossProfit);
+      document.getElementById('marginPercent').textContent = margin.toFixed(1) + '%';
+      document.getElementById('yourPrice').textContent = Utils.formatCurrency(salePrice);
+      document.getElementById('belowMsrp').textContent = (salePrice <= p.msrp ? '-' : '+') + Utils.formatCurrency(Math.abs(p.msrp - salePrice));
+
+      // Agent pricing breakdown
+      const grossSpread = salePrice - p.invoiceCost;
+      const companyMarginAmt = Math.round(grossSpread * DB.COMPANY_MARGIN_RATE);
+      const agentCost = p.invoiceCost + companyMarginAmt;
+      const agentProfitRoom = salePrice - agentCost;
+      document.getElementById('agentCost').textContent = Utils.formatCurrency(agentCost);
+      document.getElementById('agentProfitRoom').textContent = Utils.formatCurrency(agentProfitRoom);
+      document.getElementById('companyMargin').textContent = Utils.formatCurrency(companyMarginAmt);
+    }
+
+    function savePricing() {
+      if (!currentVehicle) return;
+      const markup = parseFloat(document.getElementById('markupSlider').value) / 100;
+      const salePrice = Math.round(currentVehicle.pricing.invoiceCost * (1 + markup));
+
+      DB.updateVehicle(currentVehicle.id, {
+        pricing: { ...currentVehicle.pricing, currentMarkup: markup, salePrice },
+        lastUpdated: new Date().toISOString().split('T')[0]
+      });
+
+      currentVehicle = DB.getVehicle(currentVehicle.id);
+      Utils.showToast('Pricing updated!', 'success');
+    }
+  </script>
+</body>
+</html>

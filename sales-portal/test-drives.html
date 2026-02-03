@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Drives - ZMNZ Sales Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav">
+          <a href="index.html">Dashboard</a>
+          <a href="vehicles.html">Browse Vehicles</a>
+          <a href="my-vehicles.html">My Vehicles</a>
+          <a href="viewings.html">Schedule</a>
+          <a href="sales.html">Sales</a>
+          <a href="profile.html">Profile</a>
+          <button class="btn btn-secondary btn-sm" onclick="Auth.logout()">Logout</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1 class="mb-4">Test Drive Bookings</h1>
+
+      <!-- Filter -->
+      <div class="flex gap-4 mb-8">
+        <select id="filterStatus" class="form-control" style="max-width:200px;">
+          <option value="all">All Statuses</option>
+          <option value="scheduled" selected>Scheduled</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="no-show">No Show</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Vehicle</th>
+                <th>Client</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="driveTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZMNZ Motors. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const agent = Auth.getCurrentUser();
+
+    function render() {
+      const status = document.getElementById('filterStatus').value;
+      let drives = DB.getTestDrivesByAgent(agent?.id);
+      if (status !== 'all') drives = drives.filter(td => td.status === status);
+      drives.sort((a, b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time));
+
+      const statusColors = { scheduled: 'badge-primary', completed: 'badge-gray', cancelled: 'badge-gray', 'no-show': 'badge-gray' };
+
+      document.getElementById('driveTable').innerHTML = drives.map(td => {
+        const v = DB.getVehicle(td.vehicleId);
+        const isScheduled = td.status === 'scheduled';
+        return `<tr>
+          <td>${Utils.formatDate(td.date)}</td>
+          <td>${td.time}</td>
+          <td>${v ? `<a href="vehicle-detail.html?id=${v.id}">${v.year} ${v.make} ${v.model}</a>` : 'Unknown'}</td>
+          <td>${td.clientName}</td>
+          <td>${td.clientPhone || '-'}</td>
+          <td><span class="badge ${statusColors[td.status] || 'badge-gray'}" style="text-transform:capitalize;">${td.status}</span></td>
+          <td>
+            ${isScheduled ? `
+              <button class="btn btn-sm btn-primary" onclick="updateStatus('${td.id}','completed')">Complete</button>
+              <button class="btn btn-sm btn-secondary" onclick="updateStatus('${td.id}','cancelled')">Cancel</button>
+              <button class="btn btn-sm" style="background:var(--gray-200);" onclick="updateStatus('${td.id}','no-show')">No Show</button>
+            ` : '-'}
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-500);">No test drives found</td></tr>';
+    }
+
+    function updateStatus(id, status) {
+      DB.updateTestDrive(id, { status });
+      Utils.showToast(`Test drive marked as ${status}`, 'success');
+      render();
+    }
+
+    document.getElementById('filterStatus').addEventListener('change', render);
+    render();
+  </script>
+</body>
+</html>
