@@ -180,7 +180,8 @@
                 <option value="Sold" ${v.status === 'Sold' ? 'selected' : ''}>Sold</option>
                 <option value="Pending" ${v.status === 'Pending' ? 'selected' : ''}>Pending</option>
               </select>
-              <a href="pricing.html?id=${v.id}" class="btn btn-outline btn-sm">Price</a>
+              <a href="edit-vehicle.html?id=${v.id}" class="btn btn-primary btn-sm">Edit</a>
+              <a href="pricing.html?id=${v.id}" class="btn btn-outline btn-sm" style="margin-left:0.25rem;">Price</a>
               <button class="btn btn-sm" style="background:#dc2626;color:white;margin-left:0.25rem;" onclick="deleteVehicle('${v.id}')">Delete</button>
             </td>
           </tr>
