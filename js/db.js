@@ -6,7 +6,7 @@ const DB = {
   COMPANY_MARGIN_RATE: 0.89,
 
   // Database schema version — bump to force re-seed
-  DB_VERSION: '9',
+  DB_VERSION: '10',
 
   // Initialize database
   init() {
@@ -243,6 +243,8 @@ const DB = {
   // ====================
 
   getInitialVehicles() {
+    // Empty inventory — add vehicles through the dealer portal
+    return [];
     const vehicleTemplates = [
       // Luxury Sedans
       {
