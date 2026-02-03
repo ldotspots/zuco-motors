@@ -40,6 +40,35 @@
         <a href="inventory.html" class="btn btn-secondary">Back to Inventory</a>
       </div>
 
+      <!-- Plate Lookup -->
+      <div class="card mb-6">
+        <div class="card-header"><h3>Quick Add via Plate Lookup</h3></div>
+        <div class="card-body">
+          <p style="color: var(--gray-600); margin-bottom: 1rem;">Enter a NZ registration plate to auto-fill vehicle details from CarJam.</p>
+          <div class="form-group" style="margin-bottom: 0.5rem;">
+            <label for="plate">Registration Plate</label>
+            <div style="display:flex;gap:0.5rem;">
+              <input type="text" id="plate" class="form-control" placeholder="e.g. ABC123" style="text-transform:uppercase;flex:1;max-width:200px;font-weight:600;letter-spacing:1px;">
+              <button type="button" id="lookupBtn" class="btn btn-primary" onclick="lookupPlate()">Look Up</button>
+            </div>
+            <div id="lookupStatus" style="font-size:var(--text-sm);margin-top:0.5rem;"></div>
+          </div>
+
+          <!-- Lookup result card -->
+          <div id="lookupResult" style="display:none;" class="mt-4">
+            <div class="card" style="background:var(--gray-50);border:1px solid var(--gray-200);">
+              <div class="card-body" style="padding:1rem 1.25rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                  <strong id="lookupVehicle" style="font-size:var(--text-lg);"></strong>
+                  <span class="badge badge-primary" id="lookupPlateDisplay"></span>
+                </div>
+                <div id="lookupDetails" style="font-size:var(--text-sm);color:var(--gray-600);display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem 1rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <form id="addVehicleForm">
         <!-- Basic Info -->
         <div class="card mb-6">
@@ -73,6 +102,8 @@
                   <option value="Coupe">Coupe</option>
                   <option value="Hatchback">Hatchback</option>
                   <option value="Minivan">Minivan</option>
+                  <option value="Wagon">Wagon</option>
+                  <option value="Ute">Ute</option>
                 </select>
               </div>
               <div class="form-group">
@@ -90,7 +121,7 @@
                 <input type="text" id="vin" class="form-control" placeholder="17-character VIN" maxlength="17">
               </div>
               <div class="form-group">
-                <label for="mileage">Mileage *</label>
+                <label for="mileage">Mileage (km) *</label>
                 <input type="number" id="mileage" class="form-control" required min="0" value="0">
               </div>
             </div>
@@ -122,6 +153,7 @@
                   <option value="Automatic">Automatic</option>
                   <option value="Manual">Manual</option>
                   <option value="CVT">CVT</option>
+                  <option value="DSG">DSG</option>
                   <option value="Single-Speed">Single-Speed (EV)</option>
                 </select>
               </div>
@@ -139,7 +171,7 @@
               <div class="form-group">
                 <label for="fuelType">Fuel Type</label>
                 <select id="fuelType" class="form-control">
-                  <option value="Gasoline">Gasoline</option>
+                  <option value="Gasoline">Petrol</option>
                   <option value="Diesel">Diesel</option>
                   <option value="Electric">Electric</option>
                   <option value="Hybrid">Hybrid</option>
@@ -224,6 +256,143 @@
   <script src="../js/utils.js"></script>
   <script>
     const dealer = Auth.getCurrentUser();
+
+    // ── NZ Plate Lookup ──────────────────────────────────────────
+    const MOCK_PLATES = {
+      'ABC123': { make: 'Toyota', model: 'Corolla', submodel: 'GX', year: 2018, cc: 1798, fuel: 'petrol', colour: 'Silver', body: 'Hatchback', seats: 5, odometer: 72400, transmission: 'Automatic', vin: 'JTDKN3DU5J1234567' },
+      'DEF456': { make: 'Mazda', model: 'CX-5', submodel: 'GSX', year: 2020, cc: 2488, fuel: 'petrol', colour: 'Soul Red', body: 'SUV', seats: 5, odometer: 45200, transmission: 'Automatic', vin: 'JM3KFBCM0L0123456' },
+      'GHI789': { make: 'Honda', model: 'Jazz', submodel: 'RS', year: 2019, cc: 1498, fuel: 'petrol', colour: 'Blue', body: 'Hatchback', seats: 5, odometer: 58300, transmission: 'CVT', vin: 'JHMGK5H70KX012345' },
+      'JKL012': { make: 'Hyundai', model: 'Tucson', submodel: 'Elite', year: 2021, cc: 1999, fuel: 'diesel', colour: 'White', body: 'SUV', seats: 5, odometer: 31000, transmission: 'Automatic', vin: 'KMHJ3814MU012345' },
+      'MNO345': { make: 'Ford', model: 'Ranger', submodel: 'XLT', year: 2019, cc: 3198, fuel: 'diesel', colour: 'Black', body: 'Ute', seats: 5, odometer: 89500, transmission: 'Automatic', vin: 'MNAUMFF70LW012345' },
+      'YZA567': { make: 'Toyota', model: 'Hilux', submodel: 'SR5', year: 2021, cc: 2755, fuel: 'diesel', colour: 'Graphite', body: 'Ute', seats: 5, odometer: 38700, transmission: 'Automatic', vin: 'MROFR22G5M1012345' },
+      'KLM789': { make: 'Tesla', model: 'Model 3', submodel: 'Standard Range Plus', year: 2021, cc: 0, fuel: 'electric', colour: 'White', body: 'Sedan', seats: 5, odometer: 28500, transmission: 'Automatic', vin: '5YJ3E1EA7MF012345' },
+      'NOP012': { make: 'Toyota', model: 'RAV4', submodel: 'GXL Hybrid', year: 2022, cc: 2487, fuel: 'hybrid', colour: 'Silver', body: 'SUV', seats: 5, odometer: 19800, transmission: 'CVT', vin: 'JTMW1RFV2ND012345' }
+    };
+
+    const CARJAM_PROXY = '/.netlify/functions/carjam';
+
+    function parseCarJamResponse(data) {
+      const section = data?.hidh || data?.message?.hidh || data?.idh || data?.message?.idh || {};
+      const v = section?.vehicle || section || {};
+      if (!v.make) return null;
+      return {
+        make: titleCase(v.make || ''),
+        model: titleCase(v.model || ''),
+        submodel: titleCase(v.submodel || ''),
+        year: parseInt(v.year_of_manufacture) || 0,
+        cc: parseInt(String(v.cc_rating).replace(/[^0-9]/g, '')) || 0,
+        fuel: (v.fuel_type || '').toLowerCase(),
+        colour: v.main_colour || '',
+        body: v.body_style || '',
+        seats: parseInt(v.no_of_seats) || 5,
+        odometer: parseInt(String(v.latest_odometer_reading).replace(/[^0-9]/g, '')) || 0,
+        transmission: v.transmission || '',
+        vin: v.vin || ''
+      };
+    }
+
+    function titleCase(str) {
+      return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    async function lookupPlate() {
+      const plate = document.getElementById('plate').value.trim().toUpperCase().replace(/\s+/g, '');
+      const statusEl = document.getElementById('lookupStatus');
+      const resultEl = document.getElementById('lookupResult');
+
+      if (!plate) {
+        statusEl.innerHTML = '<span style="color:var(--error);">Please enter a plate number</span>';
+        return;
+      }
+
+      statusEl.innerHTML = '<span style="color:var(--gray-500);">Looking up plate...</span>';
+      document.getElementById('lookupBtn').disabled = true;
+
+      let vehicleData = null;
+
+      // Try CarJam API
+      if (CARJAM_PROXY) {
+        try {
+          const res = await fetch(`${CARJAM_PROXY}?plate=${encodeURIComponent(plate)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (!(data?.code && data?.code < 0)) {
+              vehicleData = parseCarJamResponse(data);
+            }
+          }
+        } catch (e) {
+          console.warn('CarJam lookup failed, falling back to mock:', e.message);
+        }
+      }
+
+      // Fall back to mock data
+      if (!vehicleData) {
+        await new Promise(r => setTimeout(r, 600));
+        vehicleData = MOCK_PLATES[plate] || null;
+      }
+
+      document.getElementById('lookupBtn').disabled = false;
+
+      if (!vehicleData) {
+        statusEl.innerHTML = '<span style="color:var(--error);">Plate not found. Please enter vehicle details manually below.</span>';
+        resultEl.style.display = 'none';
+        return;
+      }
+
+      // Show result card
+      statusEl.innerHTML = '<span style="color:var(--success);">Vehicle found! Details auto-filled below.</span>';
+      document.getElementById('lookupPlateDisplay').textContent = plate;
+      document.getElementById('lookupVehicle').textContent =
+        `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} ${vehicleData.submodel || ''}`.trim();
+      document.getElementById('lookupDetails').innerHTML = [
+        vehicleData.colour ? `<span>Colour: <strong>${vehicleData.colour}</strong></span>` : '',
+        vehicleData.body ? `<span>Body: <strong>${vehicleData.body}</strong></span>` : '',
+        vehicleData.cc ? `<span>Engine: <strong>${vehicleData.cc}cc</strong></span>` : '',
+        vehicleData.fuel ? `<span>Fuel: <strong>${vehicleData.fuel.charAt(0).toUpperCase() + vehicleData.fuel.slice(1)}</strong></span>` : '',
+        vehicleData.transmission ? `<span>Trans: <strong>${vehicleData.transmission}</strong></span>` : '',
+        vehicleData.odometer ? `<span>Odo: <strong>${Utils.formatNumber(vehicleData.odometer)} km</strong></span>` : '',
+      ].filter(Boolean).join('');
+      resultEl.style.display = 'block';
+
+      // Auto-fill form fields
+      document.getElementById('year').value = vehicleData.year;
+      document.getElementById('make').value = vehicleData.make;
+      document.getElementById('model').value = vehicleData.model + (vehicleData.submodel ? ' ' + vehicleData.submodel : '');
+      if (vehicleData.submodel) document.getElementById('trim').value = vehicleData.submodel;
+      if (vehicleData.odometer) document.getElementById('mileage').value = vehicleData.odometer;
+      if (vehicleData.colour) document.getElementById('exteriorColor').value = vehicleData.colour;
+      if (vehicleData.vin) document.getElementById('vin').value = vehicleData.vin;
+      if (vehicleData.cc) document.getElementById('engine').value = (vehicleData.cc / 1000).toFixed(1) + 'L';
+
+      // Map body style
+      const bodyMap = { 'Hatchback': 'Hatchback', 'SUV': 'SUV', 'Sedan': 'Sedan', 'Ute': 'Ute', 'Wagon': 'Wagon', 'Coupe': 'Coupe' };
+      if (vehicleData.body && bodyMap[vehicleData.body]) {
+        document.getElementById('bodyStyle').value = bodyMap[vehicleData.body];
+      }
+
+      // Map transmission
+      const transMap = { 'Automatic': 'Automatic', 'Manual': 'Manual', 'CVT': 'CVT', 'DSG': 'DSG' };
+      if (vehicleData.transmission && transMap[vehicleData.transmission]) {
+        document.getElementById('transmission').value = transMap[vehicleData.transmission];
+      }
+
+      // Map fuel type
+      const fuelMap = { 'petrol': 'Gasoline', 'diesel': 'Diesel', 'electric': 'Electric', 'hybrid': 'Hybrid' };
+      if (vehicleData.fuel && fuelMap[vehicleData.fuel]) {
+        document.getElementById('fuelType').value = fuelMap[vehicleData.fuel];
+      }
+
+      // Set condition to Used for looked-up vehicles
+      document.getElementById('condition').value = 'Used';
+    }
+
+    // Allow Enter key to trigger lookup
+    document.getElementById('plate').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        lookupPlate();
+      }
+    });
 
     document.getElementById('addVehicleForm').addEventListener('submit', (e) => {
       e.preventDefault();
