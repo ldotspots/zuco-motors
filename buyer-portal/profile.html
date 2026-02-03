@@ -126,6 +126,14 @@
         </div>
       </div>
 
+      <!-- Sales Agent Application -->
+      <div class="card mb-6" id="agentAppSection">
+        <div class="card-header"><h3>Sales Agent Application</h3></div>
+        <div class="card-body" id="agentAppContent">
+          <p style="color:var(--gray-500);">Loading...</p>
+        </div>
+      </div>
+
       <!-- Account Info -->
       <div class="card">
         <div class="card-header"><h3>Account Information</h3></div>
@@ -218,6 +226,35 @@
       Utils.showToast(result.success ? 'Password updated!' : result.error, result.success ? 'success' : 'error');
       if (result.success) document.getElementById('passwordForm').reset();
     });
+
+    // Agent application section
+    function loadAgentApp() {
+      const el = document.getElementById('agentAppContent');
+      if (!user) { el.innerHTML = '<p style="color:var(--gray-500);">Sign in to apply.</p>'; return; }
+      const app = DB.getAgentApplicationByUserId(user.id);
+      if (!app) {
+        el.innerHTML = `
+          <p style="margin-bottom:1rem;">Interested in joining our sales team? Apply to become a Zuco Motors sales agent.</p>
+          <a href="apply-agent.html" class="btn btn-primary">Apply Now</a>
+        `;
+      } else if (app.status === 'pending') {
+        el.innerHTML = `
+          <p><span class="badge badge-warning" style="font-size:var(--text-sm);">Pending Review</span></p>
+          <p style="margin-top:0.5rem;color:var(--gray-600);">Your application was submitted on ${new Date(app.appliedAt).toLocaleDateString('en-NZ')}. We'll review it shortly.</p>
+        `;
+      } else if (app.status === 'approved') {
+        el.innerHTML = `
+          <p><span class="badge badge-success" style="font-size:var(--text-sm);">Approved</span></p>
+          <p style="margin-top:0.5rem;">You've been approved as a sales agent! <a href="../sales-portal/login.html">Log in to the Sales Agent Portal</a> using your existing credentials.</p>
+        `;
+      } else if (app.status === 'rejected') {
+        el.innerHTML = `
+          <p><span class="badge badge-danger" style="font-size:var(--text-sm);">Not Approved</span></p>
+          <p style="margin-top:0.5rem;color:var(--gray-600);">${app.feedback || 'Your application was not approved at this time.'}</p>
+        `;
+      }
+    }
+    loadAgentApp();
 
     loadProfile();
   </script>

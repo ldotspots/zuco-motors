@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply as Sales Agent - Zuco Motors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../index.html" class="logo"><img src="../css/images/zmnz (1).png" alt="ZMNZ Motors" style="height: 40px;"></a>
+        <nav class="nav" id="mainNav">
+          <a href="../index.html">Home</a>
+          <a href="../about-us.html">About Us</a>
+          <a href="inventory.html">Find a Car</a>
+          <a href="../sell-your-car.html">Sell Your Car</a>
+          <a href="financing.html">Financing</a>
+          <a href="compare.html">Compare</a>
+          <a href="login.html" class="btn btn-primary btn-sm nav-logged-out">Sign In / Register</a>
+          <a href="../sales-portal/login.html" class="btn btn-secondary btn-sm nav-logged-out">Sales Agent Login</a>
+          <a href="favorites.html" class="nav-logged-in" style="display:none;">Favorites</a>
+          <a href="profile.html" class="nav-logged-in" style="display:none;">My Account</a>
+          <button class="btn btn-secondary btn-sm nav-logged-in" style="display:none;" onclick="Auth.logout()">Sign Out</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container" style="max-width: 700px;">
+      <h1 class="mb-2">Apply as Sales Agent</h1>
+      <p style="color:var(--gray-500);margin-bottom:2rem;">Join the Zuco Motors sales team. Fill out the form below and our team will review your application.</p>
+
+      <div id="appStatus"></div>
+
+      <div class="card" id="appFormCard">
+        <div class="card-body">
+          <form id="applyForm">
+            <h3 style="margin-bottom:1rem;">Your Details</h3>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label for="appName">Full Name</label>
+                <input type="text" id="appName" class="form-control" disabled>
+              </div>
+              <div class="form-group">
+                <label for="appEmail">Email</label>
+                <input type="email" id="appEmail" class="form-control" disabled>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="appPhone">Phone</label>
+              <input type="tel" id="appPhone" class="form-control" disabled>
+            </div>
+
+            <h3 style="margin-top:1.5rem;margin-bottom:1rem;">Application Details</h3>
+            <div class="form-group">
+              <label for="appRegion">Preferred Region *</label>
+              <select id="appRegion" class="form-control" required>
+                <option value="">Select a region...</option>
+                <option value="Auckland">Auckland</option>
+                <option value="Wellington">Wellington</option>
+                <option value="Canterbury">Canterbury</option>
+                <option value="Waikato">Waikato</option>
+                <option value="Bay of Plenty">Bay of Plenty</option>
+                <option value="Otago">Otago</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="appExperience">Sales Experience *</label>
+              <select id="appExperience" class="form-control" required>
+                <option value="">Select...</option>
+                <option value="none">No prior sales experience</option>
+                <option value="1-2">1-2 years</option>
+                <option value="3-5">3-5 years</option>
+                <option value="5+">5+ years</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="appMotivation">Why do you want to join Zuco Motors? *</label>
+              <textarea id="appMotivation" class="form-control" rows="4" required placeholder="Tell us about yourself and why you'd be a great fit..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-full">Submit Application</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/db.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // Auth-aware nav
+    if (Auth.isAuthenticated() && Auth.hasRole('buyer')) {
+      document.querySelectorAll('.nav-logged-out').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
+    }
+
+    const user = Auth.getCurrentUser();
+    const statusEl = document.getElementById('appStatus');
+    const formCard = document.getElementById('appFormCard');
+
+    if (!user || user.role !== 'buyer') {
+      formCard.style.display = 'none';
+      statusEl.innerHTML = '<div class="card"><div class="card-body"><p style="text-align:center;color:var(--gray-500);">You need to be signed in as a buyer to apply. <a href="login.html">Sign in</a></p></div></div>';
+    } else {
+      // Pre-fill user details
+      document.getElementById('appName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
+      document.getElementById('appEmail').value = user.email || '';
+      document.getElementById('appPhone').value = user.phone || '';
+
+      // Check existing application
+      const existing = DB.getAgentApplicationByUserId(user.id);
+      if (existing) {
+        formCard.style.display = 'none';
+        if (existing.status === 'pending') {
+          statusEl.innerHTML = `
+            <div class="card"><div class="card-body" style="text-align:center;">
+              <span class="badge badge-warning" style="font-size:var(--text-base);padding:0.5rem 1rem;">Application Pending</span>
+              <p style="margin-top:1rem;color:var(--gray-600);">Your application was submitted on ${new Date(existing.appliedAt).toLocaleDateString('en-NZ')}. We'll be in touch once it's been reviewed.</p>
+              <a href="profile.html" class="btn btn-secondary" style="margin-top:1rem;">Back to Profile</a>
+            </div></div>`;
+        } else if (existing.status === 'approved') {
+          statusEl.innerHTML = `
+            <div class="card"><div class="card-body" style="text-align:center;">
+              <span class="badge badge-success" style="font-size:var(--text-base);padding:0.5rem 1rem;">Approved!</span>
+              <p style="margin-top:1rem;">You've been approved as a sales agent. Log in via the Sales Agent Portal using your existing credentials.</p>
+              <a href="../sales-portal/login.html" class="btn btn-primary" style="margin-top:1rem;">Go to Sales Agent Portal</a>
+            </div></div>`;
+        } else if (existing.status === 'rejected') {
+          statusEl.innerHTML = `
+            <div class="card"><div class="card-body" style="text-align:center;">
+              <span class="badge badge-danger" style="font-size:var(--text-base);padding:0.5rem 1rem;">Not Approved</span>
+              <p style="margin-top:1rem;color:var(--gray-600);">${existing.feedback || 'Your application was not approved at this time. Please contact us for more information.'}</p>
+              <a href="profile.html" class="btn btn-secondary" style="margin-top:1rem;">Back to Profile</a>
+            </div></div>`;
+        }
+      }
+    }
+
+    document.getElementById('applyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      DB.addAgentApplication({
+        id: Utils.generateId('APP'),
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone || '',
+        region: document.getElementById('appRegion').value,
+        experience: document.getElementById('appExperience').value,
+        motivation: document.getElementById('appMotivation').value,
+        status: 'pending',
+        appliedAt: new Date().toISOString(),
+        reviewedAt: null,
+        reviewedBy: null,
+        feedback: null
+      });
+      Utils.showToast('Application submitted! We\'ll review it shortly.', 'success');
+      setTimeout(() => window.location.reload(), 1000);
+    });
+  </script>
+</body>
+</html>

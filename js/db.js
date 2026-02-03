@@ -1023,6 +1023,34 @@ const DB = {
     quotes[idx] = { ...quotes[idx], ...updates };
     localStorage.setItem('zuco_quote_requests', JSON.stringify(quotes));
     return quotes[idx];
+  },
+
+  // ====================
+  // AGENT APPLICATIONS
+  // ====================
+
+  getAgentApplications() {
+    return JSON.parse(localStorage.getItem('zuco_agent_applications') || '[]');
+  },
+
+  getAgentApplicationByUserId(userId) {
+    return this.getAgentApplications().find(a => a.userId === userId) || null;
+  },
+
+  addAgentApplication(app) {
+    const apps = this.getAgentApplications();
+    apps.push(app);
+    localStorage.setItem('zuco_agent_applications', JSON.stringify(apps));
+    return app;
+  },
+
+  updateAgentApplication(id, updates) {
+    const apps = this.getAgentApplications();
+    const idx = apps.findIndex(a => a.id === id);
+    if (idx === -1) return null;
+    apps[idx] = { ...apps[idx], ...updates };
+    localStorage.setItem('zuco_agent_applications', JSON.stringify(apps));
+    return apps[idx];
   }
 };
 
