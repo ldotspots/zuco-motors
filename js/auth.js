@@ -348,40 +348,14 @@ const Auth = {
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
 
-  // Pages that require authentication
-  const protectedPages = [
-    '/buyer-portal/',
-    '/dealer-portal/',
-    '/sales-portal/'
-  ];
+  // Only dealer and sales portals require authentication (buyer portal is fully public)
+  const isDealer = path.includes('/dealer-portal/') && !path.includes('/dealer-portal/login.html');
+  const isSales = path.includes('/sales-portal/') && !path.includes('/sales-portal/login.html');
 
-  // Login pages
-  const loginPages = [
-    '/buyer-portal/login.html',
-    '/dealer-portal/login.html',
-    '/sales-portal/login.html'
-  ];
-
-  // Check if current page is protected
-  const isProtected = protectedPages.some(p => path.includes(p));
-  const isLoginPage = loginPages.some(p => path.includes(p));
-
-  // Buyer portal pages that are publicly accessible (no login required)
-  const buyerPublicFiles = ['inventory.html', 'vehicle-details.html', 'financing.html', 'compare.html'];
-  const isBuyerPublic = buyerPublicFiles.some(f => path.includes('/buyer-portal/' + f));
-
-  if (isProtected && !isLoginPage && !isBuyerPublic) {
-    // Determine required role
-    let requiredRole = null;
-    if (path.includes('/dealer-portal/')) {
-      requiredRole = 'dealer';
-    } else if (path.includes('/sales-portal/')) {
-      requiredRole = 'sales_agent';
-    } else if (path.includes('/buyer-portal/')) {
-      requiredRole = 'buyer';
-    }
-
-    Auth.requireAuth(requiredRole);
+  if (isDealer) {
+    Auth.requireAuth('dealer');
+  } else if (isSales) {
+    Auth.requireAuth('sales_agent');
   }
 
   // If already logged in and on login page, redirect to dashboard
