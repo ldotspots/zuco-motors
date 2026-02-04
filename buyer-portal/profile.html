@@ -166,26 +166,26 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    const user = Auth.getCurrentUserSync();
+    let user = Auth.getCurrentUserSync();
 
-    function loadProfile() {
-      if (!user) return;
-      document.getElementById('firstName').value = user.firstName || '';
-      document.getElementById('lastName').value = user.lastName || '';
-      document.getElementById('email').value = user.email || '';
-      document.getElementById('phone').value = user.phone || '';
-      document.getElementById('address').value = user.profile?.address || '';
-      document.getElementById('preferredContact').value = user.profile?.preferredContact || 'email';
-      document.getElementById('emailNotifs').checked = user.profile?.notificationPrefs?.email ?? true;
-      document.getElementById('smsNotifs').checked = user.profile?.notificationPrefs?.sms ?? false;
-      document.getElementById('memberSince').textContent = Utils.formatDate(user.createdAt);
-      document.getElementById('lastLogin').textContent = Utils.formatDate(user.lastLogin);
-      document.getElementById('accountId').textContent = user.id;
+    function loadProfile(fullUser) {
+      if (!fullUser) return;
+      document.getElementById('firstName').value = fullUser.firstName || '';
+      document.getElementById('lastName').value = fullUser.lastName || '';
+      document.getElementById('email').value = fullUser.email || '';
+      document.getElementById('phone').value = fullUser.phone || '';
+      document.getElementById('address').value = fullUser.profile?.address || '';
+      document.getElementById('preferredContact').value = fullUser.profile?.preferredContact || 'email';
+      document.getElementById('emailNotifs').checked = fullUser.profile?.notificationPrefs?.email ?? true;
+      document.getElementById('smsNotifs').checked = fullUser.profile?.notificationPrefs?.sms ?? false;
+      document.getElementById('memberSince').textContent = fullUser.createdAt ? Utils.formatDate(fullUser.createdAt) : '-';
+      document.getElementById('lastLogin').textContent = fullUser.lastLogin ? Utils.formatDate(fullUser.lastLogin) : '-';
+      document.getElementById('accountId').textContent = fullUser.id;
     }
 
-    document.getElementById('profileForm').addEventListener('submit', (e) => {
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const result = Auth.updateProfile({
+      const result = await Auth.updateProfile({
         firstName: document.getElementById('firstName').value,
         lastName: document.getElementById('lastName').value,
         phone: document.getElementById('phone').value,
@@ -207,7 +207,7 @@
       Utils.showToast('Notification preferences saved!', 'success');
     }
 
-    document.getElementById('passwordForm').addEventListener('submit', (e) => {
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const current = document.getElementById('currentPassword').value;
       const newPw = document.getElementById('newPassword').value;
@@ -224,7 +224,7 @@
         return;
       }
 
-      const result = Auth.updatePassword(current, newPw);
+      const result = await Auth.updatePassword(current, newPw);
       Utils.showToast(result.success ? 'Password updated!' : result.error, result.success ? 'success' : 'error');
       if (result.success) document.getElementById('passwordForm').reset();
     });
@@ -233,34 +233,51 @@
     async function loadAgentApp() {
       const el = document.getElementById('agentAppContent');
       if (!user) { el.innerHTML = '<p style="color:var(--gray-500);">Sign in to apply.</p>'; return; }
-      const app = await DB.getAgentApplicationByUserId(user.id);
-      if (!app) {
+      try {
+        const app = await DB.getAgentApplicationByUserId(user.id);
+        if (!app) {
+          el.innerHTML = `
+            <p style="margin-bottom:1rem;">Interested in joining our sales team? Apply to become a Zuco Motors sales agent.</p>
+            <a href="apply-agent.html" class="btn btn-primary">Apply Now</a>
+          `;
+        } else if (app.status === 'pending') {
+          el.innerHTML = `
+            <p><span class="badge badge-warning" style="font-size:var(--text-sm);">Pending Review</span></p>
+            <p style="margin-top:0.5rem;color:var(--gray-600);">Your application was submitted on ${new Date(app.appliedAt).toLocaleDateString('en-NZ')}. We'll review it shortly.</p>
+          `;
+        } else if (app.status === 'approved') {
+          el.innerHTML = `
+            <p><span class="badge badge-success" style="font-size:var(--text-sm);">Approved</span></p>
+            <p style="margin-top:0.5rem;">You've been approved as a sales agent! <a href="../sales-portal/login.html">Log in to the Sales Agent Portal</a> using your existing credentials.</p>
+          `;
+        } else if (app.status === 'rejected') {
+          el.innerHTML = `
+            <p><span class="badge badge-danger" style="font-size:var(--text-sm);">Not Approved</span></p>
+            <p style="margin-top:0.5rem;color:var(--gray-600);">${app.feedback || 'Your application was not approved at this time.'}</p>
+          `;
+        } else {
+          el.innerHTML = `
+            <p style="margin-bottom:1rem;">Interested in joining our sales team? Apply to become a Zuco Motors sales agent.</p>
+            <a href="apply-agent.html" class="btn btn-primary">Apply Now</a>
+          `;
+        }
+      } catch (err) {
+        console.error('Error loading agent application:', err);
         el.innerHTML = `
           <p style="margin-bottom:1rem;">Interested in joining our sales team? Apply to become a Zuco Motors sales agent.</p>
           <a href="apply-agent.html" class="btn btn-primary">Apply Now</a>
-        `;
-      } else if (app.status === 'pending') {
-        el.innerHTML = `
-          <p><span class="badge badge-warning" style="font-size:var(--text-sm);">Pending Review</span></p>
-          <p style="margin-top:0.5rem;color:var(--gray-600);">Your application was submitted on ${new Date(app.appliedAt).toLocaleDateString('en-NZ')}. We'll review it shortly.</p>
-        `;
-      } else if (app.status === 'approved') {
-        el.innerHTML = `
-          <p><span class="badge badge-success" style="font-size:var(--text-sm);">Approved</span></p>
-          <p style="margin-top:0.5rem;">You've been approved as a sales agent! <a href="../sales-portal/login.html">Log in to the Sales Agent Portal</a> using your existing credentials.</p>
-        `;
-      } else if (app.status === 'rejected') {
-        el.innerHTML = `
-          <p><span class="badge badge-danger" style="font-size:var(--text-sm);">Not Approved</span></p>
-          <p style="margin-top:0.5rem;color:var(--gray-600);">${app.feedback || 'Your application was not approved at this time.'}</p>
         `;
       }
     }
 
     async function init() {
-      loadProfile();
+      // Fetch full user data from DB (session only has basic fields)
+      const fullUser = await Auth.getCurrentUser();
+      if (fullUser) {
+        user = fullUser;
+      }
+      loadProfile(user);
       await loadAgentApp();
-      DB.subscribeToVehicles(() => loadAgentApp());
     }
     init();
   </script>
