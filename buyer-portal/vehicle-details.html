@@ -196,6 +196,15 @@
       box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
       margin-top: 2rem;
     }
+    .sold-notice {
+      text-align: center;
+      padding: 2rem;
+      background: var(--gray-50);
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-lg);
+    }
+    .sold-notice h3 { color: #dc2626; margin-bottom: 0.5rem; }
+    .sold-notice p { color: var(--gray-600); font-size: var(--text-sm); }
   </style>
 </head>
 <body>
@@ -460,7 +469,27 @@
       document.getElementById('vehicleSubtitle').textContent = currentVehicle.trim;
       document.getElementById('vehiclePrice').textContent = Utils.formatCurrency(currentVehicle.pricing.salePrice);
       document.getElementById('vehicleBadge').textContent = currentVehicle.status;
-      document.getElementById('vehicleBadge').className = `badge badge-${currentVehicle.status === 'Available' ? 'success' : 'warning'}`;
+      const badgeClass = currentVehicle.status === 'Available' ? 'success' : currentVehicle.status === 'Sold' ? 'error' : 'warning';
+      document.getElementById('vehicleBadge').className = `badge badge-${badgeClass}`;
+
+      // Handle sold vehicles - hide enquiry options
+      const isSold = currentVehicle.status === 'Sold';
+      const actionsCard = document.querySelector('.card-body .flex.flex-col.gap-4');
+      if (actionsCard) {
+        if (isSold) {
+          actionsCard.innerHTML = `
+            <div class="sold-notice">
+              <h3>This Vehicle Has Been Sold</h3>
+              <p>This vehicle is no longer available for purchase. Browse our inventory for similar options.</p>
+            </div>
+            <a href="inventory.html" class="btn btn-primary w-full">Browse Inventory</a>
+          `;
+        }
+      }
+      const inquirySection = document.getElementById('inquirySection');
+      if (inquirySection) {
+        inquirySection.style.display = isSold ? 'none' : '';
+      }
 
       // Setup image gallery
       setupGallery();
