@@ -158,7 +158,7 @@
       const nameParts = document.getElementById('appName').value.trim().split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
-      await DB.addAgentApplication({
+      const result = await DB.addAgentApplication({
         id: Utils.generateId('APP'),
         userId: user.id,
         firstName,
@@ -174,8 +174,12 @@
         reviewedBy: null,
         feedback: null
       });
-      Utils.showToast('Application submitted! We\'ll review it shortly.', 'success');
-      setTimeout(() => window.location.reload(), 1000);
+      if (result) {
+        Utils.showToast('Application submitted! We\'ll review it shortly.', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        Utils.showToast('Failed to submit application. Please try again.', 'error');
+      }
     });
 
     async function init() {

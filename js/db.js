@@ -543,7 +543,7 @@ const DB = {
     const { data, error } = await supabaseClient
       .from('agent_applications')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('applied_at', { ascending: false });
     if (error) { console.error('getAgentApplications error:', error); return []; }
     return data.map(a => this.toCamelCase(a));
   },
