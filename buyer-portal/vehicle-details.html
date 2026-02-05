@@ -251,9 +251,8 @@
   <main class="section">
     <div class="container">
       <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem;">
-        <!-- Left Column -->
+        <!-- Left Column - Gallery -->
         <div>
-          <!-- Gallery -->
           <div class="vehicle-gallery" id="vehicleGallery">
             <div class="gallery-main" onclick="openLightbox()">
               <div class="placeholder" id="galleryPlaceholder">No images available</div>
@@ -268,39 +267,6 @@
             </div>
             <div class="gallery-thumbnails" id="galleryThumbnails"></div>
           </div>
-
-          <!-- Description -->
-          <div class="card mb-6">
-            <div class="card-header">
-              <h2>Vehicle Overview</h2>
-            </div>
-            <div class="card-body">
-              <p id="vehicleDescription">This vehicle features premium quality and excellent condition. Perfect for your daily driving needs.</p>
-            </div>
-          </div>
-
-          <!-- Specifications -->
-          <div class="card mb-6">
-            <div class="card-header">
-              <h2>Specifications</h2>
-            </div>
-            <div class="card-body">
-              <table class="specs-table" id="specsTable">
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Features -->
-          <div class="card mb-6">
-            <div class="card-header">
-              <h2>Features & Options</h2>
-            </div>
-            <div class="card-body">
-              <div id="featuresList"></div>
-            </div>
-          </div>
-
         </div>
 
         <!-- Right Column -->
@@ -327,6 +293,38 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Vehicle Overview -->
+      <div class="card mb-6 mt-8">
+        <div class="card-header">
+          <h2>Vehicle Overview</h2>
+        </div>
+        <div class="card-body">
+          <p id="vehicleDescription">This vehicle features premium quality and excellent condition. Perfect for your daily driving needs.</p>
+        </div>
+      </div>
+
+      <!-- Specifications -->
+      <div class="card mb-6">
+        <div class="card-header">
+          <h2>Specifications</h2>
+        </div>
+        <div class="card-body">
+          <table class="specs-table" id="specsTable">
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="card mb-6">
+        <div class="card-header">
+          <h2>Features & Options</h2>
+        </div>
+        <div class="card-body">
+          <div id="featuresList"></div>
         </div>
       </div>
 
