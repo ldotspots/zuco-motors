@@ -117,16 +117,12 @@ const Auth = {
     localStorage.removeItem(key);
     localStorage.removeItem(this.REMEMBER_KEY);
 
-    // Redirect based on current portal (use relative paths for GitHub Pages compatibility)
+    // Always redirect to main homepage on logout
     const path = window.location.pathname;
-    if (path.includes('/dealer-portal/')) {
-      window.location.href = 'login.html';
-    } else if (path.includes('/sales-portal/')) {
-      window.location.href = 'login.html';
-    } else if (path.includes('/buyer-portal/')) {
+    if (path.includes('/dealer-portal/') || path.includes('/sales-portal/') || path.includes('/buyer-portal/')) {
       window.location.href = '../index.html';
     } else {
-      window.location.href = 'index.html';
+      window.location.href = './index.html';
     }
   },
 
