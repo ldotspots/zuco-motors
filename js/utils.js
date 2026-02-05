@@ -532,12 +532,14 @@ const Utils = {
   },
 
   // Find next available test drive slot for a vehicle
-  findNextTestDriveSlot(vehicleId, date) {
-    const existing = DB.getTestDrivesByVehicle(vehicleId)
+  async findNextTestDriveSlot(vehicleId, date) {
+    const testDrives = await DB.getTestDrivesByVehicle(vehicleId);
+    const existing = testDrives
       .filter(td => td.date === date && td.status !== 'cancelled')
       .map(td => td.time);
     // Also block slots taken by viewings (a viewing at HH:00 blocks HH:00 and HH:30)
-    const viewingHours = DB.getViewingBookingsByVehicle(vehicleId)
+    const viewings = await DB.getViewingBookingsByVehicle(vehicleId);
+    const viewingHours = viewings
       .filter(b => b.date === date && (b.status === 'pending' || b.status === 'approved'))
       .map(b => b.timeSlot);
     const slots = [];
@@ -553,12 +555,14 @@ const Utils = {
   },
 
   // Find available viewing timeslots for a vehicle on a given date
-  findAvailableViewingSlots(vehicleId, date) {
-    const booked = DB.getViewingBookingsByVehicle(vehicleId)
+  async findAvailableViewingSlots(vehicleId, date) {
+    const viewings = await DB.getViewingBookingsByVehicle(vehicleId);
+    const booked = viewings
       .filter(b => b.date === date && (b.status === 'pending' || b.status === 'approved'))
       .map(b => b.timeSlot);
     // Also block hours that have any test drive (HH:00 or HH:30)
-    const tdTimes = DB.getTestDrivesByVehicle(vehicleId)
+    const testDrives = await DB.getTestDrivesByVehicle(vehicleId);
+    const tdTimes = testDrives
       .filter(td => td.date === date && td.status !== 'cancelled')
       .map(td => td.time);
     const slots = [];
