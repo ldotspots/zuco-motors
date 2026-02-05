@@ -181,16 +181,16 @@ CREATE TABLE IF NOT EXISTS quote_requests (
 -- AGENT APPLICATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS agent_applications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  first_name TEXT NOT NULL,
+  first_name TEXT,
   last_name TEXT,
   email TEXT NOT NULL,
   phone TEXT,
   region TEXT,
   experience TEXT,
   motivation TEXT,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'approved', 'rejected')),
+  status TEXT DEFAULT 'pending',
   applied_at TIMESTAMPTZ DEFAULT NOW(),
   reviewed_at TIMESTAMPTZ,
   reviewed_by TEXT,
