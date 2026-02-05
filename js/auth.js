@@ -116,7 +116,18 @@ const Auth = {
     sessionStorage.removeItem(key);
     localStorage.removeItem(key);
     localStorage.removeItem(this.REMEMBER_KEY);
-    window.location.href = '/';
+
+    // Redirect based on current portal (use relative paths for GitHub Pages compatibility)
+    const path = window.location.pathname;
+    if (path.includes('/dealer-portal/')) {
+      window.location.href = 'login.html';
+    } else if (path.includes('/sales-portal/')) {
+      window.location.href = 'login.html';
+    } else if (path.includes('/buyer-portal/')) {
+      window.location.href = '../index.html';
+    } else {
+      window.location.href = 'index.html';
+    }
   },
 
   // Check if user is authenticated
@@ -238,7 +249,11 @@ const Auth = {
 
   // Get unauthorized path
   getUnauthorizedPath() {
-    return '/';
+    const path = window.location.pathname;
+    if (path.includes('/dealer-portal/') || path.includes('/sales-portal/')) {
+      return '../index.html';
+    }
+    return './index.html';
   },
 
   // Redirect after login
@@ -256,22 +271,27 @@ const Auth = {
       return;
     }
 
-    // Default redirects based on role (use relative paths)
+    // Default redirects based on role (use explicit relative paths for GitHub Pages)
     const currentPath = window.location.pathname;
     if (session.role === 'dealer') {
       if (currentPath.includes('/dealer-portal/')) {
-        window.location.href = 'index.html';
+        window.location.href = './index.html';
       } else {
-        window.location.href = 'dealer-portal/index.html';
+        window.location.href = './dealer-portal/index.html';
       }
     } else if (session.role === 'sales_agent') {
       if (currentPath.includes('/sales-portal/')) {
-        window.location.href = 'index.html';
+        window.location.href = './index.html';
       } else {
-        window.location.href = 'sales-portal/index.html';
+        window.location.href = './sales-portal/index.html';
       }
     } else {
-      window.location.href = '../index.html';
+      // Buyer - redirect to main site
+      if (currentPath.includes('/buyer-portal/')) {
+        window.location.href = '../index.html';
+      } else {
+        window.location.href = './index.html';
+      }
     }
   },
 
