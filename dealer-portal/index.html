@@ -71,9 +71,9 @@
         </div>
 
         <div class="stat-card">
-          <div class="stat-value" id="commission">$0</div>
-          <div class="stat-label">Commission Earned (YTD)</div>
-          <div class="stat-change positive" id="commissionChange">+$0 this month</div>
+          <div class="stat-value" id="companyProfit">$0</div>
+          <div class="stat-label">Company Profit (YTD)</div>
+          <div class="stat-change positive" id="profitChange">+$0 this month</div>
         </div>
       </div>
 
@@ -206,16 +206,15 @@
     // Calculate KPIs
     async function calculateKPIs() {
       const vehicles = await DB.getVehicles();
-      const myVehicles = vehicles.filter(v => v.assignedAgent === dealer.id);
-      const leads = await DB.getInquiriesByAgent(dealer.id);
-      const transactions = await DB.getTransactionsByAgent(dealer.id);
+      const availableVehicles = vehicles.filter(v => v.status === 'Available');
+      const leads = await DB.getInquiries();
+      const sales = await DB.getAgentSales();
+      const completedSales = sales.filter(s => s.status === 'completed');
 
       // Total Inventory Value
-      const totalValue = myVehicles
-        .filter(v => v.status === 'Available')
-        .reduce((sum, v) => sum + v.pricing.salePrice, 0);
+      const totalValue = availableVehicles.reduce((sum, v) => sum + (v.pricing?.salePrice || 0), 0);
       document.getElementById('totalInventoryValue').textContent = Utils.formatCurrency(totalValue);
-      document.getElementById('inventoryChange').textContent = `${myVehicles.filter(v => v.status === 'Available').length} vehicles active`;
+      document.getElementById('inventoryChange').textContent = `${availableVehicles.length} vehicles active`;
 
       // Active Leads
       const activeLeads = leads.filter(l => l.status !== 'closed-won' && l.status !== 'closed-lost');
@@ -230,32 +229,54 @@
 
       // This Month's Sales
       const thisMonth = new Date();
-      const monthTransactions = transactions.filter(t => {
-        const tDate = new Date(t.completedDate);
-        return tDate.getMonth() === thisMonth.getMonth() && tDate.getFullYear() === thisMonth.getFullYear();
+      const monthSales = completedSales.filter(s => {
+        const sDate = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
+        return sDate.getMonth() === thisMonth.getMonth() && sDate.getFullYear() === thisMonth.getFullYear();
       });
-      const monthSales = monthTransactions.reduce((sum, t) => sum + t.pricing.salePrice, 0);
-      document.getElementById('monthSales').textContent = Utils.formatCurrency(monthSales);
-      document.getElementById('salesChange').textContent = `${monthTransactions.length} vehicles sold`;
+      const monthSalesTotal = monthSales.reduce((sum, s) => sum + (s.salePrice || 0), 0);
+      document.getElementById('monthSales').textContent = Utils.formatCurrency(monthSalesTotal);
+      document.getElementById('salesChange').textContent = `${monthSales.length} vehicles sold`;
 
-      // Commission YTD
-      const ytdTransactions = transactions.filter(t => {
-        const tDate = new Date(t.completedDate);
-        return tDate.getFullYear() === thisMonth.getFullYear();
+      // Company Profit YTD (salePrice - invoiceCost for all completed sales this year)
+      const ytdSales = completedSales.filter(s => {
+        const sDate = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
+        return sDate.getFullYear() === thisMonth.getFullYear();
       });
-      const ytdCommission = ytdTransactions.reduce((sum, t) => sum + t.commission.commissionAmount, 0);
-      document.getElementById('commission').textContent = Utils.formatCurrency(ytdCommission);
-      const monthCommission = monthTransactions.reduce((sum, t) => sum + t.commission.commissionAmount, 0);
-      document.getElementById('commissionChange').textContent = `+${Utils.formatCurrency(monthCommission)} this month`;
+      let ytdProfit = 0;
+      let monthProfit = 0;
+      for (const s of ytdSales) {
+        const vehicle = await DB.getVehicle(s.vehicleId);
+        const invoiceCost = vehicle?.pricing?.invoiceCost || 0;
+        const profit = (s.salePrice || 0) - invoiceCost;
+        ytdProfit += profit;
+        // Check if this sale is from this month
+        const sDate = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
+        if (sDate.getMonth() === thisMonth.getMonth()) {
+          monthProfit += profit;
+        }
+      }
+      document.getElementById('companyProfit').textContent = Utils.formatCurrency(ytdProfit);
+      document.getElementById('profitChange').textContent = `+${Utils.formatCurrency(monthProfit)} this month`;
 
       // Average Markup
-      const avgMarkup = myVehicles
-        .filter(v => v.status === 'Available')
-        .reduce((sum, v) => sum + v.pricing.currentMarkup, 0) / myVehicles.filter(v => v.status === 'Available').length || 0;
+      const vehiclesWithMarkup = availableVehicles.filter(v => v.pricing?.currentMarkup);
+      const avgMarkup = vehiclesWithMarkup.length > 0
+        ? vehiclesWithMarkup.reduce((sum, v) => sum + v.pricing.currentMarkup, 0) / vehiclesWithMarkup.length
+        : 0;
       document.getElementById('avgMarkup').textContent = (avgMarkup * 100).toFixed(1) + '%';
 
-      // Inventory Turnover
-      document.getElementById('inventoryTurnover').textContent = '0';
+      // Inventory Turnover (average days on lot for sold vehicles)
+      const soldVehicles = vehicles.filter(v => v.status === 'Sold');
+      if (soldVehicles.length > 0) {
+        const avgDays = soldVehicles.reduce((sum, v) => {
+          const added = new Date(v.addedDate);
+          const sold = v.soldDate ? new Date(v.soldDate) : new Date();
+          return sum + Math.floor((sold - added) / (1000 * 60 * 60 * 24));
+        }, 0) / soldVehicles.length;
+        document.getElementById('inventoryTurnover').textContent = Math.round(avgDays);
+      } else {
+        document.getElementById('inventoryTurnover').textContent = '0';
+      }
 
       // Conversion Rate
       const totalLeads = leads.length;
@@ -266,7 +287,7 @@
 
     // Load recent leads
     async function loadRecentLeads() {
-      const allLeads = await DB.getInquiriesByAgent(dealer.id);
+      const allLeads = await DB.getInquiries();
       const leads = allLeads
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 5);
@@ -305,7 +326,7 @@
     // Load inventory alerts
     async function loadInventoryAlerts() {
       const allVehicles = await DB.getVehicles();
-      const vehicles = allVehicles.filter(v => v.assignedAgent === dealer.id && v.status === 'Available');
+      const vehicles = allVehicles.filter(v => v.status === 'Available');
 
       // Stale inventory (on lot for >60 days)
       const today = new Date();
