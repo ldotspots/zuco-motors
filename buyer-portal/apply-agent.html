@@ -46,16 +46,16 @@
             <div class="grid grid-2">
               <div class="form-group">
                 <label for="appName">Full Name</label>
-                <input type="text" id="appName" class="form-control" disabled>
+                <input type="text" id="appName" class="form-control" required>
               </div>
               <div class="form-group">
-                <label for="appEmail">Email</label>
-                <input type="email" id="appEmail" class="form-control" disabled>
+                <label for="appEmail">Email *</label>
+                <input type="email" id="appEmail" class="form-control" required>
               </div>
             </div>
             <div class="form-group">
-              <label for="appPhone">Phone</label>
-              <input type="tel" id="appPhone" class="form-control" disabled>
+              <label for="appPhone">Phone *</label>
+              <input type="tel" id="appPhone" class="form-control" required>
             </div>
 
             <h3 style="margin-top:1.5rem;margin-bottom:1rem;">Application Details</h3>
@@ -104,7 +104,7 @@
       document.querySelectorAll('.nav-logged-in').forEach(el => el.style.display = '');
     }
 
-    const user = Auth.getCurrentUserSync();
+    let user = Auth.getCurrentUserSync();
     const statusEl = document.getElementById('appStatus');
     const formCard = document.getElementById('appFormCard');
 
@@ -115,7 +115,11 @@
         return;
       }
 
-      // Pre-fill user details
+      // Fetch full user data for phone etc.
+      const fullUser = await Auth.getCurrentUser();
+      if (fullUser) user = fullUser;
+
+      // Pre-fill user details (editable)
       document.getElementById('appName').value = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
       document.getElementById('appEmail').value = user.email || '';
       document.getElementById('appPhone').value = user.phone || '';
@@ -151,13 +155,16 @@
 
     document.getElementById('applyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const nameParts = document.getElementById('appName').value.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
       await DB.addAgentApplication({
         id: Utils.generateId('APP'),
         userId: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone || '',
+        firstName,
+        lastName,
+        email: document.getElementById('appEmail').value.trim(),
+        phone: document.getElementById('appPhone').value.trim(),
         region: document.getElementById('appRegion').value,
         experience: document.getElementById('appExperience').value,
         motivation: document.getElementById('appMotivation').value,
