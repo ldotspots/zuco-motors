@@ -301,28 +301,6 @@
             </div>
           </div>
 
-          <!-- Vehicle History -->
-          <div class="card">
-            <div class="card-header">
-              <h2>Vehicle History</h2>
-            </div>
-            <div class="card-body">
-              <div class="grid grid-3">
-                <div class="text-center">
-                  <div style="font-size: var(--text-3xl); font-weight: 700; color: var(--gray-900);" id="accidents">0</div>
-                  <div style="color: var(--gray-600); font-size: var(--text-sm);">Accidents Reported</div>
-                </div>
-                <div class="text-center">
-                  <div style="font-size: var(--text-3xl); font-weight: 700; color: var(--gray-900);" id="owners">0</div>
-                  <div style="color: var(--gray-600); font-size: var(--text-sm);">Previous Owners</div>
-                </div>
-                <div class="text-center">
-                  <div style="font-size: var(--text-3xl); font-weight: 700; color: var(--gray-900);" id="views">0</div>
-                  <div style="color: var(--gray-600); font-size: var(--text-sm);">Times Viewed</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Right Column -->
@@ -523,11 +501,6 @@
       // Features
       document.getElementById('featuresList').innerHTML =
         currentVehicle.features.map(f => `<span class="feature-badge">${f}</span>`).join('');
-
-      // History
-      document.getElementById('accidents').textContent = currentVehicle.accidents;
-      document.getElementById('owners').textContent = currentVehicle.owners;
-      document.getElementById('views').textContent = currentVehicle.views || 0;
 
       // Update favorite button
       updateFavoriteButton();
