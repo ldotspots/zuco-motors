@@ -132,10 +132,12 @@
       document.getElementById('vehicleGrid').innerHTML = vehicles.map(v => {
         const isMine = myVehicleIds.has(v.id);
         const full = v.allocCount >= 10;
+        const hasImage = v.images && v.images.length > 0 && v.images[0].startsWith('data:');
+        const imageHtml = hasImage
+          ? `<img src="${v.images[0]}" alt="${v.year} ${v.make} ${v.model}" style="width:100%;height:180px;object-fit:cover;border-radius:var(--radius-lg) var(--radius-lg) 0 0;">`
+          : `<div style="background:var(--gray-200);height:180px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);border-radius:var(--radius-lg) var(--radius-lg) 0 0;">${v.year} ${v.make} ${v.model}</div>`;
         return `<div class="card">
-          <div style="background:var(--gray-200);height:160px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);border-radius:var(--radius-lg) var(--radius-lg) 0 0;">
-            ${v.year} ${v.make} ${v.model}
-          </div>
+          ${imageHtml}
           <div class="card-body">
             <h3 style="margin-bottom:0.5rem;">${v.year} ${v.make} ${v.model} ${v.trim || ''}</h3>
             <div class="flex gap-2 mb-3">

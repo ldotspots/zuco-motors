@@ -70,9 +70,14 @@
         const v = await DB.getVehicle(alloc.vehicleId);
         if (!v) return '';
         const pricing = await DB.getAgentVehiclePricing(v.id);
+        const hasImage = v.images && v.images.length > 0 && v.images[0].startsWith('data:');
+        const imageHtml = hasImage
+          ? `<img src="${v.images[0]}" alt="${v.year} ${v.make} ${v.model}" style="width:150px;height:100px;object-fit:cover;border-radius:var(--radius-md);margin-right:1.5rem;">`
+          : `<div style="width:150px;height:100px;background:var(--gray-200);display:flex;align-items:center;justify-content:center;color:var(--gray-500);border-radius:var(--radius-md);margin-right:1.5rem;font-size:var(--text-xs);text-align:center;">${v.year} ${v.make}<br>${v.model}</div>`;
         return `<div class="card mb-4">
           <div class="card-body">
-            <div class="flex justify-between items-center">
+            <div class="flex items-center">
+              ${imageHtml}
               <div style="flex:1;">
                 <h3 style="margin-bottom:0.25rem;">${v.year} ${v.make} ${v.model} ${v.trim || ''}</h3>
                 <div class="flex gap-2 mb-2">

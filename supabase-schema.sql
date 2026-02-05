@@ -87,12 +87,12 @@ CREATE TABLE IF NOT EXISTS transactions (
 -- AGENT ALLOCATIONS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS agent_allocations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id TEXT PRIMARY KEY,
   vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
   agent_id TEXT NOT NULL,
   agent_name TEXT,
   claimed_date DATE,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'sold', 'expired', 'returned')),
+  status TEXT DEFAULT 'active',
   expires_at TIMESTAMPTZ,
   notes TEXT,
   allocated_at TIMESTAMPTZ DEFAULT NOW()
