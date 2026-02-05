@@ -139,7 +139,7 @@
             <option value="price-desc">Price: High to Low</option>
             <option value="year-desc">Year: Newest First</option>
             <option value="year">Year: Oldest First</option>
-            <option value="mileage">Mileage: Low to High</option>
+            <option value="mileage">Odometer: Low to High</option>
             <option value="added-desc">Recently Added</option>
           </select>
         </div>
@@ -308,7 +308,7 @@
             <div class="badge badge-gray mb-3">${vehicle.condition}</div>
             <div class="vehicle-card-price">${Utils.formatCurrency(vehicle.pricing.salePrice)}</div>
             <div class="vehicle-card-specs">
-              <span>${Utils.formatNumber(vehicle.mileage)} mi</span>
+              <span>${Utils.formatNumber(vehicle.mileage)} km</span>
               <span>${vehicle.specs.transmission}</span>
               <span>${vehicle.bodyStyle}</span>
             </div>

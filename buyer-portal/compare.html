@@ -132,7 +132,7 @@
         ['Horsepower', v => `${v.specs.horsepower} hp`],
         ['Torque', v => `${v.specs.torque} lb-ft`],
         ['MPG City/Hwy', v => v.specs.fuelType === 'Electric' ? 'N/A' : `${v.specs.mpgCity}/${v.specs.mpgHighway}`],
-        ['Mileage', v => Utils.formatNumber(v.mileage) + ' mi'],
+        ['Odometer', v => Utils.formatNumber(v.mileage) + ' km'],
         ['Seating', v => `${v.specs.seating} passengers`],
         ['Exterior Color', v => v.exteriorColor],
         ['Interior Color', v => v.interiorColor],
