@@ -553,7 +553,7 @@ const DB = {
       .from('agent_applications')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
     if (error) return null;
     return this.toCamelCase(data);
   },
