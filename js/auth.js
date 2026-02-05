@@ -271,23 +271,32 @@ const Auth = {
       return;
     }
 
-    // Default redirects based on role (use explicit relative paths for GitHub Pages)
+    // Default redirects based on role (use correct relative paths based on current location)
     const currentPath = window.location.pathname;
+
     if (session.role === 'dealer') {
       if (currentPath.includes('/dealer-portal/')) {
         window.location.href = './index.html';
+      } else if (currentPath.includes('/buyer-portal/') || currentPath.includes('/sales-portal/')) {
+        // From another portal, go up then into dealer-portal
+        window.location.href = '../dealer-portal/index.html';
       } else {
+        // From root
         window.location.href = './dealer-portal/index.html';
       }
     } else if (session.role === 'sales_agent') {
       if (currentPath.includes('/sales-portal/')) {
         window.location.href = './index.html';
+      } else if (currentPath.includes('/buyer-portal/') || currentPath.includes('/dealer-portal/')) {
+        // From another portal, go up then into sales-portal
+        window.location.href = '../sales-portal/index.html';
       } else {
+        // From root
         window.location.href = './sales-portal/index.html';
       }
     } else {
       // Buyer - redirect to main site
-      if (currentPath.includes('/buyer-portal/')) {
+      if (currentPath.includes('/buyer-portal/') || currentPath.includes('/dealer-portal/') || currentPath.includes('/sales-portal/')) {
         window.location.href = '../index.html';
       } else {
         window.location.href = './index.html';
