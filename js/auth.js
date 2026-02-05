@@ -228,12 +228,12 @@ const Auth = {
   getLoginPath() {
     const path = window.location.pathname;
     if (path.includes('/dealer-portal/')) {
-      return '/dealer-portal/login.html';
+      return 'login.html';
     }
     if (path.includes('/sales-portal/')) {
-      return '/sales-portal/login.html';
+      return 'login.html';
     }
-    return '/buyer-portal/login.html';
+    return '../buyer-portal/login.html';
   },
 
   // Get unauthorized path
@@ -256,13 +256,22 @@ const Auth = {
       return;
     }
 
-    // Default redirects based on role
+    // Default redirects based on role (use relative paths)
+    const currentPath = window.location.pathname;
     if (session.role === 'dealer') {
-      window.location.href = '/dealer-portal/index.html';
+      if (currentPath.includes('/dealer-portal/')) {
+        window.location.href = 'index.html';
+      } else {
+        window.location.href = 'dealer-portal/index.html';
+      }
     } else if (session.role === 'sales_agent') {
-      window.location.href = '/sales-portal/index.html';
+      if (currentPath.includes('/sales-portal/')) {
+        window.location.href = 'index.html';
+      } else {
+        window.location.href = 'sales-portal/index.html';
+      }
     } else {
-      window.location.href = '/';
+      window.location.href = '../index.html';
     }
   },
 
@@ -375,7 +384,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // If already logged in and on login page, redirect to dashboard
+  // Only redirect if the session role matches the current portal
   if (isLoginPage && Auth.isAuthenticated()) {
-    Auth.redirectAfterLogin();
+    const session = Auth.getSession();
+    const isOnSalesLogin = path.includes('/sales-portal/login.html');
+    const isOnDealerLogin = path.includes('/dealer-portal/login.html');
+    const isOnBuyerLogin = path.includes('/buyer-portal/login.html');
+
+    // Only redirect if the role matches the portal they're logging into
+    if ((isOnSalesLogin && session?.role === 'sales_agent') ||
+        (isOnDealerLogin && session?.role === 'dealer') ||
+        (isOnBuyerLogin && session?.role === 'buyer')) {
+      Auth.redirectAfterLogin();
+    }
   }
 });
