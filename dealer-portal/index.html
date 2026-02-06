@@ -207,9 +207,8 @@
     async function calculateKPIs() {
       const vehicles = await DB.getVehicles();
       const availableVehicles = vehicles.filter(v => v.status === 'Available');
+      const soldVehicles = vehicles.filter(v => v.status === 'Sold');
       const leads = await DB.getInquiries();
-      const sales = await DB.getAgentSales();
-      const completedSales = sales.filter(s => s.status === 'completed');
 
       // Total Inventory Value
       const totalValue = availableVehicles.reduce((sum, v) => sum + (v.pricing?.salePrice || 0), 0);
@@ -227,31 +226,33 @@
       }).length;
       document.getElementById('leadsChange').textContent = `+${newLeadsThisWeek} new this week`;
 
-      // This Month's Sales
-      const thisMonth = new Date();
-      const monthSales = completedSales.filter(s => {
-        const sDate = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
-        return sDate.getMonth() === thisMonth.getMonth() && sDate.getFullYear() === thisMonth.getFullYear();
+      // This Month's Sales (from inventory - vehicles marked as Sold this month)
+      const now = new Date();
+      const thisMonthSold = soldVehicles.filter(v => {
+        if (!v.soldDate) return false;
+        const soldDate = new Date(v.soldDate);
+        return soldDate.getMonth() === now.getMonth() && soldDate.getFullYear() === now.getFullYear();
       });
-      const monthSalesTotal = monthSales.reduce((sum, s) => sum + (s.salePrice || 0), 0);
+      const monthSalesTotal = thisMonthSold.reduce((sum, v) => sum + (v.pricing?.salePrice || 0), 0);
       document.getElementById('monthSales').textContent = Utils.formatCurrency(monthSalesTotal);
-      document.getElementById('salesChange').textContent = `${monthSales.length} vehicles sold`;
+      document.getElementById('salesChange').textContent = `${thisMonthSold.length} vehicles sold`;
 
-      // Company Profit YTD (salePrice - invoiceCost for all completed sales this year)
-      const ytdSales = completedSales.filter(s => {
-        const sDate = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
-        return sDate.getFullYear() === thisMonth.getFullYear();
+      // Company Profit YTD (salePrice - invoiceCost for all sold vehicles this year)
+      const thisYearSold = soldVehicles.filter(v => {
+        if (!v.soldDate) return false;
+        const soldDate = new Date(v.soldDate);
+        return soldDate.getFullYear() === now.getFullYear();
       });
       let ytdProfit = 0;
       let monthProfit = 0;
-      for (const s of ytdSales) {
-        const vehicle = await DB.getVehicle(s.vehicleId);
-        const invoiceCost = vehicle?.pricing?.invoiceCost || 0;
-        const profit = (s.salePrice || 0) - invoiceCost;
+      for (const v of thisYearSold) {
+        const salePrice = v.pricing?.salePrice || 0;
+        const invoiceCost = v.pricing?.invoiceCost || 0;
+        const profit = salePrice - invoiceCost;
         ytdProfit += profit;
         // Check if this sale is from this month
-        const sDate = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
-        if (sDate.getMonth() === thisMonth.getMonth()) {
+        const soldDate = new Date(v.soldDate);
+        if (soldDate.getMonth() === now.getMonth()) {
           monthProfit += profit;
         }
       }
@@ -266,7 +267,6 @@
       document.getElementById('avgMarkup').textContent = (avgMarkup * 100).toFixed(1) + '%';
 
       // Inventory Turnover (average days on lot for sold vehicles)
-      const soldVehicles = vehicles.filter(v => v.status === 'Sold');
       if (soldVehicles.length > 0) {
         const avgDays = soldVehicles.reduce((sum, v) => {
           const added = new Date(v.addedDate);
@@ -368,10 +368,10 @@
       }
     }
 
-    // Sales Performance Chart (last 6 months)
+    // Sales Performance Chart (last 6 months) - uses inventory data
     async function renderSalesChart() {
-      const allSales = await DB.getAgentSales();
-      const agentSales = allSales.filter(s => s.status === 'completed');
+      const vehicles = await DB.getVehicles();
+      const soldVehicles = vehicles.filter(v => v.status === 'Sold' && v.soldDate);
       const now = new Date();
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const months = [];
@@ -381,23 +381,23 @@
       }
 
       let totalUnits = 0, totalRev = 0, totalProfit = 0;
-      const monthlyData = await Promise.all(months.map(async m => {
-        const sales = agentSales.filter(s => {
-          const d = s.completedAt ? new Date(s.completedAt) : new Date(s.saleDate);
-          return d.getMonth() === m.month && d.getFullYear() === m.year;
+      const monthlyData = months.map(m => {
+        const monthSales = soldVehicles.filter(v => {
+          const soldDate = new Date(v.soldDate);
+          return soldDate.getMonth() === m.month && soldDate.getFullYear() === m.year;
         });
         let rev = 0, profit = 0;
-        for (const s of sales) {
-          const v = await DB.getVehicle(s.vehicleId);
-          const invoiceCost = v ? v.pricing.invoiceCost : 0;
-          rev += s.salePrice;
-          profit += (s.salePrice - invoiceCost) - (s.agentProfit || 0);
+        for (const v of monthSales) {
+          const salePrice = v.pricing?.salePrice || 0;
+          const invoiceCost = v.pricing?.invoiceCost || 0;
+          rev += salePrice;
+          profit += salePrice - invoiceCost;
         }
-        totalUnits += sales.length;
+        totalUnits += monthSales.length;
         totalRev += rev;
         totalProfit += profit;
-        return { label: m.label, count: sales.length, revenue: rev };
-      }));
+        return { label: m.label, count: monthSales.length, revenue: rev };
+      });
 
       document.getElementById('chart6mUnits').textContent = totalUnits;
       document.getElementById('chart6mRevenue').textContent = Utils.formatCurrency(totalRev);
@@ -422,9 +422,8 @@
       await loadInventoryAlerts();
       await renderSalesChart();
       // Subscribe to real-time updates
-      DB.subscribeToVehicles(() => { calculateKPIs(); loadInventoryAlerts(); });
+      DB.subscribeToVehicles(() => { calculateKPIs(); loadInventoryAlerts(); renderSalesChart(); });
       DB.subscribeToInquiries(() => { calculateKPIs(); loadRecentLeads(); });
-      DB.subscribeToAgentSales(() => { calculateKPIs(); renderSalesChart(); });
     }
     init();
   </script>
