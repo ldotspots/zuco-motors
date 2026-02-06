@@ -192,7 +192,12 @@
       }).join('') || '<tr><td colspan="10" style="text-align:center;padding:2rem;">No vehicles found</td></tr>';
     }
 
+    // Debounce timer for real-time updates
+    let renderTimeout = null;
+    let isUpdating = false;
+
     async function updateStatus(vehicleId, newStatus) {
+      isUpdating = true;
       const updates = { status: newStatus };
       // Set soldDate when marking as Sold, clear it when changing to other status
       if (newStatus === 'Sold') {
@@ -200,22 +205,43 @@
       } else {
         updates.soldDate = null;
       }
-      await DB.updateVehicle(vehicleId, updates);
-      Utils.showToast(`Vehicle marked as ${newStatus}`, 'success');
-      renderInventory();
+      const result = await DB.updateVehicle(vehicleId, updates);
+      if (result) {
+        Utils.showToast(`Vehicle marked as ${newStatus}`, 'success');
+        // Wait a bit then re-render to ensure DB is consistent
+        setTimeout(() => {
+          isUpdating = false;
+          renderInventory();
+        }, 500);
+      } else {
+        Utils.showToast('Failed to update status', 'error');
+        isUpdating = false;
+        renderInventory();
+      }
     }
 
     async function deleteVehicle(vehicleId) {
       if (!confirm('Are you sure you want to permanently delete this vehicle? This cannot be undone.')) return;
+      isUpdating = true;
       await DB.deleteVehicle(vehicleId);
       Utils.showToast('Vehicle deleted', 'success');
-      renderInventory();
+      setTimeout(() => {
+        isUpdating = false;
+        renderInventory();
+      }, 500);
+    }
+
+    // Debounced render for real-time updates
+    function debouncedRender() {
+      if (isUpdating) return; // Skip if we're in the middle of an update
+      if (renderTimeout) clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => renderInventory(), 300);
     }
 
     // Initialize and subscribe to real-time updates
     async function init() {
       await renderInventory();
-      DB.subscribeToVehicles(() => renderInventory());
+      DB.subscribeToVehicles(debouncedRender);
     }
     init();
   </script>
