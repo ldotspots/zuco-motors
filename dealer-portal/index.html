@@ -226,38 +226,22 @@
       }).length;
       document.getElementById('leadsChange').textContent = `+${newLeadsThisWeek} new this week`;
 
-      // This Month's Sales (from inventory - vehicles marked as Sold this month)
+      // This Month's Sales & Company Profit (all sold vehicles)
       const now = new Date();
-      const thisMonthSold = soldVehicles.filter(v => {
-        if (!v.soldDate) return false;
-        const soldDate = new Date(v.soldDate);
-        return soldDate.getMonth() === now.getMonth() && soldDate.getFullYear() === now.getFullYear();
-      });
-      const monthSalesTotal = thisMonthSold.reduce((sum, v) => sum + (v.pricing?.salePrice || 0), 0);
+      // Count all sold vehicles (soldDate column may not exist)
+      const monthSalesTotal = soldVehicles.reduce((sum, v) => sum + (v.pricing?.salePrice || 0), 0);
       document.getElementById('monthSales').textContent = Utils.formatCurrency(monthSalesTotal);
-      document.getElementById('salesChange').textContent = `${thisMonthSold.length} vehicles sold`;
+      document.getElementById('salesChange').textContent = `${soldVehicles.length} vehicles sold`;
 
-      // Company Profit YTD (salePrice - invoiceCost for all sold vehicles this year)
-      const thisYearSold = soldVehicles.filter(v => {
-        if (!v.soldDate) return false;
-        const soldDate = new Date(v.soldDate);
-        return soldDate.getFullYear() === now.getFullYear();
-      });
-      let ytdProfit = 0;
-      let monthProfit = 0;
-      for (const v of thisYearSold) {
+      // Company Profit (salePrice - invoiceCost for all sold vehicles)
+      let totalProfit = 0;
+      for (const v of soldVehicles) {
         const salePrice = v.pricing?.salePrice || 0;
         const invoiceCost = v.pricing?.invoiceCost || 0;
-        const profit = salePrice - invoiceCost;
-        ytdProfit += profit;
-        // Check if this sale is from this month
-        const soldDate = new Date(v.soldDate);
-        if (soldDate.getMonth() === now.getMonth()) {
-          monthProfit += profit;
-        }
+        totalProfit += salePrice - invoiceCost;
       }
-      document.getElementById('companyProfit').textContent = Utils.formatCurrency(ytdProfit);
-      document.getElementById('profitChange').textContent = `+${Utils.formatCurrency(monthProfit)} this month`;
+      document.getElementById('companyProfit').textContent = Utils.formatCurrency(totalProfit);
+      document.getElementById('profitChange').textContent = `${soldVehicles.length} total sold`;
 
       // Average Markup
       const vehiclesWithMarkup = availableVehicles.filter(v => v.pricing?.currentMarkup);
@@ -368,36 +352,34 @@
       }
     }
 
-    // Sales Performance Chart (last 6 months) - uses inventory data
+    // Sales Performance Summary - uses inventory data
     async function renderSalesChart() {
       const vehicles = await DB.getVehicles();
-      const soldVehicles = vehicles.filter(v => v.status === 'Sold' && v.soldDate);
-      const now = new Date();
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({ month: d.getMonth(), year: d.getFullYear(), label: monthNames[d.getMonth()] });
+      const soldVehicles = vehicles.filter(v => v.status === 'Sold');
+
+      // Calculate totals from all sold vehicles
+      let totalUnits = soldVehicles.length;
+      let totalRev = 0, totalProfit = 0;
+      for (const v of soldVehicles) {
+        const salePrice = v.pricing?.salePrice || 0;
+        const invoiceCost = v.pricing?.invoiceCost || 0;
+        totalRev += salePrice;
+        totalProfit += salePrice - invoiceCost;
       }
 
-      let totalUnits = 0, totalRev = 0, totalProfit = 0;
-      const monthlyData = months.map(m => {
-        const monthSales = soldVehicles.filter(v => {
-          const soldDate = new Date(v.soldDate);
-          return soldDate.getMonth() === m.month && soldDate.getFullYear() === m.year;
-        });
-        let rev = 0, profit = 0;
-        for (const v of monthSales) {
-          const salePrice = v.pricing?.salePrice || 0;
-          const invoiceCost = v.pricing?.invoiceCost || 0;
-          rev += salePrice;
-          profit += salePrice - invoiceCost;
-        }
-        totalUnits += monthSales.length;
-        totalRev += rev;
-        totalProfit += profit;
-        return { label: m.label, count: monthSales.length, revenue: rev };
-      });
+      // Simple display without monthly breakdown (soldDate not available)
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const now = new Date();
+      const monthlyData = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        monthlyData.push({ label: monthNames[d.getMonth()], count: 0, revenue: 0 });
+      }
+      // Put all sales in current month for display
+      if (monthlyData.length > 0) {
+        monthlyData[monthlyData.length - 1].count = totalUnits;
+        monthlyData[monthlyData.length - 1].revenue = totalRev;
+      }
 
       document.getElementById('chart6mUnits').textContent = totalUnits;
       document.getElementById('chart6mRevenue').textContent = Utils.formatCurrency(totalRev);

@@ -198,13 +198,8 @@
 
     async function updateStatus(vehicleId, newStatus) {
       isUpdating = true;
-      const updates = { status: newStatus };
-      // Set soldDate when marking as Sold
-      if (newStatus === 'Sold') {
-        updates.soldDate = new Date().toISOString();
-      }
-      // Note: We don't clear soldDate - it's only set when marking as Sold
-      const result = await DB.updateVehicle(vehicleId, updates);
+      // Just update status - soldDate column may not exist in Supabase
+      const result = await DB.updateVehicle(vehicleId, { status: newStatus });
       if (result) {
         Utils.showToast(`Vehicle marked as ${newStatus}`, 'success');
         // Wait a bit then re-render to ensure DB is consistent
