@@ -193,7 +193,14 @@
     }
 
     async function updateStatus(vehicleId, newStatus) {
-      await DB.updateVehicle(vehicleId, { status: newStatus });
+      const updates = { status: newStatus };
+      // Set soldDate when marking as Sold, clear it when changing to other status
+      if (newStatus === 'Sold') {
+        updates.soldDate = new Date().toISOString();
+      } else {
+        updates.soldDate = null;
+      }
+      await DB.updateVehicle(vehicleId, updates);
       Utils.showToast(`Vehicle marked as ${newStatus}`, 'success');
       renderInventory();
     }

@@ -382,7 +382,7 @@
       });
       // Finalize: mark vehicle as Sold
       if (sale) {
-        await DB.updateVehicle(sale.vehicleId, { status: 'Sold' });
+        await DB.updateVehicle(sale.vehicleId, { status: 'Sold', soldDate: new Date().toISOString() });
         const allocations = await DB.getAllocationsByVehicle(sale.vehicleId);
         for (const a of allocations.filter(a => a.status === 'reserved')) {
           await DB.updateAllocation(a.id, { status: 'sold' });
@@ -514,7 +514,7 @@
       });
 
       // Mark vehicle as Sold
-      await DB.updateVehicle(b.vehicleId, { status: 'Sold' });
+      await DB.updateVehicle(b.vehicleId, { status: 'Sold', soldDate: new Date().toISOString() });
       const allocations = await DB.getAllocationsByVehicle(b.vehicleId);
       for (const a of allocations.filter(a => a.status === 'active' || a.status === 'reserved')) {
         await DB.updateAllocation(a.id, { status: 'sold' });
